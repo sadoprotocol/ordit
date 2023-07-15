@@ -1,0 +1,50 @@
+# CHAIN
+
+NETWORK="regtest"
+CURRENCY="Bitcoin"
+SYMBOL="BTC"
+DECIMALS=8
+REORGMIN=0.5
+
+# RPC
+
+RPC_HOST="127.0.0.1"
+RPC_PORT=18443 # regtest:18443 testnet:18332
+RPC_AUTH="<user>:<salt>$<hash>"
+RPC_USER="<user>"
+RPC_PASSWORD="<password>"
+
+# API
+
+PORT=3030
+
+# PARSER
+
+CRAWLER_MULTITHREAD=0
+CRAWLER_INTERNVAL=10 # in minutes
+CRAWLER_MAX_BLOCK=0
+
+RESOLVER_INTERVAL=2 # in minutes
+
+# ORD
+
+ORD_INSCRIPTION_MEDIA_URL="http://<network>.ordit.io/utxo/inscriptions/<outpoint>/<id>/media"
+ORD_DATA_ONE="/absolute/path/to/data"
+ORD_DATA_TWO="/absolute/path/to/data"
+
+# ord -r --cookie-file .bitcoin/regtest/.cookie --data-dir data/ord-data-1 index
+
+# MONGO
+
+MONGO_HOSTNAME="localhost"
+MONGO_PORT="27017"
+MONGO_DATABASE="bitcoin-regtest"
+MONGO_USERNAME=""
+MONGO_PASSWORD=""
+
+# SOCHAIN
+
+SOCHAIN_URL="https://chain.so/api/v3"
+SOCHAIN_NETWORK="BTCTEST"
+SOCHAIN_COIN="Bitcoin"
+SOCHAIN_TOKEN=""

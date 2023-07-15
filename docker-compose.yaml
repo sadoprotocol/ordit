@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  bitcoin-core:
+    image: ruimarinho/bitcoin-core
+    container_name: ordit-bitcoin-server
+    ports:
+      - ${RPC_PORT}:${RPC_PORT}
+    volumes:
+      - ./.bitcoin:/home/bitcoin/.bitcoin
+    command: -printtoconsole
+      -txindex=1
+      -testnet=1
+      -rpcallowip=0.0.0.0/0
+      -rpcbind=0.0.0.0
+      -rpcauth='${RPC_AUTH}'
+
+  database:
+    image: mongo:latest
+    container_name: ordit-mongo
+    ports:
+      - ${MONGO_PORT}:27017
+    volumes:
+      - ./.mongodb:/data/db

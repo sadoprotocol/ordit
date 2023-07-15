@@ -1,0 +1,30 @@
+# IDE - VSCode
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Development
+
+.bitcoin
+.data
+.mongodb
+.env
+
+# Dependencies
+
+node_modules
+
+# Distributions
+
+dist
+
+# OS
+
+.DS_Store
+
+# Logs
+
+npm-debug.log*

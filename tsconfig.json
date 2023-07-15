@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Default",
+  "compilerOptions": {
+    "strict": true,
+    
+    "lib": ["ES2022"],
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+
+    "allowSyntheticDefaultImports": true,
+    "useUnknownInCatchVariables": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "exclude": ["node_modules", "dist"]
+}
