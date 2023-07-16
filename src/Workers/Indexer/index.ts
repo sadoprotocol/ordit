@@ -18,7 +18,7 @@ start(true);
 async function start(prep = false) {
   if (prep === true) {
     await bootstrap();
-    profiler.start();
+    // profiler.start();
     log("network: %s", config.chain.network);
   }
 

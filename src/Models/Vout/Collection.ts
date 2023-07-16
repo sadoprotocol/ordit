@@ -13,14 +13,14 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        addressTo: 1,
+        address: 1,
         txid: 1,
         n: 1,
       },
     ],
     [
       {
-        addressTo: 1,
+        address: 1,
         blockN: -1,
         n: 1,
       },
@@ -42,34 +42,24 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        "spent.txid": 1,
-        "spent.n": 1,
-      },
-      {
-        unique: true,
-        sparse: true,
+        address: 1,
+        spent: 1,
       },
     ],
   ],
 };
 
 export type VoutDocument = Vout & {
-  addressTo?: string;
   blockHash: string;
   blockN: number;
   txid: string;
   sats: number;
-  spent?: {
-    txid: string;
-    n: number;
-  };
+  address?: string;
+  spent?: string;
 };
 
 export type SpentVout = {
   txid: string;
   vout: number;
-  location: {
-    txid: string;
-    n: number;
-  };
+  location: string;
 };

@@ -1,8 +1,6 @@
 import { AnyBulkWriteOperation } from "mongodb";
 
 import { logger } from "../../Logger";
-import { Block, optional, RawTransaction, rpc, Vout } from "../../Services/Bitcoin";
-import { sanitizeScriptPubKey, sats } from "../../Utilities/Bitcoin";
 import { collection, SpentVout, VoutDocument } from "./Collection";
 
 /**
@@ -11,26 +9,12 @@ import { collection, SpentVout, VoutDocument } from "./Collection";
  * Sanitize the vout and resolve the address to the `addressTo` value on the
  * record before inserting the documents.
  *
- * @param block - Block the vouts belong to.
- * @param tx    - Transaction the vouts belong to.
  * @param vouts - List of vouts to add.
  */
-export async function addVouts(block: Block, tx: RawTransaction, vouts: Vout[]): Promise<void> {
-  const documents: VoutDocument[] = [];
-  for (const vout of vouts) {
-    sanitizeScriptPubKey(vout.scriptPubKey);
-    documents.push({
-      addressTo: await getAddressFromVout(vout),
-      blockHash: block.hash,
-      blockN: block.height,
-      txid: tx.txid,
-      ...vout,
-      sats: sats(vout.value),
-    });
-  }
+export async function addVouts(vouts: VoutDocument[]): Promise<void> {
   const ts = performance.now();
-  await collection.insertMany(documents);
-  logger.addDatabase(performance.now() - ts);
+  await collection.insertMany(vouts);
+  logger.addDatabase("vouts", performance.now() - ts);
 }
 
 /**
@@ -42,11 +26,11 @@ export async function addVouts(block: Block, tx: RawTransaction, vouts: Vout[]):
  * @param spents - List of spent vouts to update.
  */
 export async function setVoutsSpent(spents: SpentVout[]): Promise<void> {
-  const bulkops: AnyBulkWriteOperation<VoutDocument>[] = [];
   if (spents.length === 0) {
     return;
   }
   const ts = performance.now();
+  const bulkops: AnyBulkWriteOperation<VoutDocument>[] = [];
   for (const { txid, vout, location } of spents) {
     bulkops.push({
       updateOne: {
@@ -62,7 +46,7 @@ export async function setVoutsSpent(spents: SpentVout[]): Promise<void> {
   if (bulkops.length > 0) {
     await collection.bulkWrite(bulkops);
   }
-  logger.addDatabase(performance.now() - ts);
+  logger.addDatabase("spents", performance.now() - ts);
 }
 
 /**
@@ -75,26 +59,4 @@ export async function setVoutsSpent(spents: SpentVout[]): Promise<void> {
  */
 export async function clearVoutsAfterBlock(height: number): Promise<void> {
   await collection.deleteMany({ blockN: { $gt: height - 1 } });
-}
-
-/*
- |--------------------------------------------------------------------------------
- | Utilities
- |--------------------------------------------------------------------------------
- */
-
-async function getAddressFromVout(vout: Vout): Promise<string | undefined> {
-  if (vout.scriptPubKey.address !== undefined) {
-    return vout.scriptPubKey.address;
-  }
-  if (vout.scriptPubKey.addresses) {
-    return vout.scriptPubKey.addresses[0];
-  }
-  if (vout.scriptPubKey.desc === undefined) {
-    return undefined;
-  }
-  const derived = await rpc.util
-    .deriveAddresses(vout.scriptPubKey.desc)
-    .catch(optional<string[]>(rpc.util.code.NO_CORRESPONDING_ADDRESS, []));
-  return derived[0];
 }

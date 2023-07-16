@@ -37,7 +37,7 @@ ORD_DATA_TWO="/absolute/path/to/data"
 # MONGO
 
 MONGO_HOSTNAME="localhost"
-MONGO_PORT="27017"
+MONGO_PORT=27017
 MONGO_DATABASE="bitcoin-regtest"
 MONGO_USERNAME=""
 MONGO_PASSWORD=""

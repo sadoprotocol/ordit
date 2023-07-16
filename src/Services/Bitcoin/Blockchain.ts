@@ -10,8 +10,9 @@ export const blockchain = {
     BLOCK_HASH_NOT_FOUND,
   },
   getBlock,
-  getBlockHash,
+  getBlockchainInfo,
   getBlockCount,
+  getBlockHash,
 };
 
 /*
@@ -40,12 +41,10 @@ async function getBlock(hash: string, verbosity = 1): Promise<Block | (Block & T
 }
 
 /**
- * Returns hash of block in best-block-chain at height provided.
- *
- * @param height - Height of the block whose hash should be returned.
+ * Returns an object containing various state info regarding blockchain processing.
  */
-async function getBlockHash(height: number): Promise<string> {
-  return rpc<string>("getblockhash", [height]);
+async function getBlockchainInfo(): Promise<BlockchainInfo> {
+  return rpc<BlockchainInfo>("getblockchaininfo");
 }
 
 /**
@@ -57,11 +56,36 @@ async function getBlockCount(): Promise<number> {
   return rpc<number>("getblockcount");
 }
 
+/**
+ * Returns hash of block in best-block-chain at height provided.
+ *
+ * @param height - Height of the block whose hash should be returned.
+ */
+async function getBlockHash(height: number): Promise<string> {
+  return rpc<string>("getblockhash", [height]);
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Types
  |--------------------------------------------------------------------------------
  */
+
+export type BlockchainInfo = {
+  chain: string;
+  blocks: number;
+  headers: number;
+  bestblockhash: string;
+  difficulty: number;
+  time: number;
+  mediantime: number;
+  verificationprogress: number;
+  initialblockdownload: boolean;
+  chainwork: string;
+  size_on_disk: number;
+  pruned: boolean;
+  warnings: string;
+};
 
 export type Block = {
   hash: string;

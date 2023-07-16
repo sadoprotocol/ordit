@@ -40,7 +40,7 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
     if (time / 1000 > 1) {
       log("rpc call %s args %O took %s seconds", method, args, (time / 1000).toFixed(3));
     }
-    logger.addRpc(time);
+    logger.addRpc(method, time);
   }
 }
 

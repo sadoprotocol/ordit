@@ -2,10 +2,10 @@ import debug from "debug";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
-import { addVins } from "../../Models/Vin";
-import { addVouts } from "../../Models/Vout";
-import { rpc } from "../../Services/Bitcoin";
-import { printProgress } from "../../Utilities/Progress";
+import { addVins, VinDocument } from "../../Models/Vin";
+import { addVouts, setVoutsSpent, SpentVout, VoutDocument } from "../../Models/Vout";
+import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
+import { sanitizeScriptPubKey, sats } from "../../Utilities/Bitcoin";
 
 const log = debug("ordit-indexer:crawler");
 
@@ -26,14 +26,59 @@ export async function crawl(blockN: number, maxBlockN: number) {
   const blockHash = await rpc.blockchain.getBlockHash(blockN);
   const block = await rpc.blockchain.getBlock(blockHash, 2);
 
-  let vinCount = 0;
-  let voutCount = 0;
+  // ### Documents
+
+  const vins: VinDocument[] = [];
+  const vouts: VoutDocument[] = [];
+  const spents: SpentVout[] = [];
 
   for (const tx of block.tx) {
-    await addVins(block, tx, tx.vin);
-    await addVouts(block, tx, tx.vout);
-    vinCount += tx.vin.length;
-    voutCount += tx.vout.length;
+    let n = 0;
+    for (const vin of tx.vin) {
+      if (isCoinbase(vin)) {
+        continue;
+      }
+      vins.push({
+        blockHash: block.hash,
+        blockN: block.height,
+        prevTxid: vin.txid,
+        ...vin,
+        txid: tx.txid,
+        n,
+      });
+      spents.push({
+        txid: vin.txid,
+        vout: vin.vout,
+        location: `${tx.txid}:${n}`,
+      });
+      n += 1;
+    }
+    for (const vout of tx.vout) {
+      sanitizeScriptPubKey(vout.scriptPubKey);
+      vouts.push({
+        blockHash: block.hash,
+        blockN: block.height,
+        txid: tx.txid,
+        ...vout,
+        sats: sats(vout.value),
+        address: await getAddressFromVout(vout),
+      });
+    }
+  }
+
+  const promises = [];
+
+  if (vins.length !== 0) {
+    promises.push(addVins(vins));
+  }
+  if (vouts.length !== 0) {
+    promises.push(addVouts(vouts));
+  }
+
+  await Promise.all(promises);
+
+  if (spents.length !== 0) {
+    await setVoutsSpent(spents);
   }
 
   // ### Debug
@@ -41,18 +86,39 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   logger.stop();
 
-  if (logger.timers.process / 1000 > 2) {
+  if (logger.total > 1) {
     log("crawled block %o", {
       block: blockN,
       txs: block.tx.length,
-      vins: vinCount,
-      vouts: voutCount,
+      vins: vins.length,
+      vouts: vouts.length,
+      time: logger.total.toFixed(3),
       rpc: [logger.calls.rpc, logger.rpc],
       database: [logger.calls.database, logger.database],
-      process: logger.process,
-      total: logger.total,
     });
   }
 
-  printProgress("ordit-indexer", blockN, maxBlockN);
+  // printProgress("ordit-indexer", blockN, maxBlockN);
+}
+
+/*
+ |--------------------------------------------------------------------------------
+ | Utilities
+ |--------------------------------------------------------------------------------
+ */
+
+async function getAddressFromVout(vout: Vout): Promise<string | undefined> {
+  if (vout.scriptPubKey.address !== undefined) {
+    return vout.scriptPubKey.address;
+  }
+  if (vout.scriptPubKey.addresses) {
+    return vout.scriptPubKey.addresses[0];
+  }
+  if (vout.scriptPubKey.desc === undefined) {
+    return undefined;
+  }
+  const derived = await rpc.util
+    .deriveAddresses(vout.scriptPubKey.desc)
+    .catch(optional<string[]>(rpc.util.code.NO_CORRESPONDING_ADDRESS, []));
+  return derived[0];
 }

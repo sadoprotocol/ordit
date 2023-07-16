@@ -17,8 +17,8 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        "spending.txid": 1,
-        "spending.n": 1,
+        prevTxid: 1,
+        vout: 1,
       },
       {
         unique: true,
@@ -30,9 +30,6 @@ export const registrar: CollectionRegistrar = {
 export type VinDocument = TxVin & {
   blockHash: string;
   blockN: number;
+  prevTxid: string;
   n: number;
-  spending: {
-    txid: string;
-    n: number;
-  };
 };

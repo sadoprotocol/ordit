@@ -1,3 +1,4 @@
+import "./Methods";
 import "./Routes";
 
 import debug from "debug";
