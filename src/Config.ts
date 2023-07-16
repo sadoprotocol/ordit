@@ -20,12 +20,8 @@ export const config = {
     port: getEnvironmentVariable("PORT", envToNumber),
   },
   crawler: {
-    multithread: getEnvironmentVariable("CRAWLER_MULTITHREAD", envToNumber),
     interval: getEnvironmentVariable("CRAWLER_INTERVAL", envToNumber),
     maxBlockHeight: getEnvironmentVariable("CRAWLER_MAX_BLOCK", envToNumber),
-  },
-  resolver: {
-    interval: getEnvironmentVariable("RESOLVER_INTERVAL", envToNumber),
   },
   ord: {
     inscriptionMediaUrl: getEnvironmentVariable("ORD_INSCRIPTION_MEDIA_URL"),
