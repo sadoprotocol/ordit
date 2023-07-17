@@ -1,6 +1,7 @@
 import { AnyBulkWriteOperation } from "mongodb";
 
 import { logger } from "../../Logger";
+import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, SpentVout, VoutDocument } from "./Collection";
 
 /**
@@ -13,7 +14,7 @@ import { collection, SpentVout, VoutDocument } from "./Collection";
  */
 export async function addVouts(vouts: VoutDocument[]): Promise<void> {
   const ts = performance.now();
-  await collection.insertMany(vouts);
+  await collection.insertMany(vouts, { ordered: false }).catch(ignoreDuplicateErrors);
   logger.addDatabase("vouts", performance.now() - ts);
 }
 

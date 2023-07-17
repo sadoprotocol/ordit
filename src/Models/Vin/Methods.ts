@@ -1,4 +1,5 @@
 import { logger } from "../../Logger";
+import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, VinDocument } from "./Collection";
 
 /**
@@ -11,7 +12,7 @@ import { collection, VinDocument } from "./Collection";
  */
 export async function addVins(vins: VinDocument[]): Promise<void> {
   const ts = performance.now();
-  await collection.insertMany(vins);
+  await collection.insertMany(vins, { ordered: false }).catch(ignoreDuplicateErrors);
   logger.addDatabase("vins", performance.now() - ts);
 }
 
