@@ -10,7 +10,7 @@ import { collection, VinDocument } from "./Collection";
  *
  * @param vins - List of vins to add.
  */
-export async function addVins(vins: VinDocument[], chunkSize = 100): Promise<void> {
+export async function addVins(vins: VinDocument[], chunkSize = 500): Promise<void> {
   const ts = performance.now();
 
   const promises = [];

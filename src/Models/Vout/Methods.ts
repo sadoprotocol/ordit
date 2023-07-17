@@ -12,7 +12,7 @@ import { collection, SpentVout, VoutDocument } from "./Collection";
  *
  * @param vouts - List of vouts to add.
  */
-export async function addVouts(vouts: VoutDocument[], chunkSize = 100): Promise<void> {
+export async function addVouts(vouts: VoutDocument[], chunkSize = 500): Promise<void> {
   const ts = performance.now();
 
   const promises = [];
