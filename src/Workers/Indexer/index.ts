@@ -5,7 +5,6 @@ import { config } from "../../Config";
 import { clearVinsAfterBlock } from "../../Models/Vin";
 import { clearVoutsAfterBlock } from "../../Models/Vout";
 import { rpc } from "../../Services/Bitcoin";
-import { profiler } from "../../Services/Profiler";
 import { crawl } from "./Crawl";
 import { blockHeight } from "./Data";
 
@@ -17,9 +16,8 @@ start(true);
 
 async function start(prep = false) {
   if (prep === true) {
-    await bootstrap();
-    // profiler.start();
     log("network: %s", config.chain.network);
+    await bootstrap();
   }
 
   // ### Get Chain State
@@ -28,14 +26,17 @@ async function start(prep = false) {
   log("current network block height is %d", currentBlockHeight);
 
   let crawlerBlockHeight = await blockHeight();
-  log("current crawled block height is %d", crawlerBlockHeight);
+  log("current indexed block height is %d", crawlerBlockHeight);
 
   // ### Clear Vins and Vouts
   // Remove any vins and vouts that are associated with blocks that are higher than
   // the current crawler block height. This is to ensure that we don't hit duplicate
   // errors for unique indexes.
 
-  await Promise.all([clearVinsAfterBlock(crawlerBlockHeight), clearVoutsAfterBlock(crawlerBlockHeight)]);
+  if (prep === true) {
+    log("clearing vins and vouts after block %d", crawlerBlockHeight);
+    await Promise.all([clearVinsAfterBlock(crawlerBlockHeight), clearVoutsAfterBlock(crawlerBlockHeight)]);
+  }
 
   // ### Start Crawler
 

@@ -25,11 +25,11 @@ export async function addVouts(vouts: VoutDocument[]): Promise<void> {
  *
  * @param spents - List of spent vouts to update.
  */
-export async function setVoutsSpent(spents: SpentVout[]): Promise<void> {
+export async function setSpentVouts(spents: SpentVout[]): Promise<void> {
   if (spents.length === 0) {
     return;
   }
-  const ts = performance.now();
+  // const ts = performance.now();
   const bulkops: AnyBulkWriteOperation<VoutDocument>[] = [];
   for (const { txid, vout, location } of spents) {
     bulkops.push({
@@ -46,7 +46,7 @@ export async function setVoutsSpent(spents: SpentVout[]): Promise<void> {
   if (bulkops.length > 0) {
     await collection.bulkWrite(bulkops);
   }
-  logger.addDatabase("spents", performance.now() - ts);
+  // logger.addDatabase("spents", performance.now() - ts);
 }
 
 /**

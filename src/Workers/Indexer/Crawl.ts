@@ -3,9 +3,10 @@ import debug from "debug";
 import { config } from "../../Config";
 import { logger } from "../../Logger";
 import { addVins, VinDocument } from "../../Models/Vin";
-import { addVouts, setVoutsSpent, SpentVout, VoutDocument } from "../../Models/Vout";
+import { addVouts, setSpentVouts, SpentVout, VoutDocument } from "../../Models/Vout";
 import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
 import { sanitizeScriptPubKey, sats } from "../../Utilities/Bitcoin";
+import { printProgress } from "../../Utilities/Progress";
 
 const log = debug("ordit-indexer:crawler");
 
@@ -18,7 +19,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
   }
 
   if (blockN > maxBlockN) {
-    return log("crawler caught up with latest block %d, resting...", blockN);
+    return log("indexer caught up with latest block %d, resting...", blockN);
   }
 
   logger.start();
@@ -66,6 +67,8 @@ export async function crawl(blockN: number, maxBlockN: number) {
     }
   }
 
+  // ### Insert
+
   const promises = [];
 
   if (vins.length !== 0) {
@@ -78,11 +81,10 @@ export async function crawl(blockN: number, maxBlockN: number) {
   await Promise.all(promises);
 
   if (spents.length !== 0) {
-    await setVoutsSpent(spents);
+    setSpentVouts(spents);
   }
 
   // ### Debug
-  // Identify any block that takes longer than 1 second to crawl.
 
   logger.stop();
 
@@ -98,7 +100,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
     });
   }
 
-  // printProgress("ordit-indexer", blockN, maxBlockN);
+  printProgress("ordit-indexer", blockN, maxBlockN);
 }
 
 /*
