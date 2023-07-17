@@ -20,8 +20,8 @@ PORT=3030
 
 # PARSER
 
-CRAWLER_INTERNVAL=10  # in minutes
-CRAWLER_MAX_BLOCK=0   # 0 for no limit
+CRAWLER_INTERVAL=10  # in minutes
+CRAWLER_MAX_BLOCK=0  # 0 for no limit
 
 # ORD
 
