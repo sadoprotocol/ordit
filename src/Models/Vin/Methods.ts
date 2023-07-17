@@ -10,9 +10,16 @@ import { collection, VinDocument } from "./Collection";
  *
  * @param vins - List of vins to add.
  */
-export async function addVins(vins: VinDocument[]): Promise<void> {
+export async function addVins(vins: VinDocument[], chunkSize = 100): Promise<void> {
   const ts = performance.now();
-  await collection.insertMany(vins, { ordered: false }).catch(ignoreDuplicateErrors);
+
+  const promises = [];
+  for (let i = 0; i < vins.length; i += chunkSize) {
+    const chunk = vins.slice(i, i + chunkSize);
+    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
+  }
+  await Promise.all(promises);
+
   logger.addDatabase("vins", performance.now() - ts);
 }
 

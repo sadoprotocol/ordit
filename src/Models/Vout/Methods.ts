@@ -12,9 +12,16 @@ import { collection, SpentVout, VoutDocument } from "./Collection";
  *
  * @param vouts - List of vouts to add.
  */
-export async function addVouts(vouts: VoutDocument[]): Promise<void> {
+export async function addVouts(vouts: VoutDocument[], chunkSize = 100): Promise<void> {
   const ts = performance.now();
-  await collection.insertMany(vouts, { ordered: false }).catch(ignoreDuplicateErrors);
+
+  const promises = [];
+  for (let i = 0; i < vouts.length; i += chunkSize) {
+    const chunk = vouts.slice(i, i + chunkSize);
+    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
+  }
+  await Promise.all(promises);
+
   logger.addDatabase("vouts", performance.now() - ts);
 }
 
