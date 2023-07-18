@@ -12,7 +12,6 @@ export const config = {
   rpc: {
     host: getEnvironmentVariable("RPC_HOST"),
     port: getEnvironmentVariable("RPC_PORT", envToNumber),
-    auth: getEnvironmentVariable("RPC_AUTH"),
     user: getEnvironmentVariable("RPC_USER"),
     password: getEnvironmentVariable("RPC_PASSWORD"),
   },

@@ -13,7 +13,8 @@ services:
       -testnet=1
       -rpcallowip=0.0.0.0/0
       -rpcbind=0.0.0.0
-      -rpcauth='${RPC_AUTH}'
+      -rpcuser='${RPC_USER}'
+      -rpcpassword='${RPC_PASSWORD}'
 
   database:
     image: mongo:latest
