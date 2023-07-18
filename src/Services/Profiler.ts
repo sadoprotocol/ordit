@@ -20,15 +20,15 @@ export const profiler = {
  */
 function start(level: "slow_only" | "all" = "slow_only", timer = 10) {
   mongo.db.setProfilingLevel(level);
-  interval = setInterval(() => {
-    mongo
-      .collection("system.profile")
-      .find()
-      .toArray()
-      .then((profiles) => {
-        fs.writeFile(`${DIR_DATA}/profile`, JSON.stringify(profiles, null, 2));
-      });
-  }, timer * 1000);
+  // interval = setInterval(() => {
+  //   mongo
+  //     .collection("system.profile")
+  //     .find()
+  //     .toArray()
+  //     .then((profiles) => {
+  //       fs.writeFile(`${DIR_DATA}/profile`, JSON.stringify(profiles, null, 2));
+  //     });
+  // }, timer * 1000);
 }
 
 /**
@@ -36,7 +36,7 @@ function start(level: "slow_only" | "all" = "slow_only", timer = 10) {
  */
 function stop() {
   mongo.db.setProfilingLevel("off");
-  if (interval) {
-    clearInterval(interval);
-  }
+  // if (interval) {
+  //   clearInterval(interval);
+  // }
 }

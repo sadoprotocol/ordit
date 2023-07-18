@@ -3,6 +3,7 @@ import debug from "debug";
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
 import { rpc } from "../../Services/Bitcoin";
+import { profiler } from "../../Services/Profiler";
 import { crawl } from "./Crawl";
 import { blockHeight } from "./Data";
 
@@ -16,6 +17,7 @@ async function start(prep = false) {
   if (prep === true) {
     log("network: %s", config.chain.network);
     await bootstrap();
+    profiler.start();
   }
 
   // ### Get Chain State
