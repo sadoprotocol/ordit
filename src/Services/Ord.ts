@@ -14,7 +14,7 @@ export const bitcoinArgs = [
   `--bitcoin-rpc-user=${config.rpc.user}`,
   `--bitcoin-rpc-pass=${config.rpc.password}`,
   `--rpc-url=http://${config.rpc.host}:${config.rpc.port}`,
-];
+].filter((val) => val !== "");
 
 export const ord = {
   index,
