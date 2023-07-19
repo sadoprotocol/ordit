@@ -1,7 +1,7 @@
 import { method } from "@valkyr/api";
 
 import { rpc } from "../../Services/Bitcoin";
-import { getBlockHeight } from "../../Workers/Indexer/Data";
+import { getBlockHeight } from "../../Workers/Bitcoin/Data";
 
 export const getOrditInfo = method({
   handler: async () => {

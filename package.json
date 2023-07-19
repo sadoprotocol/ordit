@@ -5,8 +5,11 @@
   "scripts": {
     "prepare": "husky install",
     "build": "tsc",
-    "start": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
-    "indexer": "DEBUG=ordit-* ts-node ./src/Workers/Indexer",
+    "start": "DEBUG=ordit-* ts-node ./src/main.ts",
+    "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
+    "btc:indexer": "DEBUG=bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
+    "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ord/Indexer.ts",
+    "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ord/Snapshot.ts",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --max-warnings 0 --report-unused-disable-directives --fix"
   },

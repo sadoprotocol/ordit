@@ -3,11 +3,12 @@ import { envToNetwork } from "./Libraries/Network";
 
 export const config = {
   chain: {
-    network: getEnvironmentVariable("NETWORK", envToNetwork),
-    currency: getEnvironmentVariable("CURRENCY"),
-    symbol: getEnvironmentVariable("SYMBOL"),
-    decimals: getEnvironmentVariable("DECIMALS", envToNumber),
-    reorgMin: getEnvironmentVariable("REORGMIN", envToNumber),
+    network: getEnvironmentVariable("CHAIN_NETWORK", envToNetwork),
+    currency: getEnvironmentVariable("CHAIN_CURRENCY"),
+    symbol: getEnvironmentVariable("CHAIN_SYMBOL"),
+    decimals: getEnvironmentVariable("CHAIN_DECIMALS", envToNumber),
+    reorgMin: getEnvironmentVariable("CHAIN_REORGMIN", envToNumber),
+    path: getEnvironmentVariable("CHAIN_PATH"),
   },
   rpc: {
     host: getEnvironmentVariable("RPC_HOST"),
@@ -18,14 +19,9 @@ export const config = {
   api: {
     port: getEnvironmentVariable("PORT", envToNumber),
   },
-  crawler: {
-    interval: getEnvironmentVariable("CRAWLER_INTERVAL", envToNumber),
-    maxBlockHeight: getEnvironmentVariable("CRAWLER_MAX_BLOCK", envToNumber),
-  },
-  ord: {
-    inscriptionMediaUrl: getEnvironmentVariable("ORD_INSCRIPTION_MEDIA_URL"),
-    dataOne: getEnvironmentVariable("ORD_DATA_ONE"),
-    dataTwo: getEnvironmentVariable("ORD_DATA_TWO"),
+  parser: {
+    interval: getEnvironmentVariable("UTXO_PARSER_INTERVAL", envToNumber),
+    maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
   },
   mongo: {
     hostname: getEnvironmentVariable("MONGO_HOSTNAME"),

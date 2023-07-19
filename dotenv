@@ -1,10 +1,11 @@
 # CHAIN
 
-NETWORK="regtest"
-CURRENCY="Bitcoin"
-SYMBOL="BTC"
-DECIMALS=8
-REORGMIN=0.5
+CHAIN_NETWORK="regtest"
+CHAIN_CURRENCY="Bitcoin"
+CHAIN_SYMBOL="BTC"
+CHAIN_DECIMALS=8
+CHAIN_REORGMIN=0.5
+CHAIN_PATH="/absolute/path/to/.bitcoin"
 
 # RPC
 
@@ -17,18 +18,10 @@ RPC_PASSWORD="<password>"
 
 PORT=3030
 
-# PARSER
+# UTXO PARSER
 
-CRAWLER_INTERVAL=10  # in minutes
-CRAWLER_MAX_BLOCK=0  # 0 for no limit
-
-# ORD
-
-ORD_INSCRIPTION_MEDIA_URL="http://<network>.ordit.io/utxo/inscriptions/<outpoint>/<id>/media"
-ORD_DATA_ONE="/absolute/path/to/data"
-ORD_DATA_TWO="/absolute/path/to/data"
-
-# ord -r --cookie-file .bitcoin/regtest/.cookie --data-dir data/ord-data-1 index
+UTXO_PARSER_INTERVAL=10  # in minutes
+UTXO_PARSER_MAX_BLOCK=0  # 0 for no limit
 
 # MONGO
 
