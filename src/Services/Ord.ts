@@ -1,8 +1,6 @@
 import { config } from "../Config";
-import { DIR_BIN, ORD_DATA } from "../Paths";
+import { ORD_DATA } from "../Paths";
 import { cli } from "./Cli";
-
-export const command = `${DIR_BIN}/ord`;
 
 export const networkFlag = {
   regtest: "-r",
@@ -39,7 +37,7 @@ export const ord = {
  * @param dataDir - Data directory to run ord index command on.
  */
 async function index(dataDir: string): Promise<void> {
-  await cli.run(command, [...bitcoinArgs, `--data-dir=${dataDir}`, "--index-sats", "index", "run"]);
+  await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${dataDir}`, "--index-sats", "index", "run"]);
 }
 
 /**
@@ -48,7 +46,7 @@ async function index(dataDir: string): Promise<void> {
  * @param location - Location of the utxo to list ordinals for.
  */
 async function list(location: string): Promise<Satoshi[]> {
-  return JSON.parse(await cli.run(command, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "list", location]));
+  return JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "list", location]));
 }
 
 /**
@@ -57,19 +55,21 @@ async function list(location: string): Promise<Satoshi[]> {
  * @param satoshi - Satoshi to get traits for.
  */
 async function traits(satoshi: number): Promise<Traits> {
-  return JSON.parse(await cli.run(command, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "traits", satoshi.toString()]));
+  return JSON.parse(
+    await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "traits", satoshi.toString()])
+  );
 }
 
 async function inscription(id: string): Promise<Inscription> {
-  return toInscription(JSON.parse(await cli.run(command, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gie", id])));
+  return toInscription(JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gie", id])));
 }
 
 async function inscriptions(location: string): Promise<string[]> {
-  return JSON.parse(await cli.run(command, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]));
+  return JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]));
 }
 
 async function reorg(data = ORD_DATA): Promise<boolean> {
-  return JSON.parse(await cli.run(command, [...bitcoinArgs, `--data-dir=${data}`, "reorg"])).is_reorged;
+  return JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${data}`, "reorg"])).is_reorged;
 }
 
 /*

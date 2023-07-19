@@ -19,6 +19,7 @@ export const config = {
   api: {
     port: getEnvironmentVariable("PORT", envToNumber),
   },
+  ord: getEnvironmentVariable("ORD"),
   parser: {
     interval: getEnvironmentVariable("UTXO_PARSER_INTERVAL", envToNumber),
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),

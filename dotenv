@@ -18,6 +18,10 @@ RPC_PASSWORD="<password>"
 
 PORT=3030
 
+# ORD
+
+ORD=/absolute/path/to/ord
+
 # UTXO PARSER
 
 UTXO_PARSER_INTERVAL=10  # in minutes

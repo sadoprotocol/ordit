@@ -12,6 +12,7 @@ Make sure you have the following services installed in your local environment.
 | ------- | ----------------------------------------- |
 | Docker  | https://docs.docker.com/engine/install    |
 | Git     | https://github.com/git-guides/install-git |
+| Ord     | https://github.com/sadoprotocol/ord       |
 
 ### Configuration
 
@@ -28,6 +29,10 @@ Open the `.env` file and adjust configuration as needed for your local setup. By
 ```sh
 $ npm install
 ```
+
+### Build Ord
+
+Follow the instructions in the [ord](https://github.com/sadoprotocol/ord) repository and build an executable for the operating system you are hosting on. Once built update the configuration and set the absolute path to the `ord` executable under the `ORD` key.
 
 ## Local Development
 

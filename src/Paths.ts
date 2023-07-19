@@ -5,11 +5,6 @@ import { getNetworkPath } from "./Workers/Ord/Utilities";
 
 export const DIR_ROOT = resolve(__dirname, "..");
 
-// ### Binary Paths
-
-export const DIR_BIN = resolve(DIR_ROOT, "bin");
-export const DIR_ORD_BIN = resolve(DIR_BIN, "ord");
-
 // ### Bitcoin Core Paths
 
 export const BTC_DATA = resolve(DIR_ROOT, ".bitcoin");

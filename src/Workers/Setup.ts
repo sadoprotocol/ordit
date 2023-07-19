@@ -1,8 +1,9 @@
 import debug from "debug";
 
+import { config } from "../Config";
 import { ORD_DATA, ORD_DATA_BLUE, ORD_DATA_GREEN, ORD_DATA_SNAPSHOT } from "../Paths";
 import { cli } from "../Services/Cli";
-import { bitcoinArgs, command } from "../Services/Ord";
+import { bitcoinArgs } from "../Services/Ord";
 import { copyFile } from "../Utilities/Files";
 import { getIndexPath } from "./Ord/Utilities";
 
@@ -15,7 +16,7 @@ main();
 async function main() {
   log("setting up ordit, this will take a while ...");
 
-  await cli.inherit(command, [...bitcoinArgs, `--data-dir=${ORD_DATA_SNAPSHOT}`, "--index-sats", "index", "run"]);
+  await cli.inherit(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA_SNAPSHOT}`, "--index-sats", "index", "run"]);
 
   log("creating blue state");
   await copyFile(getIndexPath(ORD_DATA_SNAPSHOT), getIndexPath(ORD_DATA_BLUE));
