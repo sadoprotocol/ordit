@@ -25,7 +25,7 @@ export const ORD_DATA_SNAPSHOTS = resolve(ORD_DATA_SNAPSHOT, "snapshots");
 // ### Ensure Paths Exists
 
 mkdirSync(getNetworkPath(ORD_DATA), { recursive: true });
-mkdirSync(ORD_DATA_GREEN, { recursive: true });
-mkdirSync(ORD_DATA_BLUE, { recursive: true });
-mkdirSync(ORD_DATA_SNAPSHOT, { recursive: true });
+mkdirSync(getNetworkPath(ORD_DATA_GREEN), { recursive: true });
+mkdirSync(getNetworkPath(ORD_DATA_BLUE), { recursive: true });
+mkdirSync(getNetworkPath(ORD_DATA_SNAPSHOT), { recursive: true });
 mkdirSync(ORD_DATA_SNAPSHOTS, { recursive: true });

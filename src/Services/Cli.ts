@@ -4,6 +4,7 @@ export const cli = {
   rm,
   ln,
   run,
+  inherit,
 };
 
 /*
@@ -60,6 +61,25 @@ async function run(command: string, args: ReadonlyArray<string>): Promise<string
 
     child.on("close", () => {
       resolve(`${output}`);
+    });
+  });
+}
+
+/**
+ * Execute command with args.
+ *
+ * @param command - Command to execute.
+ * @param args    - Arguments to pass to command.
+ */
+async function inherit(command: string, args: ReadonlyArray<string>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: "inherit" });
+    child.on("error", (error) => {
+      console.log(`error: ${error.message}`);
+      reject(`${error.message}`);
+    });
+    child.on("close", () => {
+      resolve();
     });
   });
 }

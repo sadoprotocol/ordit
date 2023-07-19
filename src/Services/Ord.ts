@@ -2,15 +2,15 @@ import { config } from "../Config";
 import { DIR_BIN, ORD_DATA } from "../Paths";
 import { cli } from "./Cli";
 
-const command = `${DIR_BIN}/ord`;
+export const command = `${DIR_BIN}/ord`;
 
-const networkFlag = {
+export const networkFlag = {
   regtest: "-r",
   testnet: "-t",
   mainnet: "",
 };
 
-const bitcoinArgs = [
+export const bitcoinArgs = [
   networkFlag[config.chain.network],
   `--bitcoin-data-dir=${config.chain.path}`,
   `--bitcoin-rpc-user=${config.rpc.user}`,
