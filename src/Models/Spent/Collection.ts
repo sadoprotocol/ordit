@@ -7,6 +7,11 @@ export const registrar: CollectionRegistrar = {
   indexes: [
     [
       {
+        block: 1,
+      },
+    ],
+    [
+      {
         vin: 1,
       },
     ],
@@ -19,6 +24,7 @@ export const registrar: CollectionRegistrar = {
 };
 
 export type SpentDocument = {
+  block: number;
   vout: string;
   vin: string;
 };

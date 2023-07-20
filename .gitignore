@@ -9,6 +9,7 @@
 # Development
 
 .bitcoin
+.data
 .mongodb
 .ord
 .env

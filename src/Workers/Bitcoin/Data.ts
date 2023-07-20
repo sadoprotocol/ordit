@@ -1,7 +1,7 @@
-import { BTC_DATA } from "../../Paths";
+import { DATA_DIR } from "../../Paths";
 import { readFile, writeFile } from "../../Utilities/Files";
 
-const filename = `${BTC_DATA}/block_n`;
+const filename = `${DATA_DIR}/spent_block_n`;
 
 export async function blockHeight(number?: number): Promise<number> {
   if (number === undefined) {

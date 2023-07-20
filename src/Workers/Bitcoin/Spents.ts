@@ -36,6 +36,7 @@ export async function spents(blockN: number, maxBlockN: number) {
         continue;
       }
       spents.push({
+        block: blockN,
         vout: `${vin.txid}:${vin.vout}`,
         vin: `${tx.txid}:${n}`,
       });

@@ -1,14 +1,13 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { config } from "./Config";
 import { getNetworkPath } from "./Workers/Ord/Utilities";
 
 export const DIR_ROOT = resolve(__dirname, "..");
 
 // ### Bitcoin Core Paths
 
-export const BTC_DATA = resolve(config.chain.path);
+export const DATA_DIR = resolve(DIR_ROOT, ".data");
 
 // ### ORD Paths
 
@@ -20,6 +19,7 @@ export const ORD_DATA_SNAPSHOTS = resolve(ORD_DATA_SNAPSHOT, "snapshots");
 
 // ### Ensure Paths Exists
 
+mkdirSync(DATA_DIR, { recursive: true });
 mkdirSync(getNetworkPath(ORD_DATA), { recursive: true });
 mkdirSync(getNetworkPath(ORD_DATA_GREEN), { recursive: true });
 mkdirSync(getNetworkPath(ORD_DATA_BLUE), { recursive: true });
