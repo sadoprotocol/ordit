@@ -2,17 +2,15 @@ import debug from "debug";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
-import { addVins, VinDocument } from "../../Models/Vin";
-import { addVouts, VoutDocument } from "../../Models/Vout";
+import { addSpents, SpentDocument } from "../../Models/Spent";
 import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
-import { sanitizeScriptPubKey, sats } from "../../Utilities/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
 
-const log = debug("bitcoin-crawler");
+const log = debug("bitcoin-spents");
 
 const maxBlockHeight = config.parser.maxBlockHeight;
 
-export async function crawl(blockN: number, maxBlockN: number) {
+export async function spents(blockN: number, maxBlockN: number) {
   if (maxBlockHeight !== 0 && blockN > maxBlockHeight) {
     log("max block height %d reached, terminating...", maxBlockHeight);
     return process.exit(0);
@@ -29,8 +27,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   // ### Documents
 
-  const vins: VinDocument[] = [];
-  const vouts: VoutDocument[] = [];
+  const spents: SpentDocument[] = [];
 
   for (const tx of block.tx) {
     let n = 0;
@@ -38,57 +35,33 @@ export async function crawl(blockN: number, maxBlockN: number) {
       if (isCoinbase(vin)) {
         continue;
       }
-      vins.push({
-        blockHash: block.hash,
-        blockN: block.height,
-        prevTxid: vin.txid,
-        ...vin,
-        txid: tx.txid,
-        n,
+      spents.push({
+        vout: `${vin.txid}:${vin.vout}`,
+        vin: `${tx.txid}:${n}`,
       });
       n += 1;
     }
-    for (const vout of tx.vout) {
-      sanitizeScriptPubKey(vout.scriptPubKey);
-      vouts.push({
-        blockHash: block.hash,
-        blockN: block.height,
-        txid: tx.txid,
-        ...vout,
-        sats: sats(vout.value),
-        address: await getAddressFromVout(vout),
-      });
-    }
   }
 
-  // ### Insert
-
-  const promises = [];
-  if (vins.length !== 0) {
-    promises.push(addVins(vins));
+  if (spents.length !== 0) {
+    addSpents(spents);
   }
-  if (vouts.length !== 0) {
-    promises.push(addVouts(vouts));
-  }
-  await Promise.all(promises);
 
   // ### Debug
 
   logger.stop();
 
   if (logger.total > 1) {
-    log("crawled block %o", {
+    log("indexed block %o", {
       block: blockN,
       txs: block.tx.length,
-      vins: vins.length,
-      vouts: vouts.length,
       time: logger.total.toFixed(3),
       rpc: [logger.calls.rpc, logger.rpc],
       database: [logger.calls.database, logger.database],
     });
   }
 
-  printProgress("ordit-indexer", blockN, maxBlockN);
+  printProgress("bitcoin-spents", blockN, maxBlockN);
 }
 
 /*

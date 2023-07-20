@@ -2,6 +2,7 @@ import { FastifyRequest } from "fastify";
 
 import { config } from "../../Config";
 import { fastify } from "../../Fastify";
+import { getSpendingVin } from "../../Models/Spent";
 import { isCoinbase, RawTransaction, rpc } from "../../Services/Bitcoin";
 import { ord } from "../../Services/Ord";
 import { getMetaFromWitness } from "../../Utilities/Oip";
@@ -83,17 +84,7 @@ async function getExpandedTransaction(tx: RawTransaction, options: Options = {})
       (vout as any).inscriptions = await getInscriptions(outpoint, meta);
     }
 
-    const txout = await rpc.blockchain.getTxOut(tx.txid, vout.n, false);
-    if (txout !== null) {
-      (vout as any).unspent = {
-        bestblock: txout.bestblock,
-        confirmations: txout.confirmations,
-        coinbase: txout.coinbase,
-      };
-      (vout as any).spent = false;
-    } else {
-      (vout as any).spent = true;
-    }
+    (vout as any).spent = (await getSpendingVin(outpoint)) ?? false;
 
     fee -= vout.value;
   }

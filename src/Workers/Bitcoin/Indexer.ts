@@ -3,10 +3,10 @@ import debug from "debug";
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
 import { rpc } from "../../Services/Bitcoin";
-import { crawl } from "./Crawl";
 import { blockHeight } from "./Data";
+import { spents } from "./Spents";
 
-const log = debug("btc-indexer");
+const log = debug("bitcoin-indexer");
 
 main()
   .then(() => process.exit(0))
@@ -28,7 +28,7 @@ async function main() {
   // ### Start Crawler
 
   while (crawlerBlockHeight <= currentBlockHeight) {
-    await crawl(crawlerBlockHeight, currentBlockHeight);
+    await spents(crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight = await blockHeight(crawlerBlockHeight + 1);
   }
 }

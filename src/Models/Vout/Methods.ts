@@ -1,8 +1,6 @@
-import { AnyBulkWriteOperation } from "mongodb";
-
 import { logger } from "../../Logger";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
-import { collection, SpentVout, VoutDocument } from "./Collection";
+import { collection, VoutDocument } from "./Collection";
 
 /**
  * Add a list of vouts to the database.
@@ -23,38 +21,6 @@ export async function addVouts(vouts: VoutDocument[], chunkSize = 500): Promise<
   await Promise.all(promises);
 
   logger.addDatabase("vouts", performance.now() - ts);
-}
-
-/**
- * Take a list of spent vouts and update the database using bulk write operations.
- *
- * Another side effect of this function is updating the corresponding VIN setting
- * the `addressFrom` field to the address of the vout being spent if it exists.
- *
- * @param spents - List of spent vouts to update.
- */
-export async function setSpentVouts(spents: SpentVout[]): Promise<void> {
-  if (spents.length === 0) {
-    return;
-  }
-  // const ts = performance.now();
-  const bulkops: AnyBulkWriteOperation<VoutDocument>[] = [];
-  for (const { txid, vout, location } of spents) {
-    bulkops.push({
-      updateOne: {
-        filter: { txid, n: vout },
-        update: { $set: { spent: location } },
-      },
-    });
-    if (bulkops.length === 1000) {
-      await collection.bulkWrite(bulkops);
-      bulkops.length = 0;
-    }
-  }
-  if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
-  }
-  // logger.addDatabase("spents", performance.now() - ts);
 }
 
 /**
