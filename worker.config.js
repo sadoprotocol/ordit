@@ -1,5 +1,5 @@
 module.exports = {
-  workers: [
+  apps: [
     {
       name: "ord:indexer",
       script: "npm",
