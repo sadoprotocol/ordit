@@ -8,15 +8,14 @@ import { blockHeight } from "./Data";
 
 const log = debug("btc-indexer");
 
-const interval = 60_000 * config.parser.interval;
+main()
+  .then(() => process.exit(0))
+  .catch(console.log);
 
-start(true);
+async function main() {
+  log("network: %s", config.chain.network);
 
-async function start(prep = false) {
-  if (prep === true) {
-    log("network: %s", config.chain.network);
-    await bootstrap();
-  }
+  await bootstrap();
 
   // ### Get Chain State
 
@@ -32,10 +31,4 @@ async function start(prep = false) {
     await crawl(crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight = await blockHeight(crawlerBlockHeight + 1);
   }
-
-  // ### Rest
-  // Rest for configured interval before crawling again. This is usually closely
-  // aligned with the expected block time of the network.
-
-  setTimeout(start, interval);
 }

@@ -25,7 +25,9 @@ const paths = {
   },
 } as const;
 
-main();
+main()
+  .then(() => process.exit(0))
+  .catch(console.log);
 
 async function main() {
   log("starting ord indexer");

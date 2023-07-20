@@ -11,7 +11,9 @@ const log = debug("ordit-setup");
 
 const hardlink = getIndexPath(ORD_DATA);
 
-main();
+main()
+  .then(() => process.exit(0))
+  .catch(console.log);
 
 async function main() {
   log("setting up ordit, this will take a while ...");
