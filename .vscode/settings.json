@@ -1,18 +1,13 @@
 {
   "prettier.prettierPath": "./node_modules/prettier",
   "prettier.configPath": "./.prettierrc",
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "material-icon-theme.files.associations": {
-    "index.ts": "tree",
+    "index.ts": "tree"
   },
   "files.exclude": {
     "**/.turbo": true,
