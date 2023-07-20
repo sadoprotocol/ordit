@@ -12,7 +12,18 @@ export const getCurrency = method({
     if (res.status !== 200) {
       throw new InternalError("Failed to fetch currency data");
     }
-    cache = await res.json();
+
+    const data = await res.json();
+
+    const result: any = {};
+    for (const key in data) {
+      result[key] = {
+        value: data[key].last,
+        symbol: data[key].symbol,
+      };
+    }
+    cache = result;
+
     return cache;
   },
 });
