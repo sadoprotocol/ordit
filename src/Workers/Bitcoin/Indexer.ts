@@ -11,8 +11,17 @@ import { spents } from "./Spents";
 const log = debug("bitcoin-indexer");
 
 main()
-  .then(() => process.exit(0))
-  .catch(console.log);
+  .then(() => {
+    removeFile(`${DATA_DIR}/spent_lock`).then(() => {
+      process.exit(0);
+    });
+  })
+  .catch((error) => {
+    console.log(error);
+    removeFile(`${DATA_DIR}/spent_lock`).then(() => {
+      process.exit(0);
+    });
+  });
 
 async function main() {
   const isRunning = await fileExists(`${DATA_DIR}/spent_lock`);
@@ -39,6 +48,4 @@ async function main() {
     await spents(crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight = await blockHeight(crawlerBlockHeight + 1);
   }
-
-  await removeFile(`${DATA_DIR}/spent_lock`);
 }
