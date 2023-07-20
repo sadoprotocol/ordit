@@ -7,6 +7,7 @@ export const transactions = {
     TRANSACTION_NOT_FOUND,
   },
   getRawTransaction,
+  decodeScript,
 };
 
 /*
@@ -40,6 +41,15 @@ async function getRawTransaction(txid: string, verbose = false): Promise<RawTran
   return rpc<RawTransaction>("getrawtransaction", [txid, verbose]);
 }
 
+/**
+ * Decode a hex-encoded script.
+ *
+ * @param hex - Hex-encoded script.
+ */
+async function decodeScript(hex: string): Promise<Script | undefined> {
+  return rpc<Script | undefined>("decodescript", [hex]);
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Utilities
@@ -70,6 +80,24 @@ export type RawTransaction = {
   confirmations: number;
   time: number;
   blocktime: number;
+};
+
+export type Script = {
+  asm: string;
+  type: string;
+  reqSigs: number;
+  addresses: string[];
+  p2sh?: string;
+  segwit?: SegWit;
+};
+
+export type SegWit = {
+  asm: string;
+  hex: string;
+  type: string;
+  reqSigs: number;
+  addresses: string[];
+  p2shSegwit: string;
 };
 
 export type Vin = Coinbase | TxVin;

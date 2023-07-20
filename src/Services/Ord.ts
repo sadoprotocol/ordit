@@ -67,7 +67,8 @@ async function inscription(id: string): Promise<Inscription> {
 }
 
 async function inscriptions(location: string): Promise<string[]> {
-  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]));
+  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]))
+    .inscriptions;
 }
 
 async function reorg(data = ORD_DATA): Promise<boolean> {
@@ -108,6 +109,7 @@ export type Inscription = {
   mediaType: string;
   mediaSize: number;
   mediaContent: string;
+  oipMeta?: any;
 };
 
 export type Satoshi = {
