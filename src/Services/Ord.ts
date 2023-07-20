@@ -37,7 +37,7 @@ export const ord = {
  * @param dataDir - Data directory to run ord index command on.
  */
 async function index(dataDir: string): Promise<void> {
-  await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${dataDir}`, "--index-sats", "index", "run"]);
+  await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${dataDir}`, "--index-sats", "index", "run"]);
 }
 
 /**
@@ -46,7 +46,7 @@ async function index(dataDir: string): Promise<void> {
  * @param location - Location of the utxo to list ordinals for.
  */
 async function list(location: string): Promise<Satoshi[]> {
-  return JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "list", location]));
+  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "list", location]));
 }
 
 /**
@@ -56,20 +56,22 @@ async function list(location: string): Promise<Satoshi[]> {
  */
 async function traits(satoshi: number): Promise<Traits> {
   return JSON.parse(
-    await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "traits", satoshi.toString()])
+    await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "traits", satoshi.toString()])
   );
 }
 
 async function inscription(id: string): Promise<Inscription> {
-  return toInscription(JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gie", id])));
+  return toInscription(
+    JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gie", id]))
+  );
 }
 
 async function inscriptions(location: string): Promise<string[]> {
-  return JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]));
+  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]));
 }
 
 async function reorg(data = ORD_DATA): Promise<boolean> {
-  return JSON.parse(await cli.run(config.ord, [...bitcoinArgs, `--data-dir=${data}`, "reorg"])).is_reorged;
+  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${data}`, "reorg"])).is_reorged;
 }
 
 /*

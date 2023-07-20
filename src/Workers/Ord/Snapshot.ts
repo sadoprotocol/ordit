@@ -1,9 +1,10 @@
 import debug from "debug";
 
+import { config } from "../../Config";
 import { ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../../Paths";
 import { rpc } from "../../Services/Bitcoin";
 import { ord } from "../../Services/Ord";
-import { copyFile, fileExists, removeFile, writeFile } from "../../Utilities/Files";
+import { copyFile, fileExists, readDir, removeFile, writeFile } from "../../Utilities/Files";
 import { getIndexPath } from "./Utilities";
 
 const log = debug("ord-snapshot");
@@ -25,6 +26,11 @@ async function main() {
 
   await index();
   await snapshot();
+
+  const snapshots = (await readDir(ORD_DATA_SNAPSHOTS)).reverse().slice(config.ord.maxSnapshots);
+  for (const snapshot of snapshots) {
+    await removeFile(`${ORD_DATA_SNAPSHOTS}/${snapshot}`);
+  }
 
   await removeFile(`${ORD_DATA_SNAPSHOT}/lock`);
 

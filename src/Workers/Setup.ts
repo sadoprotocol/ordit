@@ -18,7 +18,13 @@ main()
 async function main() {
   log("setting up ordit, this will take a while ...");
 
-  await cli.inherit(config.ord, [...bitcoinArgs, `--data-dir=${ORD_DATA_SNAPSHOT}`, "--index-sats", "index", "run"]);
+  await cli.inherit(config.ord.bin, [
+    ...bitcoinArgs,
+    `--data-dir=${ORD_DATA_SNAPSHOT}`,
+    "--index-sats",
+    "index",
+    "run",
+  ]);
 
   log("creating blue state");
   await copyFile(getIndexPath(ORD_DATA_SNAPSHOT), getIndexPath(ORD_DATA_BLUE));

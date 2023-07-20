@@ -21,6 +21,7 @@ PORT=3030
 # ORD
 
 ORD=/absolute/path/to/ord
+ORD_SNAPSHOT_LIMIT=3
 
 # UTXO PARSER
 
