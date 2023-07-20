@@ -22,6 +22,8 @@ PORT=3030
 
 ORD=/absolute/path/to/ord
 ORD_SNAPSHOT_LIMIT=3
+ORD_SNAPSHOT_INTERVAL=3  # in hours
+ORD_INDEXER_INTERVAL=10  # in minutes
 
 # UTXO PARSER
 
