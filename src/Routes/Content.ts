@@ -3,6 +3,12 @@ import { FastifyRequest } from "fastify";
 import { fastify } from "../Fastify";
 import { getMediaByInscriptionId } from "../Models/Media";
 
+type MediaRequest = FastifyRequest<{
+  Params: {
+    inscription: string;
+  };
+}>;
+
 fastify.get(
   "/content/:inscription",
   {
@@ -23,9 +29,3 @@ fastify.get(
       .send(buffer);
   }
 );
-
-type MediaRequest = FastifyRequest<{
-  Params: {
-    inscription: string;
-  };
-}>;

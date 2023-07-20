@@ -1,5 +1,7 @@
 import { config } from "../Config";
-import { ORD_DATA } from "../Paths";
+import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
+import { fileExists, readDir } from "../Utilities/Files";
+import { getStatus } from "../Workers/Ord/Status";
 import { cli } from "./Cli";
 
 export const networkFlag = {
@@ -23,6 +25,7 @@ export const ord = {
   inscription,
   inscriptions,
   reorg,
+  status,
 };
 
 /*
@@ -37,7 +40,7 @@ export const ord = {
  * @param dataDir - Data directory to run ord index command on.
  */
 async function index(dataDir: string): Promise<void> {
-  await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${dataDir}`, "--index-sats", "index", "run"]);
+  await run(["--index-sats", "index", "run"], dataDir);
 }
 
 /**
@@ -46,7 +49,14 @@ async function index(dataDir: string): Promise<void> {
  * @param location - Location of the utxo to list ordinals for.
  */
 async function list(location: string): Promise<Satoshi[]> {
-  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "list", location]));
+  const result = await run<Satoshi[]>(["list", location]);
+  if ("error" in result) {
+    if (result.error.includes("output not found")) {
+      return [];
+    }
+    throw new Error(result.error);
+  }
+  return result;
 }
 
 /**
@@ -55,24 +65,60 @@ async function list(location: string): Promise<Satoshi[]> {
  * @param satoshi - Satoshi to get traits for.
  */
 async function traits(satoshi: number): Promise<Traits> {
-  return JSON.parse(
-    await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "traits", satoshi.toString()])
-  );
+  const result = await run<Traits>(["traits", satoshi.toString()]);
+  if ("error" in result) {
+    throw new Error(result.error);
+  }
+  return result;
 }
 
 async function inscription(id: string): Promise<Inscription> {
-  return toInscription(
-    JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gie", id]))
-  );
+  const result = await run<any>(["gie", id]);
+  if ("error" in result) {
+    throw new Error(result.error);
+  }
+  return toInscription(result);
 }
 
 async function inscriptions(location: string): Promise<string[]> {
-  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${ORD_DATA}`, "gioo", location]))
-    .inscriptions;
+  const result = await run<{ inscriptions: string[] }>(["gioo", location]);
+  if ("error" in result) {
+    throw new Error(result.error);
+  }
+  return result.inscriptions;
 }
 
 async function reorg(data = ORD_DATA): Promise<boolean> {
-  return JSON.parse(await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${data}`, "reorg"])).is_reorged;
+  const result = await run<{ is_reorged: boolean }>(["reorg"], data);
+  if ("error" in result) {
+    throw new Error(result.error);
+  }
+  return result.is_reorged;
+}
+
+async function status(): Promise<any> {
+  return {
+    indexer: await getStatus(),
+    snapshot: {
+      running: await fileExists(`${ORD_DATA_SNAPSHOT}/lock`),
+      backups: await readDir(ORD_DATA_SNAPSHOTS),
+    },
+  };
+}
+
+/*
+ |--------------------------------------------------------------------------------
+ | Request
+ |--------------------------------------------------------------------------------
+ */
+
+async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<Response<R>> {
+  const data = await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${dataDir}`, ...args]);
+  try {
+    return JSON.parse(data) as R;
+  } catch (_) {
+    return { error: data } as const;
+  }
 }
 
 /*
@@ -134,3 +180,9 @@ export type Traits = {
 };
 
 export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+
+type Response<R> =
+  | R
+  | {
+      error: string;
+    };

@@ -13,6 +13,9 @@ export const blockchain = {
   getBlockchainInfo,
   getBlockCount,
   getBlockHash,
+  getMemPoolInfo,
+  getRawMemPool,
+  getTxOut,
 };
 
 /*
@@ -37,14 +40,14 @@ async function getBlock(hash: string, verbosity: 0): Promise<string>;
 async function getBlock(hash: string, verbosity?: 1): Promise<Block>;
 async function getBlock(hash: string, verbosity: 2): Promise<Block & Transactions>;
 async function getBlock(hash: string, verbosity = 1): Promise<Block | (Block & Transactions) | string> {
-  return rpc<Block>("getblock", [hash, verbosity]);
+  return rpc("getblock", [hash, verbosity]);
 }
 
 /**
  * Returns an object containing various state info regarding blockchain processing.
  */
 async function getBlockchainInfo(): Promise<BlockchainInfo> {
-  return rpc<BlockchainInfo>("getblockchaininfo");
+  return rpc("getblockchaininfo");
 }
 
 /**
@@ -53,7 +56,7 @@ async function getBlockchainInfo(): Promise<BlockchainInfo> {
  * The genesis block has height 0.
  */
 async function getBlockCount(): Promise<number> {
-  return rpc<number>("getblockcount");
+  return rpc("getblockcount");
 }
 
 /**
@@ -62,7 +65,36 @@ async function getBlockCount(): Promise<number> {
  * @param height - Height of the block whose hash should be returned.
  */
 async function getBlockHash(height: number): Promise<string> {
-  return rpc<string>("getblockhash", [height]);
+  return rpc("getblockhash", [height]);
+}
+
+/**
+ * Returns details on the active state of the TX memory pool.
+ */
+async function getMemPoolInfo(): Promise<MemPoolInfo> {
+  return rpc("getmempoolinfo");
+}
+
+/**
+ * Returns all transaction ids in memory pool as a json array of string transaction ids.
+ *
+ * Hint: use getMemPoolEntry to fetch a specific transaction from the mempool.
+ */
+async function getRawMemPool(): Promise<string[]>;
+async function getRawMemPool(verbose: true): Promise<{ [txid: string]: RawMempoolTransation }>;
+async function getRawMemPool(verbose = false): Promise<string[] | { [txid: string]: RawMempoolTransation }> {
+  return rpc("getrawmempool", [verbose]);
+}
+
+/**
+ * Returns details about an unspent transaction output.
+ *
+ * @param txid
+ * @param n
+ * @param includeMemPool
+ */
+async function getTxOut(txid: string, vout: number, include_mempool = true): Promise<TxOut | null> {
+  return rpc("gettxout", [txid, vout, include_mempool]);
 }
 
 /*
@@ -87,6 +119,43 @@ export type BlockchainInfo = {
   warnings: string;
 };
 
+export type MemPoolInfo = {
+  loaded: boolean;
+  size: number;
+  bytes: number;
+  usage: number;
+  maxmempool: number;
+  mempoolminfee: number;
+  minrelaytxfee: number;
+  unbroadcastcount: number;
+};
+
+export type RawMempoolTransation = {
+  vsize: number;
+  weight: number;
+  fee: number;
+  modifiedfee: number;
+  time: number;
+  height: number;
+  descendantcount: number;
+  descendantsize: number;
+  descendantfees: number;
+  ancestorcount: number;
+  ancestorsize: number;
+  ancestorfees: number;
+  wtxid: string;
+  fees: {
+    base: number;
+    modified: number;
+    ancestor: number;
+    descendant: number;
+  };
+  depends: string[];
+  spentby: string[];
+  bip125_replaceable: boolean;
+  unbroadcast: boolean;
+};
+
 export type Block = {
   hash: string;
   confirmations: number;
@@ -105,6 +174,22 @@ export type Block = {
   size: number;
   weight: number;
   tx: string[];
+};
+
+type TxOut = {
+  bestblock: string;
+  confirmations: number;
+  value: number;
+  scriptPubKey: ScriptPubKey;
+  coinbase: boolean;
+};
+
+export type ScriptPubKey = {
+  asm: string;
+  hex: string;
+  reqSigs: number;
+  type: string;
+  addresses: string[];
 };
 
 type Transactions = {

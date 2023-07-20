@@ -109,7 +109,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
  |--------------------------------------------------------------------------------
  */
 
-async function getAddressFromVout(vout: Vout): Promise<string | undefined> {
+export async function getAddressFromVout(vout: Vout): Promise<string | undefined> {
   if (vout.scriptPubKey.address !== undefined) {
     return vout.scriptPubKey.address;
   }

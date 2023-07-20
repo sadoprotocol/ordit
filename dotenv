@@ -1,3 +1,8 @@
+# API
+
+DOMAIN="https://network.ordit.io"
+PORT=3030
+
 # CHAIN
 
 CHAIN_NETWORK="regtest"
@@ -13,10 +18,6 @@ RPC_HOST="127.0.0.1"
 RPC_PORT=18443 # regtest:18443 testnet:18332
 RPC_USER="<user>"
 RPC_PASSWORD="<password>"
-
-# API
-
-PORT=3030
 
 # ORD
 

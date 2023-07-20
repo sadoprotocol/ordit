@@ -2,6 +2,10 @@ import { envToNumber, getEnvironmentVariable } from "./Libraries/Environment";
 import { envToNetwork } from "./Libraries/Network";
 
 export const config = {
+  api: {
+    domain: getEnvironmentVariable("DOMAIN"),
+    port: getEnvironmentVariable("PORT", envToNumber),
+  },
   chain: {
     network: getEnvironmentVariable("CHAIN_NETWORK", envToNetwork),
     currency: getEnvironmentVariable("CHAIN_CURRENCY"),
@@ -15,9 +19,6 @@ export const config = {
     port: getEnvironmentVariable("RPC_PORT", envToNumber),
     user: getEnvironmentVariable("RPC_USER"),
     password: getEnvironmentVariable("RPC_PASSWORD"),
-  },
-  api: {
-    port: getEnvironmentVariable("PORT", envToNumber),
   },
   ord: {
     bin: getEnvironmentVariable("ORD"),
