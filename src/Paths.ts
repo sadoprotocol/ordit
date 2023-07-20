@@ -1,13 +1,14 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { config } from "./Config";
 import { getNetworkPath } from "./Workers/Ord/Utilities";
 
 export const DIR_ROOT = resolve(__dirname, "..");
 
 // ### Bitcoin Core Paths
 
-export const BTC_DATA = resolve(DIR_ROOT, ".bitcoin");
+export const BTC_DATA = resolve(config.chain.path);
 
 // ### ORD Paths
 
