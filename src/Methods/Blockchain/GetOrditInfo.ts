@@ -1,6 +1,6 @@
 import { method } from "@valkyr/api";
 
-import { getHeighestBlock } from "../../Models/Spent";
+import { getHeighestBlock } from "../../Models/Vout";
 import { rpc } from "../../Services/Bitcoin";
 
 export const getOrditInfo = method({

@@ -1,6 +1,8 @@
+import { AnyBulkWriteOperation } from "mongodb";
+
 import { logger } from "../../Logger";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
-import { collection, VoutDocument } from "./Collection";
+import { collection, SpentVout, VoutDocument } from "./Collection";
 
 /**
  * Add a list of vouts to the database.
@@ -21,6 +23,63 @@ export async function addVouts(vouts: VoutDocument[], chunkSize = 500): Promise<
   await Promise.all(promises);
 
   logger.addDatabase("vouts", performance.now() - ts);
+}
+
+/**
+ * Get the heighest recorded block number from the spents list.
+ */
+export async function getHeighestBlock(): Promise<number> {
+  const vout = await collection.findOne({}, { sort: { blockN: -1 } });
+  if (vout === null) {
+    return 0;
+  }
+  return vout.blockN;
+}
+
+/**
+ * Get the spending vin location for the given outpoint.
+ *
+ * @param outpoint - Vout to get spending vin for.
+ */
+export async function getSpendingVin(outpoint: string): Promise<string | false | undefined> {
+  const [txid, n] = outpoint.split(":");
+  const document = await collection.findOne({ txid, n: parseInt(n, 10) });
+  if (document === null) {
+    return undefined;
+  }
+  return document.spent;
+}
+
+/**
+ * Take a list of spent vouts and update the database using bulk write operations.
+ *
+ * Another side effect of this function is updating the corresponding VIN setting
+ * the `addressFrom` field to the address of the vout being spent if it exists.
+ *
+ * @param spents - List of spent vouts to update.
+ */
+export async function setSpentVouts(spents: SpentVout[]): Promise<void> {
+  if (spents.length === 0) {
+    return;
+  }
+  // const ts = performance.now();
+  const bulkops: AnyBulkWriteOperation<VoutDocument>[] = [];
+  for (const { txid, vout, location } of spents) {
+    bulkops.push({
+      updateOne: {
+        filter: { txid, n: vout },
+        update: { $set: { spent: location } },
+      },
+    });
+    if (bulkops.length === 1000) {
+      await collection.bulkWrite(bulkops);
+      bulkops.length = 0;
+    }
+  }
+  if (bulkops.length > 0) {
+    await collection.bulkWrite(bulkops);
+  }
+  // logger.addDatabase("spents", performance.now() - ts);
 }
 
 /**

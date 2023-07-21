@@ -2,7 +2,7 @@ import { FastifyRequest } from "fastify";
 
 import { config } from "../../Config";
 import { fastify } from "../../Fastify";
-import { getSpendingVin } from "../../Models/Spent";
+import { getSpendingVin } from "../../Models/Vout";
 import { isCoinbase, RawTransaction, rpc } from "../../Services/Bitcoin";
 import { ord } from "../../Services/Ord";
 import { getMetaFromWitness } from "../../Utilities/Oip";

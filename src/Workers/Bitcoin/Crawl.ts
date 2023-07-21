@@ -3,7 +3,7 @@ import debug from "debug";
 import { config } from "../../Config";
 import { logger } from "../../Logger";
 import { addVins, VinDocument } from "../../Models/Vin";
-import { addVouts, VoutDocument } from "../../Models/Vout";
+import { addVouts, setSpentVouts, SpentVout, VoutDocument } from "../../Models/Vout";
 import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
 import { sanitizeScriptPubKey, sats } from "../../Utilities/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
@@ -31,6 +31,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   const vins: VinDocument[] = [];
   const vouts: VoutDocument[] = [];
+  const spents: SpentVout[] = [];
 
   for (const tx of block.tx) {
     let n = 0;
@@ -46,6 +47,11 @@ export async function crawl(blockN: number, maxBlockN: number) {
         txid: tx.txid,
         n,
       });
+      spents.push({
+        txid: vin.txid,
+        vout: vin.vout,
+        location: `${tx.txid}:${n}`,
+      });
       n += 1;
     }
     for (const vout of tx.vout) {
@@ -57,6 +63,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
         ...vout,
         sats: sats(vout.value),
         address: await getAddressFromVout(vout),
+        spent: false,
       });
     }
   }
@@ -64,13 +71,19 @@ export async function crawl(blockN: number, maxBlockN: number) {
   // ### Insert
 
   const promises = [];
+
   if (vins.length !== 0) {
     promises.push(addVins(vins));
   }
   if (vouts.length !== 0) {
     promises.push(addVouts(vouts));
   }
+
   await Promise.all(promises);
+
+  if (spents.length !== 0) {
+    setSpentVouts(spents);
+  }
 
   // ### Debug
 
@@ -88,7 +101,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
     });
   }
 
-  printProgress("ordit-indexer", blockN, maxBlockN);
+  printProgress("bitcoin-crawler", blockN, maxBlockN);
 }
 
 /*

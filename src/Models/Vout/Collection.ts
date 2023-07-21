@@ -55,4 +55,11 @@ export type VoutDocument = Vout & {
   txid: string;
   sats: number;
   address?: string;
+  spent: string | false;
+};
+
+export type SpentVout = {
+  txid: string;
+  vout: number;
+  location: string;
 };
