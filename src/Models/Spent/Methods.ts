@@ -1,3 +1,5 @@
+import { AnyBulkWriteOperation } from "mongodb";
+
 import { logger } from "../../Logger";
 import { collection, SpentDocument } from "./Collection";
 
@@ -8,8 +10,35 @@ import { collection, SpentDocument } from "./Collection";
  */
 export async function addSpents(spents: SpentDocument[]): Promise<void> {
   const ts = performance.now();
-  collection.insertMany(spents);
+  const bulkops: AnyBulkWriteOperation<SpentDocument>[] = [];
+  for (const spent of spents) {
+    bulkops.push({
+      updateOne: {
+        filter: { vout: spent.vout },
+        update: { $set: spent },
+        upsert: true,
+      },
+    });
+    if (bulkops.length === 1000) {
+      await collection.bulkWrite(bulkops);
+      bulkops.length = 0;
+    }
+  }
+  if (bulkops.length > 0) {
+    await collection.bulkWrite(bulkops);
+  }
   logger.addDatabase("spents", performance.now() - ts);
+}
+
+/**
+ * Get the heighest recorded block number from the spents list.
+ */
+export async function getHeighestBlock(): Promise<number> {
+  const spent = await collection.findOne({}, { sort: { block: -1 } });
+  if (spent === null) {
+    return 0;
+  }
+  return spent.block;
 }
 
 /**

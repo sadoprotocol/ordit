@@ -2,10 +2,10 @@ import debug from "debug";
 
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
+import { getHeighestBlock } from "../../Models/Spent";
 import { DATA_DIR } from "../../Paths";
 import { rpc } from "../../Services/Bitcoin";
 import { fileExists, removeFile, writeFile } from "../../Utilities/Files";
-import { blockHeight } from "./Data";
 import { spents } from "./Spents";
 
 const log = debug("bitcoin-indexer");
@@ -39,13 +39,13 @@ async function main() {
   const currentBlockHeight = await rpc.blockchain.getBlockCount();
   log("current network block height is %d", currentBlockHeight);
 
-  let crawlerBlockHeight = await blockHeight();
+  let crawlerBlockHeight = (await getHeighestBlock()) - 1;
   log("current indexed block height is %d", crawlerBlockHeight);
 
   // ### Start Crawler
 
   while (crawlerBlockHeight <= currentBlockHeight) {
     await spents(crawlerBlockHeight, currentBlockHeight);
-    crawlerBlockHeight = await blockHeight(crawlerBlockHeight + 1);
+    crawlerBlockHeight += 1;
   }
 }
