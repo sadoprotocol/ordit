@@ -3,7 +3,7 @@ export function printProgress(prefix: string, current: number, total: number): v
     `  ${prefix} ${current.toLocaleString()} / ${total.toLocaleString()} [${getProgressPercentage(
       current,
       total
-    ).toFixed(2)}%]\r`
+    ).toFixed(2)}%]          \r`
   );
 }
 

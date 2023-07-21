@@ -15,15 +15,6 @@ export const registrar: CollectionRegistrar = {
         unique: true,
       },
     ],
-    [
-      {
-        prevTxid: 1,
-        vout: 1,
-      },
-      {
-        unique: true,
-      },
-    ],
   ],
 };
 

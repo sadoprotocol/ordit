@@ -8,42 +8,11 @@ export const registrar: CollectionRegistrar = {
   indexes: [
     [
       {
-        blockN: 1,
-      },
-    ],
-    [
-      {
-        address: 1,
-        txid: 1,
-        n: 1,
-      },
-    ],
-    [
-      {
-        address: 1,
-        blockN: -1,
-        n: 1,
-      },
-    ],
-    [
-      {
         txid: 1,
         n: 1,
       },
       {
         unique: true,
-      },
-    ],
-    [
-      {
-        blockN: -1,
-        n: 1,
-      },
-    ],
-    [
-      {
-        address: 1,
-        spent: 1,
       },
     ],
   ],

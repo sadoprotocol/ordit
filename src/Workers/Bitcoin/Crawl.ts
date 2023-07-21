@@ -71,18 +71,16 @@ export async function crawl(blockN: number, maxBlockN: number) {
   // ### Insert
 
   const promises = [];
-
   if (vins.length !== 0) {
     promises.push(addVins(vins));
   }
   if (vouts.length !== 0) {
     promises.push(addVouts(vouts));
   }
-
   await Promise.all(promises);
 
   if (spents.length !== 0) {
-    setSpentVouts(spents);
+    await setSpentVouts(spents);
   }
 
   // ### Debug
