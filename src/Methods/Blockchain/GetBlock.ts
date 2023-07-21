@@ -10,12 +10,11 @@ export const getBlock = method({
     hash: string.optional(),
     verbose: boolean.optional(),
     options: Schema({
-      noord: boolean.optional(),
       nohex: boolean.optional(),
       nowitness: boolean.optional(),
     }).optional(),
   }),
-  handler: async ({ height, hash, verbose, options }) => {
+  handler: async ({ height, hash, verbose, options = {} }) => {
     if (height !== undefined) {
       hash = await rpc.blockchain.getBlockHash(height);
     }
@@ -28,7 +27,7 @@ export const getBlock = method({
 
     if (verbose === true) {
       for (let i = 0, length = block.tx.length; i < length; i++) {
-        block.tx[i] = await getExpandedTransaction(block.tx[i], options);
+        block.tx[i] = await getExpandedTransaction(block.tx[i], { ...options, noord: true });
       }
     }
 
