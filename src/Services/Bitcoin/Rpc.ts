@@ -22,7 +22,13 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
         params: args,
       }),
     });
-    const json = await response.json();
+    const text = await response.text();
+    let json: any;
+    try {
+      json = JSON.parse(text);
+    } catch (error) {
+      throw new Error(`bitcoin rcp error: ${text}`);
+    }
     if (json.error !== null) {
       throw new RpcError(json.error, id);
     }
