@@ -1,12 +1,12 @@
 import { method } from "@valkyr/api";
 
+import { getHeighestBlock } from "../../Models/Spent";
 import { rpc } from "../../Services/Bitcoin";
-import { getBlockHeight } from "../../Workers/Bitcoin/Data";
 
 export const getOrditInfo = method({
   handler: async () => {
     const block = await rpc.blockchain.getBlockchainInfo();
-    const indexed = await getBlockHeight();
+    const indexed = await getHeighestBlock();
     return {
       chain: block.chain,
       indexed: `${indexed.toLocaleString()} / ${block.blocks.toLocaleString()} [ ${(
