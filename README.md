@@ -34,6 +34,55 @@ $ npm install
 
 Follow the instructions in the [ord](https://github.com/sadoprotocol/ord) repository and build an executable for the operating system you are hosting on. Once built update the configuration and set the absolute path to the `ord` executable under the `ORD` key.
 
+## Server
+
+When you want to host ordit simply pull the repository to the server you want to run it on, follow the above install process, and run the setup script.
+
+```sh
+$ npm run setup
+```
+
+This will start the process of initating the ord requirements for the server by starting ord indexing process against your first snapshot, then generating the blue/green indexes that is targeted by the running server.
+
+Indexing can be a time consuming process, so its recommended to pre-index the initial snapshot before starting the setup process.
+
+```sh
+/path/to/ord -t --bitcoin-data-dir=/path/to/.bitcoin --bitcoin-rpc-user=<username> --bitcoin-rpc-pass=<password> --rpc-url=<rpc-url> --data-dir=/path/to/ordit/.ord --index-sats index run
+```
+
+The `-t` option is for testnet, `-r` for regtest or omit the value for mainnet.
+
+Estimated indexing times for ord on a large server:
+
+```
+testnet: ~1 day
+mainnet: ~5 days
+```
+
+### Workers
+
+Ordit provides a configuration file for [PM2](https://pm2.keymetrics.io/) which sets up the two pre-mentioned indexer and snapshot workers. It is recommended that you either run the setup process or manually provide ready made indexes before assigning the workers to PM2.
+
+You can start the workers with the following command.
+
+```sh
+$ pm2 start worker.config.js
+```
+
+### Starting Server
+
+To spin up the server simply use one of the two commands.
+
+```sh
+$ npm start
+```
+
+Or if you want to run with PM2
+
+```sh
+$ pm2 start npm --name ordit -- start
+```
+
 ## Local Development
 
 Running the solution locally for development purposes we use docker to spin up our required services.
@@ -71,13 +120,35 @@ $ npm run mongodb:stop
 Once the docker containers are up and running we can start the API.
 
 ```sh
-$ npm start
+$ npm run dev
 ```
 
 ### Indexing
 
-Indexer runs through all the blocks and pulls out the vins and vouts of each transaction and ties them to the block and transactions they originate in. It also mutates custom states based on new incoming data with each block processed.
+Ordit comes with two indexing commands for `bitcoin` and `ord`.
+
+Bitcoin indexer runs against the local bitcoin core instance and indexes data against the local mongodb instance. You can start the indexer with the following command.
 
 ```sh
-$ npm run indexer
+$ npm run btc:indexer
+```
+
+Ord indexer is set up with a blue/green switcher during indexing to avoid write locking a single entry point to ord data. This is done automatically when running the indexer.
+
+In the event of a reorg the indexer will attempt to automatically recover from stored snapshots. If no valid snapshot is present the indexer will start rebuilding the ord index from scratch.
+
+You can start the ord indexer with the following command.
+
+```sh
+$ npm run ord:indexer
+```
+
+### Snapshot
+
+To recover from reorg events we retain periodic snapshots of the ord index. The number of snapshots retained can be set in the .env configuration. Once a reorg is identified the system will attempt to return to a non reorg index.
+
+You can run a snapshot using the following command.
+
+```sh
+$ npm run ord:snapshot
 ```
