@@ -11,6 +11,10 @@
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
     "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ord/Indexer.ts",
     "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ord/Snapshot.ts",
+    "bitcoin:start": "docker-compose -f  ./docker-compose-bitcoin.yaml up -d",
+    "bitcoin:stop": "docker-compose -f  ./docker-compose-bitcoin.yaml down",
+    "mongodb:start": "docker-compose -f ./docker-compose-mongo.yaml up -d",
+    "mongodb:stop": "docker-compose -f  ./docker-compose-mongo.yaml down",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --max-warnings 0 --report-unused-disable-directives --fix"
   },

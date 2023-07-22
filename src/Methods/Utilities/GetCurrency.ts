@@ -1,33 +1,14 @@
 import { InternalError, method } from "@valkyr/api";
-import fetch from "node-fetch";
 
-let cache: any;
+import { getCurrency as getCurrencyData } from "../../Utilities/Currency";
+import { isError } from "../../Utilities/Response";
 
 export const getCurrency = method({
   handler: async () => {
-    if (cache !== undefined) {
-      return cache;
+    const currency = await getCurrencyData();
+    if (isError(currency)) {
+      throw new InternalError(currency.error.message);
     }
-    const res = await fetch("https://blockchain.info/ticker");
-    if (res.status !== 200) {
-      throw new InternalError("Failed to fetch currency data");
-    }
-
-    const data = await res.json();
-
-    const result: any = {};
-    for (const key in data) {
-      result[key] = {
-        value: data[key].last,
-        symbol: data[key].symbol,
-      };
-    }
-    cache = result;
-
-    return cache;
+    return currency;
   },
 });
-
-setInterval(() => {
-  cache = undefined;
-}, 1000 * 60 * 15);

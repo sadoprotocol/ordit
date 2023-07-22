@@ -38,12 +38,32 @@ Follow the instructions in the [ord](https://github.com/sadoprotocol/ord) reposi
 
 Running the solution locally for development purposes we use docker to spin up our required services.
 
-### Docker Compose
+### Bitcoin Core
 
-Before starting local instance we need to spin up `bitcoin-core` for local regtest environment, and `mongodb` for our blockchain cache using `docker-compose`.
+If you do not have your own bitcoin core instance running you can use the provided docker compose file to spin up a new bitcoin core vm in a docker container.
 
 ```sh
-$ docker-compose up -d
+$ npm run bitcoin:start
+```
+
+To shut it down you can run the opposite command
+
+```sh
+$ npm run bitcoin:stop
+```
+
+### MongoDB
+
+If you do not have your own mongodb instance running you can use the provided docker compose file to spin up a new mongodb vm in a docker container.
+
+```sh
+$ npm run mongodb:start
+```
+
+To shut it down you can run the opposite command
+
+```sh
+$ npm run mongodb:stop
 ```
 
 ### Run API
