@@ -24,11 +24,17 @@ export type VoutDocument = Vout & {
   txid: string;
   sats: number;
   address?: string;
-  spent: string | false;
+  nextTxid?: string;
+  vin?: number;
 };
 
 export type SpentVout = {
-  txid: string;
-  vout: number;
-  location: string;
+  vout: {
+    txid: string;
+    n: number;
+  };
+  vin: {
+    txid: string;
+    n: number;
+  };
 };

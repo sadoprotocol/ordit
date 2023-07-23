@@ -48,9 +48,14 @@ export async function crawl(blockN: number, maxBlockN: number) {
         n,
       });
       spents.push({
-        txid: vin.txid,
-        vout: vin.vout,
-        location: `${tx.txid}:${n}`,
+        vout: {
+          txid: vin.txid,
+          n: vin.vout,
+        },
+        vin: {
+          txid: tx.txid,
+          n,
+        },
       });
       n += 1;
     }
@@ -63,7 +68,6 @@ export async function crawl(blockN: number, maxBlockN: number) {
         ...vout,
         sats: sats(vout.value),
         address: await getAddressFromVout(vout),
-        spent: false,
       });
     }
   }

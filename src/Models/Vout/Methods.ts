@@ -41,13 +41,13 @@ export async function getHeighestBlock(): Promise<number> {
  *
  * @param outpoint - Vout to get spending vin for.
  */
-export async function getSpendingVin(outpoint: string): Promise<string | false | undefined> {
+export async function getSpendingVin(outpoint: string): Promise<string | undefined> {
   const [txid, n] = outpoint.split(":");
   const document = await collection.findOne({ txid, n: parseInt(n, 10) });
-  if (document === null) {
+  if (document === null || document.nextTxid === undefined) {
     return undefined;
   }
-  return document.spent;
+  return `${document.nextTxid}:${document.vin}`;
 }
 
 /**
@@ -65,11 +65,16 @@ export async function setSpentVouts(spents: SpentVout[]): Promise<void> {
   const ts = performance.now();
 
   const bulkops: AnyBulkWriteOperation<VoutDocument>[] = [];
-  for (const { txid, vout, location } of spents) {
+  for (const { vout, vin } of spents) {
     bulkops.push({
       updateOne: {
-        filter: { txid, n: vout },
-        update: { $set: { spent: location } },
+        filter: { txid: vout.txid, n: vout.n },
+        update: {
+          $set: {
+            nextTxid: vin.txid,
+            vin: vin.n,
+          },
+        },
       },
     });
     if (bulkops.length === 1000) {
