@@ -51,6 +51,15 @@ export async function getSpendingVin(outpoint: string): Promise<string | undefin
 }
 
 /**
+ * Get list of unspent utxos for the given address.
+ *
+ * @param address - Address to get unspent vouts for.
+ */
+export async function getUnspentVouts(address: string): Promise<VoutDocument[]> {
+  return collection.find({ address, nextTxid: { $exists: false } }).toArray();
+}
+
+/**
  * Take a list of spent vouts and update the database using bulk write operations.
  *
  * Another side effect of this function is updating the corresponding VIN setting

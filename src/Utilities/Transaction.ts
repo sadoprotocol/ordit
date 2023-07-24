@@ -1,14 +1,24 @@
 import { config } from "../Config";
 import { getSpendingVin } from "../Models/Vout";
-import { isCoinbase, RawTransaction, rpc } from "../Services/Bitcoin";
+import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
 import { ord } from "../Services/Ord";
 import { getAddressFromVout } from "../Workers/Bitcoin/Crawl";
 import { getMetaFromWitness } from "./Oip";
 
+export type ExpandedTransaction = RawTransaction & {
+  vout: (Vout & {
+    ordinals: any[];
+    inscriptions: any[];
+    spent: string | false;
+  })[];
+  fee: number;
+  blockheight: number;
+};
+
 export async function getExpandedTransaction(
   tx: RawTransaction,
   { noord = false, nohex = false, nowitness = false }: Options = {}
-): Promise<any> {
+): Promise<ExpandedTransaction> {
   let meta: any = undefined;
   let fee = 0;
   let coinbase = false;
@@ -55,10 +65,10 @@ export async function getExpandedTransaction(
     delete (tx as any).hex;
   }
 
-  (tx as any).fee = coinbase ? 0 : fee;
-  (tx as any).blockheight = (await rpc.blockchain.getBlockCount()) - tx.confirmations + 1;
+  (tx as ExpandedTransaction).fee = coinbase ? 0 : fee;
+  (tx as ExpandedTransaction).blockheight = (await rpc.blockchain.getBlockCount()) - tx.confirmations + 1;
 
-  return tx;
+  return tx as ExpandedTransaction;
 }
 
 async function getOrdinals(outpoint: string): Promise<any[]> {

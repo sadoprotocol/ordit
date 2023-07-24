@@ -179,7 +179,7 @@ export type Traits = {
   rarity: Rarity;
 };
 
-export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
 
 type Response<R> =
   | R
