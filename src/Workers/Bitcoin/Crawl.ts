@@ -6,7 +6,6 @@ import { addVins, VinDocument } from "../../Models/Vin";
 import { addVouts, setSpentVouts, SpentVout, VoutDocument } from "../../Models/Vout";
 import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
 import { sanitizeScriptPubKey, sats } from "../../Utilities/Bitcoin";
-import { printProgress } from "../../Utilities/Progress";
 
 const log = debug("bitcoin-crawler");
 
@@ -102,8 +101,6 @@ export async function crawl(blockN: number, maxBlockN: number) {
       database: [logger.calls.database, logger.database],
     });
   }
-
-  printProgress("bitcoin-crawler", blockN, maxBlockN);
 }
 
 /*

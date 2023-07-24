@@ -4,6 +4,7 @@ import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
 import { getHeighestBlock } from "../../Models/Vout";
 import { rpc } from "../../Services/Bitcoin";
+import { printProgress } from "../../Utilities/Progress";
 import { crawl } from "./Crawl";
 
 const log = debug("bitcoin-indexer");
@@ -31,6 +32,7 @@ async function main() {
 
   while (crawlerBlockHeight <= currentBlockHeight) {
     await crawl(crawlerBlockHeight, currentBlockHeight);
+    printProgress("bitcoin-crawler", crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight += 1;
   }
 }

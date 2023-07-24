@@ -25,6 +25,7 @@ export const config = {
     maxSnapshots: getEnvironmentVariable("ORD_SNAPSHOT_LIMIT", envToNumber),
   },
   parser: {
+    port: getEnvironmentVariable("UTXO_PARSER_PORT", envToNumber),
     interval: getEnvironmentVariable("UTXO_PARSER_INTERVAL", envToNumber),
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
   },

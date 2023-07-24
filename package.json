@@ -5,9 +5,10 @@
   "scripts": {
     "prepare": "husky install",
     "build": "tsc",
-    "start": "DEBUG=ordit-* ts-node ./src/main.ts",
-    "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
     "setup": "DEBUG=ordit-* ts-node ./src/Workers/Setup.ts",
+    "start": "DEBUG=ordit-* ts-node ./src/main.ts",
+    "worker": "DEBUG=ordit-* ts-node ./src/Workers/Watcher.ts",
+    "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
     "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ord/Indexer.ts",
     "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ord/Snapshot.ts",
