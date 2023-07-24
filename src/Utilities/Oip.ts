@@ -43,19 +43,23 @@ export async function getMetaFromWitness(txinwitness: string[]): Promise<object 
   // subsequent sliced buffers that is not undefined or "0". Once we hit an OP_CODE we
   // assume the end is reached and attempt to parse the json.
 
-  let json = "";
+  let data = "";
 
   const asm = decodedScript.asm.split(" ");
   const jsonIndex = asm.findIndex((item) => item === jsonHash);
 
   const partials = asm.slice(jsonIndex + 1);
-  for (const data of partials) {
-    if (data === undefined || data === "0") {
+  for (const buffer of partials) {
+    if (buffer === undefined || buffer === "0") {
       continue; // skip data that is not part of the application/json
     }
-    if (data.includes("OP")) {
-      return JSON.parse(Buffer.from(json, "hex").toString("utf8"));
+    if (buffer.includes("OP")) {
+      try {
+        return JSON.parse(Buffer.from(data, "hex").toString("utf8"));
+      } catch (err) {
+        return undefined; // meta could not be extracted from witness buffer
+      }
     }
-    json += data;
+    data += buffer;
   }
 }

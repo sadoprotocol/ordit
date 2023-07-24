@@ -1,8 +1,8 @@
 import { FastifyRequest } from "fastify";
 
-import { fastify } from "../../Fastify";
-import { rpc } from "../../Services/Bitcoin";
-import { getExpandedTransaction } from "../../Utilities/Transaction";
+import { fastify } from "../Fastify";
+import { rpc } from "../Services/Bitcoin";
+import { getExpandedTransaction } from "../Utilities/Transaction";
 
 type Request = FastifyRequest<{
   Body: {
@@ -29,19 +29,17 @@ fastify.post(
             noord: { type: "boolean", default: false },
             nohex: { type: "boolean", default: false },
             nowitness: { type: "boolean", default: false },
-            before: { type: "number", default: 0 },
-            after: { type: "number", default: 0 },
-            limit: { type: "number", default: 50 },
           },
         },
       },
     },
   },
   async (req: Request) => {
+    const tx = await rpc.transactions.getRawTransaction(req.body.txid, true);
     return {
       success: true,
       message: "Transaction of " + req.body.txid,
-      rdata: [],
+      rdata: await getExpandedTransaction(tx, req.body.options),
     };
   }
 );

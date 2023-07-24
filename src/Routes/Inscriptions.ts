@@ -1,8 +1,8 @@
 import { FastifyRequest } from "fastify";
 
-import { fastify } from "../../Fastify";
-import { ord } from "../../Services/Ord";
-import { getMetaFromTxId } from "../../Utilities/Oip";
+import { fastify } from "../Fastify";
+import { ord } from "../Services/Ord";
+import { getMetaFromTxId } from "../Utilities/Oip";
 
 type Request = FastifyRequest<{
   Params: {

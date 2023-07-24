@@ -1,5 +1,5 @@
-import { fastify } from "../../Fastify";
-import { rpc } from "../../Services/Bitcoin";
+import { fastify } from "../Fastify";
+import { rpc } from "../Services/Bitcoin";
 
 fastify.get("/utxo/unconfirmed_transactions", async () => {
   return {

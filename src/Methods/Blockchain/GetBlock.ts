@@ -2,7 +2,7 @@ import { BadRequestError, method } from "@valkyr/api";
 import Schema, { boolean, number, string } from "computed-types";
 
 import { rpc } from "../../Services/Bitcoin";
-import { getExpandedTransaction } from "../../Utilities/Transaction";
+import { ExpandedTransaction, getExpandedTransaction } from "../../Utilities/Transaction";
 
 export const getBlock = method({
   params: Schema({
@@ -25,12 +25,16 @@ export const getBlock = method({
 
     const block = await rpc.blockchain.getBlock(hash, 2);
 
+    const txs: ExpandedTransaction[] = [];
     if (verbose === true) {
       for (let i = 0, length = block.tx.length; i < length; i++) {
-        block.tx[i] = await getExpandedTransaction(block.tx[i], { ...options, noord: true });
+        txs[i] = await getExpandedTransaction(block.tx[i], { ...options, noord: true });
       }
     }
 
-    return block;
+    return {
+      ...block,
+      tx: txs,
+    };
   },
 });

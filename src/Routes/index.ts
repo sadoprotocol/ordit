@@ -1,8 +1,9 @@
-import "./Utxo/Inscriptions";
-import "./Utxo/MemPoolInfo";
-import "./Utxo/OrdIndexerStatus";
-import "./Utxo/Transaction";
-import "./Utxo/UnconfimedTransactions";
-import "./Utxo/Unspents";
 import "./Base";
 import "./Content";
+import "./Inscriptions";
+import "./MemPoolInfo";
+import "./OrdIndexerStatus";
+import "./Transaction";
+import "./Transactions";
+import "./UnconfimedTransactions";
+import "./Unspents";

@@ -1,5 +1,5 @@
-import { fastify } from "../../Fastify";
-import { ord } from "../../Services/Ord";
+import { fastify } from "../Fastify";
+import { ord } from "../Services/Ord";
 
 fastify.get("/utxo/ord_indexer_status", async () => {
   return {

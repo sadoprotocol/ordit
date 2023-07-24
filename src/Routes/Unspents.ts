@@ -1,13 +1,13 @@
 import { FastifyRequest } from "fastify";
 
-import { config } from "../../Config";
-import { fastify } from "../../Fastify";
-import { getUnspentVouts } from "../../Models/Vout";
-import { rpc } from "../../Services/Bitcoin";
-import { Rarity } from "../../Services/Ord";
-import { sochain } from "../../Services/SoChain";
-import { sats } from "../../Utilities/Bitcoin";
-import { ExpandedTransaction, getExpandedTransaction } from "../../Utilities/Transaction";
+import { config } from "../Config";
+import { fastify } from "../Fastify";
+import { getUnspentVouts } from "../Models/Vout";
+import { rpc } from "../Services/Bitcoin";
+import { Rarity } from "../Services/Ord";
+import { sochain } from "../Services/SoChain";
+import { sats } from "../Utilities/Bitcoin";
+import { ExpandedTransaction, getExpandedTransaction } from "../Utilities/Transaction";
 
 type Request = FastifyRequest<{
   Body: {

@@ -1,4 +1,4 @@
-import { AnyBulkWriteOperation } from "mongodb";
+import { AnyBulkWriteOperation, WithId } from "mongodb";
 
 import { logger } from "../../Logger";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
@@ -23,6 +23,15 @@ export async function addVouts(vouts: VoutDocument[], chunkSize = 500): Promise<
   await Promise.all(promises);
 
   logger.addDatabase("vouts", performance.now() - ts);
+}
+
+/**
+ * Get all vouts for the given address.
+ *
+ * @param address - Address to get vouts for.
+ */
+export async function getVoutsByAddress(address: string): Promise<WithId<VoutDocument>[]> {
+  return collection.find({ address }).toArray();
 }
 
 /**
