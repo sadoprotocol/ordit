@@ -49,7 +49,7 @@ fastify.post(
   },
   async (req: Request) => {
     const { unspents, txs } =
-      config.chain.network === "testnet"
+      config.chain.network === "mainnet"
         ? await sochain.getUnspents(req.body.address, req.body.options)
         : await getUnspents(req.body.address, req.body.options);
     return {
