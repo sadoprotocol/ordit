@@ -3,7 +3,7 @@ import Schema, { boolean, Type } from "computed-types";
 import { config } from "../Config";
 import { getSpendingVin } from "../Models/Vout";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
-import { ord } from "../Services/Ord";
+import { ord, Rarity } from "../Services/Ord";
 import { getAddressFromVout } from "../Workers/Bitcoin/Crawl";
 import { getMetaFromWitness } from "./Oip";
 
@@ -71,8 +71,8 @@ export async function getExpandedTransaction(
     const outpoint = `${tx.txid}:${vout.n}`;
 
     if (noord === false) {
-      (vout as any).ordinals = await getOrdinals(outpoint);
-      (vout as any).inscriptions = await getInscriptions(outpoint, meta);
+      (vout as any).ordinals = await getOrdinalsByOutpoint(outpoint);
+      (vout as any).inscriptions = await getInscriptionsByOutpoint(outpoint, meta);
     }
 
     (vout as any).spent = (await getSpendingVin(outpoint)) ?? false;
@@ -96,7 +96,7 @@ export async function getExpandedTransaction(
  |--------------------------------------------------------------------------------
  */
 
-async function getOrdinals(outpoint: string): Promise<any[]> {
+export async function getOrdinalsByOutpoint(outpoint: string): Promise<any[]> {
   const ordinals = [];
 
   const satoshis = await ord.list(outpoint);
@@ -110,7 +110,7 @@ async function getOrdinals(outpoint: string): Promise<any[]> {
   return ordinals;
 }
 
-async function getInscriptions(outpoint: string, meta?: any): Promise<any[]> {
+export async function getInscriptionsByOutpoint(outpoint: string, meta?: any): Promise<any[]> {
   const inscriptions = [];
 
   const [txid, n] = outpoint.split(":");
@@ -132,6 +132,22 @@ async function getInscriptions(outpoint: string, meta?: any): Promise<any[]> {
   return inscriptions;
 }
 
+export function getSafeToSpendState(
+  ordinals: any[],
+  inscriptions: any[],
+  allowedRarity: Rarity[] = ["common", "uncommon"]
+): boolean {
+  if (inscriptions.length > 0 || ordinals.length === 0) {
+    return false;
+  }
+  for (const ordinal of ordinals) {
+    if (allowedRarity.includes(ordinal.rarity) === false) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Types
@@ -139,6 +155,11 @@ async function getInscriptions(outpoint: string, meta?: any): Promise<any[]> {
  */
 
 export type ExpandOptions = Type<typeof schema.expand.options>;
+
+export type ExpandVoutsOptions = {
+  nooip?: boolean;
+  meta?: any;
+};
 
 export type ExpandedTransaction = RawTransaction & {
   vout: (Vout & {

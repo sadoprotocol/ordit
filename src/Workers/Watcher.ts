@@ -19,6 +19,8 @@ fastify.register(helmet);
 
 let indexing = false;
 
+fastify.get("/health", async () => true);
+
 fastify.all("/", async () => {
   if (indexing === true) {
     return;

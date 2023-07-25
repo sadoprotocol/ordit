@@ -1,6 +1,7 @@
 import { config } from "../Config";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
+import { isError } from "../Utilities/Response";
 import { getStatus } from "../Workers/Ord/Status";
 import { cli } from "./Cli";
 
@@ -34,6 +35,7 @@ export const ord = {
   inscriptions,
   reorg,
   status,
+  version,
 };
 
 /*
@@ -58,7 +60,7 @@ async function index(dataDir: string): Promise<void> {
  */
 async function list(location: string): Promise<Satoshi[]> {
   const result = await run<Satoshi[]>(["list", location]);
-  if ("error" in result) {
+  if (isError(result)) {
     if (result.error.includes("output not found")) {
       return [];
     }
@@ -74,7 +76,7 @@ async function list(location: string): Promise<Satoshi[]> {
  */
 async function traits(satoshi: number): Promise<Traits> {
   const result = await run<Traits>(["traits", satoshi.toString()]);
-  if ("error" in result) {
+  if (isError(result)) {
     throw new Error(result.error);
   }
   return result;
@@ -90,7 +92,7 @@ async function inscription(id: string): Promise<Inscription> {
 
 async function inscriptions(location: string): Promise<string[]> {
   const result = await run<{ inscriptions: string[] }>(["gioo", location]);
-  if ("error" in result) {
+  if (isError(result)) {
     throw new Error(result.error);
   }
   return result.inscriptions;
@@ -98,7 +100,7 @@ async function inscriptions(location: string): Promise<string[]> {
 
 async function reorg(data = ORD_DATA): Promise<boolean> {
   const result = await run<{ is_reorged: boolean }>(["reorg"], data);
-  if ("error" in result) {
+  if (isError(result)) {
     throw new Error(result.error);
   }
   return result.is_reorged;
@@ -112,6 +114,14 @@ async function status(): Promise<any> {
       backups: await readDir(ORD_DATA_SNAPSHOTS),
     },
   };
+}
+
+async function version(): Promise<string> {
+  const data = await cli.run(config.ord.bin, ["--version"]);
+  if (data.includes("ord")) {
+    return data.replace("ord", "").replace("\n", "").trim();
+  }
+  return "unknown";
 }
 
 /*
