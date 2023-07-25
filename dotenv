@@ -15,23 +15,22 @@ CHAIN_PATH="/absolute/path/to/.bitcoin"
 # RPC
 
 RPC_HOST="127.0.0.1"
-RPC_PORT=18443 # regtest:18443 testnet:18332
+RPC_PORT=18443 # regtest:18443 testnet:18332 mainnet:8332
 RPC_USER="<user>"
 RPC_PASSWORD="<password>"
-RPC_NOTIFY=/Users/christoffer/.nvm/versions/node/v18.15.0/bin/pm2 start btc:indexer
 
 # ORD
 
 ORD=/absolute/path/to/ord
 ORD_SNAPSHOT_LIMIT=3
 ORD_SNAPSHOT_INTERVAL=3  # in hours
-ORD_INDEXER_INTERVAL=10  # in minutes
+ORD_INDEXER_ENABLED=true
 
 # UTXO PARSER
 
 UTXO_PARSER_PORT=3031
-UTXO_PARSER_INTERVAL=10  # in minutes
 UTXO_PARSER_MAX_BLOCK=0  # 0 for no limit
+UTXO_PARSER_ENABLED=true
 
 # MONGO
 

@@ -25,22 +25,27 @@ fastify.all("/", async () => {
   }
   indexing = true;
 
-  await indexUtxos();
-  await indexOrdinals();
+  const currentBlockHeight = await rpc.blockchain.getBlockCount();
+
+  if (config.parser.enabled === true) {
+    await indexUtxos(currentBlockHeight);
+  }
+
+  if (config.ord.enabled === true) {
+    await indexOrdinals();
+  }
+
+  log("indexed to block %d", currentBlockHeight);
 
   indexing = false;
 });
 
-async function indexUtxos(): Promise<void> {
-  const currentBlockHeight = await rpc.blockchain.getBlockCount();
+async function indexUtxos(currentBlockHeight: number): Promise<void> {
   let crawlerBlockHeight = await getHeighestBlock();
-
   while (crawlerBlockHeight <= currentBlockHeight) {
     await crawlBlock(crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight += 1;
   }
-
-  log("indexed from block %d to %d", currentBlockHeight, crawlerBlockHeight);
 }
 
 async function indexOrdinals(): Promise<void> {

@@ -1,4 +1,4 @@
-import { envToNumber, getEnvironmentVariable } from "./Libraries/Environment";
+import { envToBoolean, envToNumber, getEnvironmentVariable } from "./Libraries/Environment";
 import { envToNetwork } from "./Libraries/Network";
 
 export const config = {
@@ -23,11 +23,12 @@ export const config = {
   ord: {
     bin: getEnvironmentVariable("ORD"),
     maxSnapshots: getEnvironmentVariable("ORD_SNAPSHOT_LIMIT", envToNumber),
+    enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
   parser: {
     port: getEnvironmentVariable("UTXO_PARSER_PORT", envToNumber),
-    interval: getEnvironmentVariable("UTXO_PARSER_INTERVAL", envToNumber),
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
+    enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
   mongo: {
     hostname: getEnvironmentVariable("MONGO_HOSTNAME"),

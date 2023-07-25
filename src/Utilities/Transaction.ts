@@ -1,3 +1,5 @@
+import Schema, { boolean, Type } from "computed-types";
+
 import { config } from "../Config";
 import { getSpendingVin } from "../Models/Vout";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
@@ -5,19 +7,36 @@ import { ord } from "../Services/Ord";
 import { getAddressFromVout } from "../Workers/Bitcoin/Crawl";
 import { getMetaFromWitness } from "./Oip";
 
-export type ExpandedTransaction = RawTransaction & {
-  vout: (Vout & {
-    ordinals: any[];
-    inscriptions: any[];
-    spent: string | false;
-  })[];
-  fee: number;
-  blockheight: number;
-};
+/*
+ |--------------------------------------------------------------------------------
+ | Schema
+ |--------------------------------------------------------------------------------
+ */
+
+export const schema = {
+  expand: {
+    default: Object.freeze({
+      noord: false,
+      nohex: false,
+      nowitness: false,
+    }),
+    options: Schema({
+      noord: boolean.optional(),
+      nohex: boolean.optional(),
+      nowitness: boolean.optional(),
+    }),
+  },
+} as const;
+
+/*
+ |--------------------------------------------------------------------------------
+ | Methods
+ |--------------------------------------------------------------------------------
+ */
 
 export async function getExpandedTransaction(
   tx: RawTransaction,
-  { noord = false, nohex = false, nowitness = false }: Options = {}
+  { noord = false, nohex = false, nowitness = false }: ExpandOptions = {}
 ): Promise<ExpandedTransaction> {
   let meta: any = undefined;
   let fee = 0;
@@ -71,6 +90,12 @@ export async function getExpandedTransaction(
   return tx as ExpandedTransaction;
 }
 
+/*
+ |--------------------------------------------------------------------------------
+ | Utilities
+ |--------------------------------------------------------------------------------
+ */
+
 async function getOrdinals(outpoint: string): Promise<any[]> {
   const ordinals = [];
 
@@ -107,8 +132,20 @@ async function getInscriptions(outpoint: string, meta?: any): Promise<any[]> {
   return inscriptions;
 }
 
-export type Options = {
-  noord?: boolean;
-  nohex?: boolean;
-  nowitness?: boolean;
+/*
+ |--------------------------------------------------------------------------------
+ | Types
+ |--------------------------------------------------------------------------------
+ */
+
+export type ExpandOptions = Type<typeof schema.expand.options>;
+
+export type ExpandedTransaction = RawTransaction & {
+  vout: (Vout & {
+    ordinals: any[];
+    inscriptions: any[];
+    spent: string | false;
+  })[];
+  fee: number;
+  blockheight: number;
 };

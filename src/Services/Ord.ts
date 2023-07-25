@@ -18,6 +18,14 @@ export const bitcoinArgs = [
   `--rpc-url=http://${config.rpc.host}:${config.rpc.port}`,
 ].filter((val) => val !== "");
 
+export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+
+/*
+ |--------------------------------------------------------------------------------
+ | Service
+ |--------------------------------------------------------------------------------
+ */
+
 export const ord = {
   index,
   list,
@@ -146,6 +154,10 @@ function toInscription(inscription: any): Inscription {
  |--------------------------------------------------------------------------------
  */
 
+export type RarityOptions = {
+  allowedrarity?: Rarity[];
+};
+
 export type Inscription = {
   fee: number;
   height: number;
@@ -179,7 +191,7 @@ export type Traits = {
   rarity: Rarity;
 };
 
-export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
+export type Rarity = (typeof rarity)[number];
 
 type Response<R> =
   | R
