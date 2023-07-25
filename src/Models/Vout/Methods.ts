@@ -1,4 +1,4 @@
-import { AnyBulkWriteOperation, WithId } from "mongodb";
+import { AnyBulkWriteOperation, Filter, WithId } from "mongodb";
 
 import { logger } from "../../Logger";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
@@ -25,13 +25,25 @@ export async function addVouts(vouts: VoutDocument[], chunkSize = 500): Promise<
   logger.addDatabase("vouts", performance.now() - ts);
 }
 
+export async function getVoutByFilter(filter: Filter<VoutDocument>): Promise<WithId<VoutDocument> | undefined> {
+  const vout = await collection.findOne(filter);
+  if (vout === null) {
+    return undefined;
+  }
+  return vout;
+}
+
 /**
  * Get all vouts for the given address.
  *
  * @param address - Address to get vouts for.
+ * @param filter  - Additional filter to apply to the query.
  */
-export async function getVoutsByAddress(address: string): Promise<WithId<VoutDocument>[]> {
-  return collection.find({ address }).toArray();
+export async function getVoutsByAddress(
+  address: string,
+  filter: Filter<VoutDocument> = {}
+): Promise<WithId<VoutDocument>[]> {
+  return collection.find({ address, ...filter }).toArray();
 }
 
 /**

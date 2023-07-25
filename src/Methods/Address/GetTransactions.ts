@@ -1,46 +1,22 @@
 import { method } from "@valkyr/api";
-import Schema, { string } from "computed-types";
+import Schema, { boolean, string, Type } from "computed-types";
 
-import { getVoutsByAddress, VoutDocument } from "../../Models/Vout";
-import { rpc } from "../../Services/Bitcoin";
-import { ExpandedTransaction, getExpandedTransaction } from "../../Utilities/Transaction";
+import { lookup } from "../../Services/Lookup";
+
+const options = Schema({
+  noord: boolean.optional(),
+  nohex: boolean.optional(),
+  nowitness: boolean.optional(),
+});
 
 export const getTransactions = method({
   params: Schema({
     address: string,
+    options: options.optional(),
   }),
-  handler: async ({ address }) => {
-    return getTransactionsByAddress(address);
+  handler: async ({ address, options }) => {
+    return lookup.getTransactions(address, options);
   },
 });
 
-/*
- |--------------------------------------------------------------------------------
- | Methods
- |--------------------------------------------------------------------------------
- */
-
-export async function getTransactionsByAddress(address: string) {
-  const vouts = await getVoutsByAddress(address);
-  return getTransactionsFromVouts(vouts);
-}
-
-async function getTransactionsFromVouts(vouts: VoutDocument[]) {
-  const txIds = vouts.reduce((txIds: string[], vout) => {
-    txIds.push(vout.txid);
-    if (vout.nextTxid !== undefined) {
-      txIds.push(vout.nextTxid);
-    }
-    return txIds;
-  }, []);
-
-  const txs: ExpandedTransaction[] = [];
-  for (const txId of txIds) {
-    const tx = await rpc.transactions.getRawTransaction(txId, true);
-    if (tx !== undefined) {
-      txs.push(await getExpandedTransaction(tx));
-    }
-  }
-
-  return txs;
-}
+export type Options = Type<typeof options>;

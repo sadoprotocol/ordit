@@ -1,9 +1,12 @@
-import type { Options } from "../Methods/Address/GetUnspents";
+import type { Options as TransactionsOptions } from "../Methods/Address/GetTransactions";
+import type { Options as UnspentOptions } from "../Methods/Address/GetUnspents";
+import { getTransactionsByAddress } from "../Models/Transactions";
 import { getUnspentVouts } from "../Models/Vout";
 import { getInscriptionsByOutpoint, getOrdinalsByOutpoint, getSafeToSpendState } from "../Utilities/Transaction";
 import { rpc } from "./Bitcoin";
 
 export const lookup = {
+  getTransactions,
   getUnspents,
 };
 
@@ -13,9 +16,67 @@ export const lookup = {
  |--------------------------------------------------------------------------------
  */
 
+async function getTransactions(
+  address: string,
+  { noord = false, nohex = false, nowitness = false }: TransactionsOptions = {}
+) {
+  const result: any[] = [];
+
+  const transactions = await getTransactionsByAddress(address);
+  for (const transaction of transactions) {
+    const tx: any = {
+      txid: undefined,
+      blockHash: undefined,
+      blockHeight: undefined,
+      blockTime: undefined,
+      confirmations: undefined,
+      fee: undefined,
+      hash: undefined,
+      hex: undefined,
+      locktime: undefined,
+      size: undefined,
+      vin: [],
+      vout: [],
+      vsize: undefined,
+      weight: undefined,
+    };
+
+    result.push(tx);
+  }
+
+  return transactions;
+}
+
+/*
+export async function getTransactionsByAddress(address: string) {
+  const vouts = await getVoutsByAddress(address);
+  return getTransactionsFromVouts(vouts);
+}
+
+async function getTransactionsFromVouts(vouts: VoutDocument[]) {
+  const txIds = vouts.reduce((txIds: string[], vout) => {
+    txIds.push(vout.txid);
+    if (vout.nextTxid !== undefined) {
+      txIds.push(vout.nextTxid);
+    }
+    return txIds;
+  }, []);
+
+  const txs: ExpandedTransaction[] = [];
+  for (const txId of txIds) {
+    const tx = await rpc.transactions.getRawTransaction(txId, true);
+    if (tx !== undefined) {
+      txs.push(await getExpandedTransaction(tx));
+    }
+  }
+
+  return txs;
+}
+*/
+
 async function getUnspents(
   address: string,
-  { noord = false, notsafetospend = false, allowedrarity = ["common", "uncommon"] }: Options = {}
+  { noord = false, notsafetospend = false, allowedrarity = ["common", "uncommon"] }: UnspentOptions = {}
 ) {
   const result = [];
 
