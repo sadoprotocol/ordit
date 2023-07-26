@@ -2,7 +2,6 @@ import { method } from "@valkyr/api";
 import Schema, { boolean, number, string, Type } from "computed-types";
 
 import { TransactionDocument } from "../../Models/Transactions";
-import { lookup } from "../../Services/Lookup";
 import { sochain } from "../../Services/SoChain";
 
 const options = Schema({
@@ -33,7 +32,7 @@ export const getTransactions = method({
       pagination: {
         page: pagination?.page ?? 1,
         limit: 10,
-        total: await lookup.getTotalTransactions(address),
+        total: await sochain.getTotalTransactions(address),
       },
     };
   },

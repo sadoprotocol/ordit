@@ -96,6 +96,10 @@ export async function checkTransactionsUpdates(transactions: WithId<TransactionD
           vout.ordinals = [];
           vout.inscriptions = [];
           vout.spent = `${currentVout.nextTxid}:${currentVout.vin}`;
+        } else if (vout.ordinals.length === 0) {
+          hasChanges = true;
+          vout.ordinals = await getOrdinalsByOutpoint(`${transaction.txid}:${vout.n}`);
+          vout.inscriptions = await getInscriptionsByOutpoint(`${transaction.txid}:${vout.n}`);
         }
       }
     }
