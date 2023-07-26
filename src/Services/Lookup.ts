@@ -1,11 +1,25 @@
-import type { Options as TransactionsOptions } from "../Methods/Address/GetTransactions";
+import { WithId } from "mongodb";
+
+import type { Options as TransactionsOptions, Pagination } from "../Methods/Address/GetTransactions";
 import type { Options as UnspentOptions } from "../Methods/Address/GetUnspents";
-import { getTransactionsByAddress } from "../Models/Transactions";
-import { getUnspentVouts } from "../Models/Vout";
-import { getInscriptionsByOutpoint, getOrdinalsByOutpoint, getSafeToSpendState } from "../Utilities/Transaction";
+import {
+  addTransaction,
+  getAddressesFromTx,
+  getTransactionsByAddress,
+  TransactionDocument,
+  updateVoutById,
+} from "../Models/Transactions";
+import { getUnspentVouts, getVoutByFilter, getVoutCountByAddress, getVoutsByAddress } from "../Models/Vout";
+import {
+  getExpandedTransaction,
+  getInscriptionsByOutpoint,
+  getOrdinalsByOutpoint,
+  getSafeToSpendState,
+} from "../Utilities/Transaction";
 import { rpc } from "./Bitcoin";
 
 export const lookup = {
+  getTotalTransactions: getVoutCountByAddress,
   getTransactions,
   getUnspents,
 };
@@ -18,34 +32,112 @@ export const lookup = {
 
 async function getTransactions(
   address: string,
-  { noord = false, nohex = false, nowitness = false }: TransactionsOptions = {}
+  options: TransactionsOptions = {},
+  { limit = 10, page = 1 }: Pagination = {}
 ) {
-  const result: any[] = [];
-
-  const transactions = await getTransactionsByAddress(address);
-  for (const transaction of transactions) {
-    const tx: any = {
-      txid: undefined,
-      blockHash: undefined,
-      blockHeight: undefined,
-      blockTime: undefined,
-      confirmations: undefined,
-      fee: undefined,
-      hash: undefined,
-      hex: undefined,
-      locktime: undefined,
-      size: undefined,
-      vin: [],
-      vout: [],
-      vsize: undefined,
-      weight: undefined,
-    };
-
-    result.push(tx);
+  const skip = (page - 1) * limit;
+  const transactions = await getTransactionsByAddress(address, {}, { sort: { blockHeight: -1 }, limit, skip });
+  if (transactions.length === limit) {
+    await checkTransactionsUpdates(transactions);
+    return transactions;
   }
 
-  return transactions;
+  // ### Find
+  // Find more potential transactions since the last cache operation if the
+  // returned result is less than the limit.
+
+  const txIds = new Set<string>();
+  for (const transaction of transactions) {
+    txIds.add(transaction.txid);
+  }
+
+  const vouts = await getVoutsByAddress(
+    address,
+    { txid: { $nin: Array.from(txIds) } },
+    { sort: { blockN: -1 }, limit, skip }
+  );
+  for (const vout of vouts) {
+    const tx = await rpc.transactions.getRawTransaction(vout.txid, true);
+    if (tx === undefined) {
+      continue;
+    }
+    const document: TransactionDocument = {
+      addresses: await getAddressesFromTx(tx),
+      blockHeight: vout.blockN,
+      ...(await getExpandedTransaction(tx, options)),
+    };
+    const result = await addTransaction(document);
+    (document as WithId<TransactionDocument>)._id = result.insertedId;
+    transactions.push(document as WithId<TransactionDocument>);
+  }
+
+  await checkTransactionsUpdates(transactions);
+
+  return transactions.sort((a, b) => b.blockHeight - a.blockHeight);
 }
+
+async function checkTransactionsUpdates(transactions: WithId<TransactionDocument>[]) {
+  for (const transaction of transactions) {
+    let hasChanges = false;
+    for (const vout of transaction.vout) {
+      if (vout.spent === false) {
+        const currentVout = await getVoutByFilter({ txid: transaction.txid, n: vout.n });
+        if (currentVout !== undefined && currentVout.nextTxid !== undefined) {
+          hasChanges = true;
+          vout.ordinals = [];
+          vout.inscriptions = [];
+          vout.spent = `${currentVout.nextTxid}:${currentVout.vin}`;
+        }
+      }
+    }
+    if (hasChanges) {
+      updateVoutById(transaction._id, transaction.vout);
+    }
+  }
+}
+
+/*
+const txIds = new Set<string>();
+for (const transaction of transactions) {
+  txIds.add(transaction.txid);
+}
+
+const vouts = await getVoutsByAddress(address, { txid: { $nin: Array.from(txIds) } });
+for (const vout of vouts) {
+  const tx = await rpc.transactions.getRawTransaction(vout.txid, true);
+  if (tx === undefined) {
+    continue;
+  }
+  const document: TransactionDocument = {
+    addresses: await getAddressesFromTx(tx),
+    blockHeight: vout.blockN,
+    ...(await getExpandedTransaction(tx, { noord: true })),
+  };
+  const result = await collection.insertOne(document);
+  (document as WithId<TransactionDocument>)._id = result.insertedId;
+  transactions.push(document as WithId<TransactionDocument>);
+}
+
+for (const transaction of transactions) {
+  let hasChanges = false;
+  for (const vout of transaction.vout) {
+    if (vout.spent === false) {
+      const currentVout = await getVoutByFilter({ txid: transaction.txid, n: vout.n });
+      if (currentVout !== undefined && currentVout.nextTxid !== undefined) {
+        hasChanges = true;
+        vout.spent = `${currentVout.nextTxid}:${currentVout.vin}`;
+        vout.ordinals = [];
+        vout.inscriptions = [];
+      }
+    }
+  }
+  if (hasChanges) {
+    collection.updateOne({ _id: transaction._id }, { $set: { vout: transaction.vout } });
+  }
+}
+
+return transactions.sort((a, b) => b.blockHeight - a.blockHeight);
+*/
 
 /*
 export async function getTransactionsByAddress(address: string) {

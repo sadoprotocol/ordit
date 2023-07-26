@@ -1,4 +1,4 @@
-import { AnyBulkWriteOperation, Filter, WithId } from "mongodb";
+import { AnyBulkWriteOperation, Filter, FindOptions, WithId } from "mongodb";
 
 import { logger } from "../../Logger";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
@@ -41,9 +41,14 @@ export async function getVoutByFilter(filter: Filter<VoutDocument>): Promise<Wit
  */
 export async function getVoutsByAddress(
   address: string,
-  filter: Filter<VoutDocument> = {}
+  filter: Filter<VoutDocument> = {},
+  options: FindOptions<VoutDocument> = {}
 ): Promise<WithId<VoutDocument>[]> {
-  return collection.find({ address, ...filter }).toArray();
+  return collection.find({ address, ...filter }, options).toArray();
+}
+
+export async function getVoutCountByAddress(address: string): Promise<number> {
+  return collection.countDocuments({ address });
 }
 
 /**

@@ -12,6 +12,7 @@
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
     "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ord/Indexer.ts",
     "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ord/Snapshot.ts",
+    "ord:command": "ts-node ./src/Workers/Ord/Command.ts",
     "bitcoin:start": "docker compose -f  ./docker-compose-bitcoin.yaml up -d",
     "bitcoin:stop": "docker compose -f  ./docker-compose-bitcoin.yaml down",
     "mongodb:start": "docker compose -f ./docker-compose-mongo.yaml up -d",

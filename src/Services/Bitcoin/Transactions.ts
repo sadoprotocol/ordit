@@ -80,6 +80,7 @@ export type RawTransaction = {
   confirmations: number;
   time: number;
   blocktime: number;
+  weight: number;
 };
 
 export type Script = {
