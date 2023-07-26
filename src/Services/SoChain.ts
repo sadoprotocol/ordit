@@ -1,10 +1,19 @@
+import { WithId } from "mongodb";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
+import type { Options as TransactionsOptions, Pagination } from "../Methods/Address/GetTransactions";
 import type { Options } from "../Methods/Address/GetUnspents";
+import { addTransaction, getAddressesFromTx, getTransactionsByIds, TransactionDocument } from "../Models/Transactions";
 import { sats } from "../Utilities/Bitcoin";
-import { getInscriptionsByOutpoint, getOrdinalsByOutpoint, getSafeToSpendState } from "../Utilities/Transaction";
+import {
+  getExpandedTransaction,
+  getInscriptionsByOutpoint,
+  getOrdinalsByOutpoint,
+  getSafeToSpendState,
+} from "../Utilities/Transaction";
 import { rpc } from "./Bitcoin";
+import { checkTransactionsUpdates } from "./Lookup";
 
 const headers = {
   Accept: "application/json",
@@ -13,6 +22,8 @@ const headers = {
 };
 
 export const sochain = {
+  getTotalTransactions,
+  getTransactions,
   getUnspents,
 };
 
@@ -21,6 +32,42 @@ export const sochain = {
  | Methods
  |--------------------------------------------------------------------------------
  */
+
+async function getTotalTransactions(address: string): Promise<number> {
+  const { total } = await get<SochainTransactionCounts>(`/transaction_counts/${config.sochain.network}/${address}`);
+  return total;
+}
+
+async function getTransactions(address: string, options: TransactionsOptions = {}, { page = 1 }: Pagination = {}) {
+  const data = await get<{ transactions: SochainTransaction[] }>(
+    `/transactions/${config.sochain.network}/${address}/${page}`
+  );
+  const txids = data.transactions.map((tx) => tx.hash);
+
+  // ### Transactions
+
+  const transactions = await getTransactionsByIds(txids);
+  const missingTxids = txids.filter((txid) => !transactions.find((tx) => tx.txid === txid));
+
+  for (const txid of missingTxids) {
+    const tx = await rpc.transactions.getRawTransaction(txid, true);
+    if (tx === undefined) {
+      continue;
+    }
+    const document: TransactionDocument = {
+      addresses: await getAddressesFromTx(tx),
+      blockHeight: data.transactions.find((tx) => tx.hash === txid)?.block ?? -1,
+      ...(await getExpandedTransaction(tx, options)),
+    };
+    const result = await addTransaction(document);
+    (document as WithId<TransactionDocument>)._id = result.insertedId;
+    transactions.push(document as WithId<TransactionDocument>);
+  }
+
+  await checkTransactionsUpdates(transactions);
+
+  return transactions.sort((a, b) => b.blockHeight - a.blockHeight);
+}
 
 async function getUnspents(
   address: string,
@@ -89,6 +136,25 @@ async function get<R>(path: string): Promise<R> {
  | Types
  |--------------------------------------------------------------------------------
  */
+
+type SochainTransactionCounts = {
+  sent: number;
+  received: number;
+  total: number;
+};
+
+type SochainTransaction = {
+  hash: string;
+  value_sent: string;
+  value_recieved: string;
+  balance_change: string;
+  time: number;
+  block: number;
+  price: {
+    value: string;
+    currency: string;
+  };
+};
 
 type SoChainOutput = {
   hash: string;

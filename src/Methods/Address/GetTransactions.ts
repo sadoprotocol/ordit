@@ -3,6 +3,7 @@ import Schema, { boolean, number, string, Type } from "computed-types";
 
 import { TransactionDocument } from "../../Models/Transactions";
 import { lookup } from "../../Services/Lookup";
+import { sochain } from "../../Services/SoChain";
 
 const options = Schema({
   noord: boolean.optional(),
@@ -23,7 +24,7 @@ export const getTransactions = method({
   }),
   handler: async ({ address, options, pagination }) => {
     return {
-      transactions: (await lookup.getTransactions(address, options, pagination)).map(format),
+      transactions: (await sochain.getTransactions(address, options, pagination)).map(format),
       options: {
         noord: options?.noord ?? false,
         nohex: options?.nohex ?? false,
@@ -31,7 +32,7 @@ export const getTransactions = method({
       },
       pagination: {
         page: pagination?.page ?? 1,
-        limit: pagination?.limit ?? 10,
+        limit: 10,
         total: await lookup.getTotalTransactions(address),
       },
     };

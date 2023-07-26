@@ -47,8 +47,18 @@ export async function getVoutsByAddress(
   return collection.find({ address, ...filter }, options).toArray();
 }
 
-export async function getVoutCountByAddress(address: string): Promise<number> {
-  return collection.countDocuments({ address });
+export async function getTransactionCountsByAddress(address: string): Promise<{
+  sent: number;
+  received: number;
+  total: number;
+}> {
+  const received = await collection.countDocuments({ address });
+  const sent = await collection.countDocuments({ address, nextTxid: { $exists: true } });
+  return {
+    sent,
+    received,
+    total: received + sent,
+  };
 }
 
 /**

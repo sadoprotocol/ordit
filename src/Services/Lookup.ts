@@ -9,7 +9,7 @@ import {
   TransactionDocument,
   updateVoutById,
 } from "../Models/Transactions";
-import { getUnspentVouts, getVoutByFilter, getVoutCountByAddress, getVoutsByAddress } from "../Models/Vout";
+import { getTransactionCountsByAddress, getUnspentVouts, getVoutByFilter, getVoutsByAddress } from "../Models/Vout";
 import {
   getExpandedTransaction,
   getInscriptionsByOutpoint,
@@ -19,7 +19,7 @@ import {
 import { rpc } from "./Bitcoin";
 
 export const lookup = {
-  getTotalTransactions: getVoutCountByAddress,
+  getTotalTransactions,
   getTransactions,
   getUnspents,
 };
@@ -29,6 +29,11 @@ export const lookup = {
  | Methods
  |--------------------------------------------------------------------------------
  */
+
+async function getTotalTransactions(address: string): Promise<number> {
+  const { total } = await getTransactionCountsByAddress(address);
+  return total;
+}
 
 async function getTransactions(
   address: string,
@@ -51,6 +56,7 @@ async function getTransactions(
     txIds.add(transaction.txid);
   }
 
+  const vins = [];
   const vouts = await getVoutsByAddress(
     address,
     { txid: { $nin: Array.from(txIds) } },
@@ -69,6 +75,9 @@ async function getTransactions(
     const result = await addTransaction(document);
     (document as WithId<TransactionDocument>)._id = result.insertedId;
     transactions.push(document as WithId<TransactionDocument>);
+    if (vout.nextTxid !== undefined) {
+      vins.push(vout.nextTxid);
+    }
   }
 
   await checkTransactionsUpdates(transactions);
@@ -76,7 +85,7 @@ async function getTransactions(
   return transactions.sort((a, b) => b.blockHeight - a.blockHeight);
 }
 
-async function checkTransactionsUpdates(transactions: WithId<TransactionDocument>[]) {
+export async function checkTransactionsUpdates(transactions: WithId<TransactionDocument>[]) {
   for (const transaction of transactions) {
     let hasChanges = false;
     for (const vout of transaction.vout) {

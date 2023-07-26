@@ -13,6 +13,10 @@ export async function addTransaction(tx: TransactionDocument) {
   return collection.insertOne(tx);
 }
 
+export async function getTransactionsByIds(txids: string[]): Promise<WithId<TransactionDocument>[]> {
+  return collection.find({ txid: { $in: txids } }).toArray();
+}
+
 /**
  * Get transactions by address..
  *
