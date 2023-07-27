@@ -1,7 +1,6 @@
 import { BadRequestError, method } from "@valkyr/api";
 import Schema, { boolean, number, string } from "computed-types";
 
-import { hasToken } from "../../Actions/HasToken";
 import { rpc } from "../../Services/Bitcoin";
 import { ExpandedTransaction, getExpandedTransaction } from "../../Utilities/Transaction";
 
@@ -15,7 +14,6 @@ export const getBlock = method({
       nowitness: boolean.optional(),
     }).optional(),
   }),
-  actions: [hasToken],
   handler: async ({ height, hash, verbose, options = {} }) => {
     if (height !== undefined) {
       hash = await rpc.blockchain.getBlockHash(height);
