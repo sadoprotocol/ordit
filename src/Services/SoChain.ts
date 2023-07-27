@@ -90,8 +90,8 @@ async function getUnspents(
       blockHash: tx.blockhash,
       blockN: output.block,
       scriptPubKey: tx.vout[output.index].scriptPubKey,
-      value: parseInt(output.value),
-      sats: sats(parseInt(output.value)),
+      value: output.value,
+      sats: sats(output.value),
     };
 
     if (ord === true) {

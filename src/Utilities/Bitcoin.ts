@@ -1,14 +1,14 @@
-import { config } from "../Config";
+import { Big, BigSource } from "big.js";
+
 import { Vout } from "../Services/Bitcoin";
 
 /**
  * Get the number of satoshis from a value.
  *
- * @param value   - Value to convert to satoshis.
- * @param decimal - Number of decimal places to use.
+ * @param value - Value to convert to satoshis.
  */
-export function sats(value: number, decimal = config.chain.decimals): number {
-  return Math.ceil(value * 10 ** decimal);
+export function sats(value: BigSource): number {
+  return new Big(value).times(1e8).round(0, 0).toNumber();
 }
 
 /**
