@@ -1,6 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
+import { hasToken } from "../../Actions/HasToken";
 import { ord } from "../../Services/Ord";
 import { getMetaFromTxId } from "../../Utilities/Oip";
 
@@ -8,6 +9,7 @@ export const getInscriptions = method({
   params: Schema({
     outpoint: string,
   }),
+  actions: [hasToken],
   handler: async ({ outpoint }) => {
     const data = [];
 

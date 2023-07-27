@@ -1,12 +1,14 @@
 import { method } from "@valkyr/api";
 import Schema, { number } from "computed-types";
 
+import { hasToken } from "../../Actions/HasToken";
 import { rpc } from "../../Services/Bitcoin";
 
 export const getLatestBlocks = method({
   params: Schema({
     limit: number.lte(20).optional(),
   }),
+  actions: [hasToken],
   handler: async ({ limit = 10 }) => {
     const blockCount = await rpc.blockchain.getBlockCount();
     const blocks = [];

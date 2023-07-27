@@ -5,6 +5,7 @@ export const config = {
   api: {
     domain: getEnvironmentVariable("DOMAIN"),
     port: getEnvironmentVariable("PORT", envToNumber),
+    token: getEnvironmentVariable("TOKEN"),
   },
   chain: {
     network: getEnvironmentVariable("CHAIN_NETWORK", envToNetwork),

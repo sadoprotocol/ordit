@@ -1,6 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { boolean, number, string, Type } from "computed-types";
 
+import { hasToken } from "../../Actions/HasToken";
 import { TransactionDocument } from "../../Models/Transactions";
 import { sochain } from "../../Services/SoChain";
 
@@ -21,6 +22,7 @@ export const getTransactions = method({
     options: options.optional(),
     pagination: pagination.optional(),
   }),
+  actions: [hasToken],
   handler: async ({ address, options, pagination }) => {
     return {
       transactions: (await sochain.getTransactions(address, options, pagination)).map(format),

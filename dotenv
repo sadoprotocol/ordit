@@ -2,6 +2,7 @@
 
 DOMAIN="https://network.ordit.io"
 PORT=3030
+TOKEN=ultra-secret-token
 
 # CHAIN
 

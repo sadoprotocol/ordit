@@ -1,12 +1,14 @@
 import { method } from "@valkyr/api";
 import fetch from "node-fetch";
 
+import { hasToken } from "../Actions/HasToken";
 import { config } from "../Config";
 import { getHeighestBlock } from "../Models/Vout";
 import { rpc } from "../Services/Bitcoin";
 import { ord } from "../Services/Ord";
 
 export const getInfo = method({
+  actions: [hasToken],
   handler: async () => {
     const block = await rpc.blockchain.getBlockchainInfo();
     const indexed = await getHeighestBlock();
