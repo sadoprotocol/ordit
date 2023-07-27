@@ -5,9 +5,9 @@ import { TransactionDocument } from "../../Models/Transactions";
 import { sochain } from "../../Services/SoChain";
 
 const options = Schema({
-  noord: boolean.optional(),
-  nohex: boolean.optional(),
-  nowitness: boolean.optional(),
+  ord: boolean.optional(),
+  hex: boolean.optional(),
+  witness: boolean.optional(),
 });
 
 const pagination = Schema({
@@ -25,9 +25,9 @@ export const getTransactions = method({
     return {
       transactions: (await sochain.getTransactions(address, options, pagination)).map(format),
       options: {
-        noord: options?.noord ?? false,
-        nohex: options?.nohex ?? false,
-        nowitness: options?.nowitness ?? false,
+        ord: options?.ord ?? false,
+        hex: options?.hex ?? false,
+        witness: options?.witness ?? false,
       },
       pagination: {
         page: pagination?.page ?? 1,

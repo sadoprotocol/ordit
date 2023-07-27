@@ -71,7 +71,7 @@ async function getTransactions(address: string, options: TransactionsOptions = {
 
 async function getUnspents(
   address: string,
-  { noord = false, notsafetospend = false, allowedrarity = ["common", "uncommon"] }: Options = {}
+  { ord = false, notsafetospend = false, allowedrarity = ["common", "uncommon"] }: Options = {}
 ) {
   const result: any = [];
 
@@ -94,7 +94,7 @@ async function getUnspents(
       sats: sats(parseInt(output.value)),
     };
 
-    if (noord === false) {
+    if (ord === true) {
       const outpoint = `${output.hash}:${output.index}`;
       utxo.ordinals = await getOrdinalsByOutpoint(outpoint);
       utxo.inscriptions = await getInscriptionsByOutpoint(outpoint);

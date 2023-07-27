@@ -1,9 +1,7 @@
 import { fastify } from "../Fastify";
 
-fastify.get("/", async () => {
+fastify.get("/health", async () => {
   return {
-    success: true,
-    message: "Invalid requests",
-    rdata: null,
+    status: "ok",
   };
 });

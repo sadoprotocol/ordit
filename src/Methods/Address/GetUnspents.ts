@@ -6,7 +6,7 @@ import { lookup } from "../../Services/Lookup";
 import { sochain } from "../../Services/SoChain";
 
 const options = Schema({
-  noord: boolean.optional(),
+  ord: boolean.optional(),
   notsafetospend: boolean.optional(),
   allowedrarity: array.of(string).optional(),
 });

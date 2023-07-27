@@ -3,7 +3,7 @@ import Schema, { string } from "computed-types";
 
 import { ord } from "../../Services/Ord";
 
-export const getOrdinalList = method({
+export const getOrdinals = method({
   params: Schema({
     location: string,
   }),

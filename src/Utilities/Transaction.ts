@@ -16,14 +16,14 @@ import { getMetaFromWitness } from "./Oip";
 export const schema = {
   expand: {
     default: Object.freeze({
-      noord: false,
-      nohex: false,
-      nowitness: false,
+      ord: false,
+      hex: false,
+      witness: false,
     }),
     options: Schema({
-      noord: boolean.optional(),
-      nohex: boolean.optional(),
-      nowitness: boolean.optional(),
+      ord: boolean.optional(),
+      hex: boolean.optional(),
+      witness: boolean.optional(),
     }),
   },
 } as const;
@@ -36,7 +36,7 @@ export const schema = {
 
 export async function getExpandedTransaction(
   tx: RawTransaction,
-  { noord = false, nohex = false, nowitness = false }: ExpandOptions = {}
+  { ord = false, hex = false, witness = false }: ExpandOptions = {}
 ): Promise<ExpandedTransaction> {
   let meta: any = undefined;
   let fee = 0;
@@ -55,7 +55,7 @@ export async function getExpandedTransaction(
       }
     }
 
-    if (nowitness === true) {
+    if (witness === false) {
       delete (vin as any).txinwitness;
     }
 
@@ -70,7 +70,7 @@ export async function getExpandedTransaction(
   for (const vout of tx.vout) {
     const outpoint = `${tx.txid}:${vout.n}`;
 
-    if (noord === false) {
+    if (ord === true) {
       (vout as any).ordinals = await getOrdinalsByOutpoint(outpoint);
       (vout as any).inscriptions = await getInscriptionsByOutpoint(outpoint, meta);
     }
@@ -80,7 +80,7 @@ export async function getExpandedTransaction(
     fee -= vout.value;
   }
 
-  if (nohex === true) {
+  if (hex === false) {
     delete (tx as any).hex;
   }
 
