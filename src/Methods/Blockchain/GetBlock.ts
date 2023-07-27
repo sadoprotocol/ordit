@@ -28,7 +28,7 @@ export const getBlock = method({
     const txs: ExpandedTransaction[] = [];
     if (verbose === true) {
       for (let i = 0, length = block.tx.length; i < length; i++) {
-        txs[i] = await getExpandedTransaction(block.tx[i], { ...options, noord: true });
+        txs[i] = await getExpandedTransaction(block.tx[i], { ...options, ord: false });
       }
     }
 
