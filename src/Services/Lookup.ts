@@ -111,7 +111,7 @@ export async function checkTransactionsUpdates(transactions: WithId<TransactionD
 
 async function getUnspents(
   address: string,
-  { ord = true, notsafetospend = false, allowedrarity = ["common", "uncommon"] }: UnspentOptions = {}
+  { ord = true, safetospend = false, allowedrarity = ["common", "uncommon"] }: UnspentOptions = {}
 ) {
   const result = [];
 
@@ -137,7 +137,7 @@ async function getUnspents(
     utxo.safeToSpend = getSafeToSpendState(utxo.ordinals ?? [], utxo.inscriptions ?? [], allowedrarity);
     utxo.confirmation = blockHeight - unspent.blockN + 1;
 
-    if (notsafetospend === true && utxo.safeToSpend === false) {
+    if (safetospend === true && utxo.safeToSpend === false) {
       continue;
     }
 

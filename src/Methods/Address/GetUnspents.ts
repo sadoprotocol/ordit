@@ -7,7 +7,7 @@ import { sochain } from "../../Services/SoChain";
 
 const options = Schema({
   ord: boolean.optional(),
-  notsafetospend: boolean.optional(),
+  safetospend: boolean.optional(),
   allowedrarity: array.of(string).optional(),
 });
 
