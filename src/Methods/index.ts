@@ -1,6 +1,7 @@
 import "./Address";
 import "./Blockchain";
 import "./Ord";
+import "./Transactions";
 import "./Utilities";
 
 import { api } from "../Api";
