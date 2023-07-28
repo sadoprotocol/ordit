@@ -177,7 +177,7 @@ export type Inscription = {
   mediaType: string;
   mediaSize: number;
   mediaContent: string;
-  oipMeta?: any;
+  meta?: any;
 };
 
 export type Satoshi = {

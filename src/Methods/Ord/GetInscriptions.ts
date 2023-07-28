@@ -20,9 +20,9 @@ export const getInscriptions = method({
     const inscriptionIds = await ord.inscriptions(outpoint);
     for (const id of inscriptionIds) {
       const inscription = await ord.inscription(id);
-      const oipMeta = await getMetaFromTxId(txid);
-      if (oipMeta !== undefined) {
-        inscription.oipMeta = oipMeta;
+      const meta = await getMetaFromTxId(txid);
+      if (meta !== undefined) {
+        inscription.meta = meta;
       }
       if (options === undefined || options.url === true) {
         inscription.mediaContent = `${config.api.domain}/content/${id}`;
