@@ -8,6 +8,7 @@ export const transactions = {
   },
   getRawTransaction,
   decodeScript,
+  sendRawTransaction,
 };
 
 /*
@@ -48,6 +49,27 @@ async function getRawTransaction(txid: string, verbose = false): Promise<RawTran
  */
 async function decodeScript(hex: string): Promise<Script | undefined> {
   return rpc<Script | undefined>("decodescript", [hex]);
+}
+
+/**
+ * Submit a raw transaction (serialized, hex-encoded) to local node and network.
+ *
+ * Note that the transaction will be sent unconditionally to all peers, so using
+ * this for manual rebroadcast may degrade privacy by leaking the transaction’s
+ * origin, as nodes will normally not rebroadcast non-wallet transactions already
+ * in their mempool.
+ *
+ * Also see createrawtransaction and signrawtransactionwithkey calls.
+ *
+ * @param hex        - The serialized, hex-encoded transaction.
+ * @param maxFeeRate - Maximum fee rate in BTC/kB to use when creating the transaction.
+ */
+async function sendRawTransaction(hex: string, maxFeeRate?: number): Promise<string> {
+  const args: [string, number?] = [hex];
+  if (maxFeeRate !== undefined) {
+    args.push(maxFeeRate);
+  }
+  return rpc<string>("sendrawtransaction", args);
 }
 
 /*
