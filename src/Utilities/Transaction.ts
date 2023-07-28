@@ -120,8 +120,6 @@ export async function getInscriptionsByOutpoint(outpoint: string, meta?: any): P
   for (const inscriptionId of inscriptionIds) {
     const inscription = await ord.inscription(inscriptionId);
     inscriptions.push({
-      id: inscriptionId,
-      outpoint,
       owner: await getAddressFromVout(tx.vout[parseInt(n)]),
       ...inscription,
       mediaContent: `${config.api.domain}/content/${inscriptionId}`,
