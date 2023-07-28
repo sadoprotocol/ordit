@@ -1,4 +1,5 @@
 import { config } from "../Config";
+import { getOutpointFromId } from "../Models/Media";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
 import { isError } from "../Utilities/Response";
@@ -87,7 +88,7 @@ async function inscription(id: string): Promise<Inscription> {
   if ("error" in result) {
     throw new Error(result.error);
   }
-  return toInscription(result);
+  return toInscription(id, result);
 }
 
 async function inscriptions(location: string): Promise<string[]> {
@@ -145,8 +146,11 @@ async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<
  |--------------------------------------------------------------------------------
  */
 
-function toInscription(inscription: any): Inscription {
+function toInscription(id: string, inscription: any): Inscription {
   return {
+    id,
+    outpoint: getOutpointFromId(id),
+    owner: "",
     fee: inscription.fee,
     height: inscription.height,
     number: inscription.number,
@@ -169,6 +173,9 @@ export type RarityOptions = {
 };
 
 export type Inscription = {
+  id: string;
+  outpoint: string;
+  owner?: string;
   fee: number;
   height: number;
   number: number;
