@@ -6,9 +6,10 @@ export async function getMetaFromTxId(txid: string): Promise<any> {
     if (isCoinbase(vin)) {
       continue;
     }
-    return getMetaFromWitness(vin.txinwitness);
+    if (vin.txinwitness) {
+      return getMetaFromWitness(vin.txinwitness);
+    }
   }
-
   return undefined;
 }
 
