@@ -10,6 +10,7 @@ import {
   updateVoutById,
 } from "../Models/Transactions";
 import { getTransactionCountsByAddress, getUnspentVouts, getVoutByFilter, getVoutsByAddress } from "../Models/Vout";
+import { getMetaFromTxId } from "../Utilities/Oip";
 import {
   getExpandedTransaction,
   getInscriptionsByOutpoint,
@@ -131,7 +132,10 @@ async function getUnspents(
 
     if (ord === true) {
       utxo.ordinals = await getOrdinalsByOutpoint(`${unspent.txid}:${unspent.n}`);
-      utxo.inscriptions = await getInscriptionsByOutpoint(`${unspent.txid}:${unspent.n}`);
+      utxo.inscriptions = await getInscriptionsByOutpoint(
+        `${unspent.txid}:${unspent.n}`,
+        await getMetaFromTxId(unspent.txid)
+      );
     }
 
     utxo.safeToSpend = getSafeToSpendState(utxo.ordinals ?? [], utxo.inscriptions ?? [], allowedrarity);
