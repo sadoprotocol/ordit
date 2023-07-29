@@ -43,7 +43,7 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
     throw error;
   } finally {
     const time = performance.now() - ts;
-    if (time > 1) {
+    if (time / 1000 > 1) {
       log("rpc call %s args [%s] took %s seconds", method, args.join(", "), (time / 1000).toFixed(3));
     }
     logger.addRpc(method, time);
