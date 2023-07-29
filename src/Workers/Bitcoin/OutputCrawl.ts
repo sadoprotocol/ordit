@@ -1,13 +1,19 @@
+import { networks, payments } from "bitcoinjs-lib";
 import debug from "debug";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
 import { addOutputs, OutputDocument, setSpentOutputs, SpentOutput } from "../../Models/Output";
-import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
+import { isCoinbase, rpc, Vout } from "../../Services/Bitcoin";
 
 const log = debug("bitcoin-crawler");
 
 const maxBlockHeight = config.parser.maxBlockHeight;
+
+const network = config.chain.network === "mainnet" ? networks.bitcoin : networks[config.chain.network];
+if (network === undefined) {
+  throw new Error("invalid network", network);
+}
 
 export async function crawl(blockN: number, maxBlockN: number) {
   if (maxBlockHeight !== 0 && blockN > maxBlockHeight) {
@@ -98,17 +104,58 @@ export async function crawl(blockN: number, maxBlockN: number) {
  |--------------------------------------------------------------------------------
  */
 
-export async function getAddressessFromVout(vout: Vout): Promise<string[]> {
+function getAddressessFromVout(vout: Vout) {
   if (vout.scriptPubKey.address !== undefined) {
     return [vout.scriptPubKey.address];
   }
   if (vout.scriptPubKey.addresses) {
     return vout.scriptPubKey.addresses;
   }
-  if (vout.scriptPubKey.desc === undefined) {
+  const address = extractAddress(vout.scriptPubKey.hex);
+  if (address === undefined) {
     return [];
   }
-  return rpc.util
-    .deriveAddresses(vout.scriptPubKey.desc)
-    .catch(optional<string[]>(rpc.util.code.NO_CORRESPONDING_ADDRESS, []));
+  return [address];
+}
+
+function extractAddress(scriptPubKeyHex: string) {
+  const scriptPubKey = Buffer.from(scriptPubKeyHex, "hex");
+
+  try {
+    const address = payments.p2pkh({ output: scriptPubKey, network }).address;
+    if (address) {
+      return address;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const address = payments.p2sh({ output: scriptPubKey, network }).address;
+    if (address) {
+      return address;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const address = payments.p2wpkh({ output: scriptPubKey, network }).address;
+    if (address) {
+      return address;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const address = payments.p2wsh({ output: scriptPubKey, network }).address;
+    if (address) {
+      return address;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  return undefined;
 }
