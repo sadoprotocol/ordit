@@ -7,7 +7,7 @@ import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
 import { getHeighestBlock } from "../Models/Vout";
 import { rpc } from "../Services/Bitcoin";
-import { crawl as crawlBlock } from "./Bitcoin/Crawl";
+import { crawl as crawlBlock } from "./Bitcoin/OutputCrawl";
 import { crawl as crawlOrdinals } from "./Ord/Crawl";
 
 const log = debug("ordit-workers");
