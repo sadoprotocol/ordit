@@ -17,6 +17,8 @@
     "bitcoin:stop": "docker compose -f  ./docker-compose-bitcoin.yaml down",
     "mongodb:start": "docker compose -f ./docker-compose-mongo.yaml up -d",
     "mongodb:stop": "docker compose -f  ./docker-compose-mongo.yaml down",
+    "neo:start": "docker compose -f ./docker-compose-neo.yaml up -d",
+    "neo:stop": "docker compose -f  ./docker-compose-neo.yaml down",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --max-warnings 0 --report-unused-disable-directives --fix"
   },
@@ -30,6 +32,7 @@
     "dotenv": "^16.1.4",
     "fastify": "^4.18.0",
     "mongodb": "^5.6.0",
+    "neo4j-driver": "^5.11.0",
     "node-fetch": "^2.6.11",
     "p-limit": "^3.1.0"
   },

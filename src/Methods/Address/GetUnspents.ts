@@ -17,7 +17,7 @@ export const getUnspents = method({
     options: options.optional(),
   }),
   handler: async ({ address, options }) => {
-    if (config.chain.network === "mainnet") {
+    if (config.chain.network === "testnet" || config.chain.network === "mainnet") {
       return sochain.getUnspents(address, options);
     }
     return lookup.getUnspents(address, options);

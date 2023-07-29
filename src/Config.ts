@@ -38,6 +38,13 @@ export const config = {
     username: getEnvironmentVariable("MONGO_USERNAME"),
     password: getEnvironmentVariable("MONGO_PASSWORD"),
   },
+  neo: {
+    hostname: getEnvironmentVariable("NEO4J_HOSTNAME"),
+    port: getEnvironmentVariable("NEO4J_PORT", envToNumber),
+    database: getEnvironmentVariable("NEO4J_DATABASE"),
+    user: getEnvironmentVariable("NEO4J_USER"),
+    pass: getEnvironmentVariable("NEO4J_PASS"),
+  },
   sochain: {
     url: getEnvironmentVariable("SOCHAIN_URL"),
     network: getEnvironmentVariable("SOCHAIN_NETWORK"),

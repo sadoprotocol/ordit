@@ -2,10 +2,10 @@ import debug from "debug";
 
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
-import { getHeighestBlock } from "../../Models/Vout";
+import { getHeighestBlock } from "../../Models/Output";
 import { rpc } from "../../Services/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
-import { crawl } from "./Crawl";
+import { crawl } from "./OutputCrawl";
 
 const log = debug("bitcoin-indexer");
 

@@ -2,7 +2,7 @@ import { method } from "@valkyr/api";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
-import { getHeighestBlock } from "../Models/Vout";
+import { getHeighestBlock } from "../Models/Output";
 import { rpc } from "../Services/Bitcoin";
 import { ord } from "../Services/Ord";
 
@@ -15,7 +15,7 @@ export const getInfo = method({
       blocks: block.blocks,
       headers: block.headers,
       worker: {
-        height: await getHeighestBlock(),
+        height: indexed,
         active: await getWorkerHealth(),
         utxos: config.parser.enabled,
         ordinals: config.ord.enabled,

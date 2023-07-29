@@ -3,13 +3,14 @@ import { WithId } from "mongodb";
 import type { Options as TransactionsOptions, Pagination } from "../Methods/Address/GetTransactions";
 import type { Options as UnspentOptions } from "../Methods/Address/GetUnspents";
 import {
-  addTransaction,
-  getAddressesFromTx,
-  getTransactionsByAddress,
-  TransactionDocument,
-  updateVoutById,
-} from "../Models/Transactions";
-import { getTransactionCountsByAddress, getUnspentVouts, getVoutByFilter, getVoutsByAddress } from "../Models/Vout";
+  getHeighestOutput,
+  getOutputsByAddress,
+  getTransactionCountByAddress,
+  getUnspentOutputsByAddress,
+} from "../Models/Output";
+import { TransactionDocument, updateVoutById } from "../Models/Transactions";
+import { getVoutByFilter } from "../Models/Vout";
+import { sats } from "../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../Utilities/Oip";
 import {
   getExpandedTransaction,
@@ -32,7 +33,7 @@ export const lookup = {
  */
 
 async function getTotalTransactions(address: string): Promise<number> {
-  const { total } = await getTransactionCountsByAddress(address);
+  const { total } = await getTransactionCountByAddress(address);
   return total;
 }
 
@@ -40,50 +41,30 @@ async function getTransactions(
   address: string,
   options: TransactionsOptions = {},
   { limit = 10, page = 1 }: Pagination = {}
-) {
+): Promise<any[]> {
   const skip = (page - 1) * limit;
-  const transactions = await getTransactionsByAddress(address, {}, { sort: { blockHeight: -1 }, limit, skip });
-  if (transactions.length === limit) {
-    await checkTransactionsUpdates(transactions);
-    return transactions;
-  }
 
-  // ### Find
-  // Find more potential transactions since the last cache operation if the
-  // returned result is less than the limit.
-
-  const txIds = new Set<string>();
-  for (const transaction of transactions) {
-    txIds.add(transaction.txid);
-  }
-
-  const vins = [];
-  const vouts = await getVoutsByAddress(
+  const outputs = await getOutputsByAddress(
     address,
-    { txid: { $nin: Array.from(txIds) } },
-    { sort: { blockN: -1 }, limit, skip }
+    {},
+    { sort: { "vout.block.height": -1, "vin.block.height": -1 }, limit, skip }
   );
-  for (const vout of vouts) {
-    const tx = await rpc.transactions.getRawTransaction(vout.txid, true);
+
+  const transactions: any = [];
+  for (const output of outputs) {
+    const entry = getHeighestOutput(output);
+
+    const tx = await rpc.transactions.getRawTransaction(entry.txid, true);
     if (tx === undefined) {
       continue;
     }
-    const document: TransactionDocument = {
-      addresses: await getAddressesFromTx(tx),
-      blockHeight: vout.blockN,
+    transactions.push({
+      blockHeight: entry.block.height,
       ...(await getExpandedTransaction(tx, options)),
-    };
-    const result = await addTransaction(document);
-    (document as WithId<TransactionDocument>)._id = result.insertedId;
-    transactions.push(document as WithId<TransactionDocument>);
-    if (vout.nextTxid !== undefined) {
-      vins.push(vout.nextTxid);
-    }
+    });
   }
 
-  await checkTransactionsUpdates(transactions);
-
-  return transactions.sort((a, b) => b.blockHeight - a.blockHeight);
+  return transactions;
 }
 
 export async function checkTransactionsUpdates(transactions: WithId<TransactionDocument>[]) {
@@ -118,28 +99,34 @@ async function getUnspents(
 
   const blockHeight = await rpc.blockchain.getBlockCount();
 
-  const unspents = await getUnspentVouts(address);
+  const unspents = await getUnspentOutputsByAddress(address);
   for (const unspent of unspents) {
+    const tx = await rpc.transactions.getRawTransaction(unspent.vout.txid, true);
+    if (tx === undefined) {
+      continue;
+    }
+
+    const vout = tx.vout[unspent.vout.n];
     const utxo: any = {
-      txid: unspent.txid,
-      n: unspent.n,
-      blockHash: unspent.blockHash,
-      blockN: unspent.blockN,
-      scriptPubKey: unspent.scriptPubKey,
-      value: unspent.value,
-      sats: unspent.sats,
+      txid: unspent.vout.txid,
+      n: unspent.vout.n,
+      blockHash: unspent.vout.block.hash,
+      blockN: unspent.vout.block.height,
+      scriptPubKey: vout.scriptPubKey,
+      value: vout.value,
+      sats: sats(vout.value),
     };
 
     if (ord === true) {
-      utxo.ordinals = await getOrdinalsByOutpoint(`${unspent.txid}:${unspent.n}`);
+      utxo.ordinals = await getOrdinalsByOutpoint(`${unspent.vout.txid}:${unspent.vout.n}`);
       utxo.inscriptions = await getInscriptionsByOutpoint(
-        `${unspent.txid}:${unspent.n}`,
-        await getMetaFromTxId(unspent.txid)
+        `${unspent.vout.txid}:${unspent.vout.n}`,
+        await getMetaFromTxId(unspent.vout.txid)
       );
     }
 
     utxo.safeToSpend = getSafeToSpendState(utxo.ordinals ?? [], utxo.inscriptions ?? [], allowedrarity);
-    utxo.confirmation = blockHeight - unspent.blockN + 1;
+    utxo.confirmation = blockHeight - unspent.vout.block.height + 1;
 
     if (safetospend === true && utxo.safeToSpend === false) {
       continue;

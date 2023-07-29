@@ -1,7 +1,9 @@
 import { method } from "@valkyr/api";
 import Schema, { boolean, number, string, Type } from "computed-types";
 
+import { config } from "../../Config";
 import { TransactionDocument } from "../../Models/Transactions";
+import { lookup } from "../../Services/Lookup";
 import { sochain } from "../../Services/SoChain";
 
 const options = Schema({
@@ -22,8 +24,24 @@ export const getTransactions = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
+    if (config.chain.network === "testnet" || config.chain.network === "mainnet") {
+      console.log("SOCHAIN");
+      return {
+        transactions: (await sochain.getTransactions(address, options, pagination)).map(format),
+        options: {
+          ord: options?.ord ?? false,
+          hex: options?.hex ?? false,
+          witness: options?.witness ?? false,
+        },
+        pagination: {
+          page: pagination?.page ?? 1,
+          limit: 10,
+          total: await sochain.getTotalTransactions(address),
+        },
+      };
+    }
     return {
-      transactions: (await sochain.getTransactions(address, options, pagination)).map(format),
+      transactions: (await lookup.getTransactions(address, options, pagination)).map(format),
       options: {
         ord: options?.ord ?? false,
         hex: options?.hex ?? false,
@@ -32,7 +50,7 @@ export const getTransactions = method({
       pagination: {
         page: pagination?.page ?? 1,
         limit: 10,
-        total: await sochain.getTotalTransactions(address),
+        total: await lookup.getTotalTransactions(address),
       },
     };
   },
