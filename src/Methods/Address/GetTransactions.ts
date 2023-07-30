@@ -24,8 +24,7 @@ export const getTransactions = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
-    if (config.chain.network === "testnet" || config.chain.network === "mainnet") {
-      console.log("SOCHAIN");
+    if (config.chain.network === "mainnet") {
       return {
         transactions: (await sochain.getTransactions(address, options, pagination)).map(format),
         options: {

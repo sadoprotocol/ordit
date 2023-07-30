@@ -35,6 +35,8 @@ export async function crawl(blockN: number, maxBlockN: number) {
   const outputs: OutputDocument[] = [];
   const spents: SpentOutput[] = [];
 
+  let addressTime = 0;
+
   for (const tx of block.tx) {
     let n = 0;
     for (const vin of tx.vin) {
@@ -58,7 +60,9 @@ export async function crawl(blockN: number, maxBlockN: number) {
       n += 1;
     }
     for (const vout of tx.vout) {
+      const t = performance.now();
       const addresses = await getAddressessFromVout(vout);
+      addressTime += performance.now() - t;
       if (addresses.length === 0) {
         continue;
       }
@@ -91,7 +95,8 @@ export async function crawl(blockN: number, maxBlockN: number) {
       txs: block.tx.length,
       vins: spents.length,
       vouts: outputs.length,
-      time: logger.total.toFixed(3),
+      total: logger.total.toFixed(3),
+      address: (addressTime / 1000).toFixed(3),
       rpc: [logger.calls.rpc, logger.rpc],
       database: [logger.calls.database, logger.database],
     });
