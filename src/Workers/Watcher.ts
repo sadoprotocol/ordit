@@ -5,12 +5,12 @@ import Fastify from "fastify";
 
 import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
-import { getHeighestBlock } from "../Models/Vout";
+import { getHeighestBlock } from "../Models/Output";
 import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/OutputCrawl";
 import { crawl as crawlOrdinals } from "./Ord/Crawl";
 
-const log = debug("ordit-workers");
+const log = debug("ordit-worker");
 
 const fastify = Fastify();
 
@@ -21,11 +21,13 @@ let indexing = false;
 
 fastify.get("/health", async () => true);
 
-fastify.all("/", async () => {
+fastify.all("/", async (req: any) => {
   if (indexing === true) {
     return;
   }
   indexing = true;
+
+  log("received new block %s", req.query.block);
 
   const currentBlockHeight = await rpc.blockchain.getBlockCount();
 
