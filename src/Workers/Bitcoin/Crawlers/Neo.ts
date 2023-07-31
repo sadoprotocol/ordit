@@ -2,8 +2,9 @@ import debug from "debug";
 
 import { config } from "../../../Config";
 import { logger } from "../../../Logger";
-import { isCoinbase, optional, rpc, Vout } from "../../../Services/Bitcoin";
+import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { neo } from "../../../Services/Neo";
+import { getAddressessFromVout } from "../../../Utilities/Address";
 
 const log = debug("bitcoin-crawler");
 
@@ -69,8 +70,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
     }
 
     for (const vout of tx.vout) {
-      // sanitizeScriptPubKey(vout.scriptPubKey);
-      const address = await getAddressFromVout(vout);
+      const address = getAddressessFromVout(vout);
       if (!address) {
         console.log(vout, address);
         continue;
@@ -80,7 +80,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
         txid: tx.txid,
         value: vout.value,
         n: vout.n,
-        address: await getAddressFromVout(vout).catch(() => ""),
+        address,
       });
     }
   }
@@ -144,26 +144,4 @@ export async function crawl(blockN: number, maxBlockN: number) {
       database: [logger.calls.database, logger.database],
     });
   }
-}
-
-/*
- |--------------------------------------------------------------------------------
- | Utilities
- |--------------------------------------------------------------------------------
- */
-
-export async function getAddressFromVout(vout: Vout): Promise<string | string[] | undefined> {
-  if (vout.scriptPubKey.address !== undefined) {
-    return vout.scriptPubKey.address;
-  }
-  if (vout.scriptPubKey.addresses) {
-    return vout.scriptPubKey.addresses;
-  }
-  if (vout.scriptPubKey.desc === undefined) {
-    return undefined;
-  }
-  const derived = await rpc.util
-    .deriveAddresses(vout.scriptPubKey.desc)
-    .catch(optional<string[]>(rpc.util.code.NO_CORRESPONDING_ADDRESS, []));
-  return derived[0];
 }

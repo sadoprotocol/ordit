@@ -13,7 +13,6 @@ import {
   getSafeToSpendState,
 } from "../Utilities/Transaction";
 import { rpc } from "./Bitcoin";
-import { checkTransactionsUpdates } from "./Lookup";
 
 const headers = {
   Accept: "application/json",
@@ -63,8 +62,6 @@ async function getTransactions(address: string, options: TransactionsOptions = {
     (document as WithId<TransactionDocument>)._id = result.insertedId;
     transactions.push(document as WithId<TransactionDocument>);
   }
-
-  await checkTransactionsUpdates(transactions);
 
   return transactions.sort((a, b) => b.blockHeight - a.blockHeight);
 }

@@ -1,7 +1,7 @@
 import { Filter, FindOptions, ObjectId, WithId } from "mongodb";
 
 import { RawTransaction } from "../../Services/Bitcoin";
-import { getAddressFromVout } from "../../Workers/Bitcoin/Crawlers/Crawl";
+import { getAddressessFromVout } from "../../Utilities/Address";
 import { collection, TransactionDocument } from "./Collection";
 
 /**
@@ -50,7 +50,7 @@ export async function updateVoutById(_id: ObjectId, vout: TransactionDocument["v
 export async function getAddressesFromTx(tx: RawTransaction): Promise<string[]> {
   const addresses = new Set<string>();
   for (const vout of tx.vout) {
-    const address = await getAddressFromVout(vout);
+    const address = getAddressessFromVout(vout)[0];
     if (address !== undefined) {
       addresses.add(address);
     }

@@ -95,6 +95,15 @@ export async function getTransactionCountByAddress(address: string): Promise<{
     }));
 }
 
+export async function getSpendingVin(outpoint: string): Promise<string | undefined> {
+  const [txid, n] = outpoint.split(":");
+  const output = await collection.findOne({ "vout.txid": txid, "vout.n": parseInt(n, 10) });
+  if (output?.vin === undefined) {
+    return undefined;
+  }
+  return `${output.vin.txid}:${output.vin.n}`;
+}
+
 export async function getHeighestBlock(): Promise<number> {
   const output = await collection.findOne({}, { sort: { "vout.block.height": -1, "vin.block.height": -1 } });
   if (output === null) {

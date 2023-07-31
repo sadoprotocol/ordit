@@ -1,5 +1,3 @@
-import { WithId } from "mongodb";
-
 import type { Options as TransactionsOptions, Pagination } from "../Methods/Address/GetTransactions";
 import type { Options as UnspentOptions } from "../Methods/Address/GetUnspents";
 import {
@@ -8,8 +6,6 @@ import {
   getTransactionCountByAddress,
   getUnspentOutputsByAddress,
 } from "../Models/Output";
-import { TransactionDocument, updateVoutById } from "../Models/Transactions";
-import { getVoutByFilter } from "../Models/Vout";
 import { sats } from "../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../Utilities/Oip";
 import {
@@ -65,30 +61,6 @@ async function getTransactions(
   }
 
   return transactions;
-}
-
-export async function checkTransactionsUpdates(transactions: WithId<TransactionDocument>[]) {
-  for (const transaction of transactions) {
-    let hasChanges = false;
-    for (const vout of transaction.vout) {
-      if (vout.spent === false) {
-        const currentVout = await getVoutByFilter({ txid: transaction.txid, n: vout.n });
-        if (currentVout !== undefined && currentVout.nextTxid !== undefined) {
-          hasChanges = true;
-          vout.ordinals = [];
-          vout.inscriptions = [];
-          vout.spent = `${currentVout.nextTxid}:${currentVout.vin}`;
-        } else if (vout.ordinals === undefined || vout.ordinals.length === 0) {
-          hasChanges = true;
-          vout.ordinals = await getOrdinalsByOutpoint(`${transaction.txid}:${vout.n}`);
-          vout.inscriptions = await getInscriptionsByOutpoint(`${transaction.txid}:${vout.n}`);
-        }
-      }
-    }
-    if (hasChanges) {
-      updateVoutById(transaction._id, transaction.vout);
-    }
-  }
 }
 
 async function getUnspents(

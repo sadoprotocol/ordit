@@ -13,6 +13,7 @@ export const blockchain = {
   getBlockchainInfo,
   getBlockCount,
   getBlockHash,
+  getBlockStats,
   getMemPoolInfo,
   getRawMemPool,
   getTxOut,
@@ -69,6 +70,19 @@ async function getBlockHash(height: number): Promise<string> {
 }
 
 /**
+ * Compute per block statistics for a given window. All amounts are in satoshis.
+ *
+ * @param height - Height of the block whose hash should be returned.
+ */
+async function getBlockStats(hashOrHeight: string | number): Promise<BlockStats> {
+  const stats = await rpc("getblockstats", [hashOrHeight]);
+  if (stats === undefined) {
+    throw new Error("Block not found");
+  }
+  return toBlockStats(stats);
+}
+
+/**
  * Returns details on the active state of the TX memory pool.
  */
 async function getMemPoolInfo(): Promise<MemPoolInfo> {
@@ -99,6 +113,46 @@ async function getTxOut(txid: string, vout: number, include_mempool = true): Pro
 
 /*
  |--------------------------------------------------------------------------------
+ | Formatters
+ |--------------------------------------------------------------------------------
+ */
+
+function toBlockStats(stats: any): BlockStats {
+  return {
+    avgFee: stats.avgfee,
+    avgFeeRate: stats.avgfeerate,
+    avgTxSize: stats.avgtxsize,
+    blockhash: stats.blockhash,
+    feeratePercentiles: stats.feerate_percentiles,
+    height: stats.height,
+    ins: stats.ins,
+    maxFee: stats.maxfee,
+    maxFeeRate: stats.maxfeerate,
+    maxTxSize: stats.maxtxsize,
+    medianFee: stats.medianfee,
+    medianTime: stats.mediantime,
+    medianTxSize: stats.mediantxsize,
+    minFee: stats.minfee,
+    minFeeRate: stats.minfeerate,
+    minTxSize: stats.mintxsize,
+    outs: stats.outs,
+    subsidy: stats.subsidy,
+    swTotalSize: stats.swtotal_size,
+    swTotalWeight: stats.swtotal_weight,
+    swtxs: stats.swtxs,
+    time: stats.time,
+    totalOut: stats.total_out,
+    totalSize: stats.total_size,
+    totalWeight: stats.total_weight,
+    totalfee: stats.totalfee,
+    txs: stats.tx,
+    utxoIncrease: stats.utxo_increase,
+    utxoSizeIncrease: stats.utxo_size_increase,
+  };
+}
+
+/*
+ |--------------------------------------------------------------------------------
  | Types
  |--------------------------------------------------------------------------------
  */
@@ -117,6 +171,38 @@ export type BlockchainInfo = {
   size_on_disk: number;
   pruned: boolean;
   warnings: string;
+};
+
+export type BlockStats = {
+  avgFee: number;
+  avgFeeRate: number;
+  avgTxSize: number;
+  blockhash: string;
+  feeratePercentiles: number[];
+  height: number;
+  ins: number;
+  maxFee: number;
+  maxFeeRate: number;
+  maxTxSize: number;
+  medianFee: number;
+  medianTime: number;
+  medianTxSize: number;
+  minFee: number;
+  minFeeRate: number;
+  minTxSize: number;
+  outs: number;
+  subsidy: number;
+  swTotalSize: number;
+  swTotalWeight: number;
+  swtxs: number;
+  time: number;
+  totalOut: number;
+  totalSize: number;
+  totalWeight: number;
+  totalfee: number;
+  txs: number;
+  utxoIncrease: number;
+  utxoSizeIncrease: number;
 };
 
 export type MemPoolInfo = {

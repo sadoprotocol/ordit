@@ -1,10 +1,10 @@
 import Schema, { boolean, Type } from "computed-types";
 
 import { config } from "../Config";
-import { getSpendingVin } from "../Models/Vout";
+import { getSpendingVin } from "../Models/Output";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
 import { ord, Rarity } from "../Services/Ord";
-import { getAddressFromVout } from "../Workers/Bitcoin/Crawlers/Crawl";
+import { getAddressessFromVout } from "./Address";
 import { getMetaFromWitness } from "./Oip";
 
 /*
@@ -62,7 +62,7 @@ export async function getExpandedTransaction(
     const vinTx = await rpc.transactions.getRawTransaction(vin.txid, true);
 
     (vin as any).value = vinTx.vout[vin.vout].value;
-    (vin as any).address = await getAddressFromVout(vinTx.vout[vin.vout]);
+    (vin as any).address = getAddressessFromVout(vinTx.vout[vin.vout])[0];
 
     fee += vinTx.vout[vin.vout].value;
   }
@@ -120,7 +120,7 @@ export async function getInscriptionsByOutpoint(outpoint: string, meta?: any): P
   for (const inscriptionId of inscriptionIds) {
     const inscription = await ord.inscription(inscriptionId);
     inscriptions.push({
-      owner: await getAddressFromVout(tx.vout[parseInt(n)]),
+      owner: getAddressessFromVout(tx.vout[parseInt(n)])[0],
       ...inscription,
       mediaContent: `${config.api.domain}/content/${inscriptionId}`,
       meta,
