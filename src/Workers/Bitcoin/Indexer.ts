@@ -5,7 +5,7 @@ import { config } from "../../Config";
 import { getHeighestBlock } from "../../Models/Output";
 import { rpc } from "../../Services/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
-import { crawl } from "./OutputCrawl";
+import { crawl } from "./Outputs/Output";
 
 const log = debug("bitcoin-indexer");
 

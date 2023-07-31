@@ -4,7 +4,7 @@ import { config } from "../Config";
 import { getSpendingVin } from "../Models/Vout";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
 import { ord, Rarity } from "../Services/Ord";
-import { getAddressFromVout } from "../Workers/Bitcoin/Crawl";
+import { getAddressFromVout } from "../Workers/Bitcoin/Crawlers/Crawl";
 import { getMetaFromWitness } from "./Oip";
 
 /*

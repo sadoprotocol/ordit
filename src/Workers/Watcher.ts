@@ -7,7 +7,8 @@ import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
 import { getHeighestBlock } from "../Models/Output";
 import { rpc } from "../Services/Bitcoin";
-import { crawl as crawlBlock } from "./Bitcoin/OutputCrawl";
+import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
+import { spend } from "./Bitcoin/Outputs/Spend";
 import { crawl as crawlOrdinals } from "./Ord/Crawl";
 
 const log = debug("ordit-worker");
@@ -50,6 +51,7 @@ async function indexUtxos(currentBlockHeight: number): Promise<void> {
     await crawlBlock(crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight += 1;
   }
+  await spend();
 }
 
 async function indexOrdinals(): Promise<void> {

@@ -1,7 +1,7 @@
 import { Filter, FindOptions, ObjectId, WithId } from "mongodb";
 
 import { RawTransaction } from "../../Services/Bitcoin";
-import { getAddressFromVout } from "../../Workers/Bitcoin/Crawl";
+import { getAddressFromVout } from "../../Workers/Bitcoin/Crawlers/Crawl";
 import { collection, TransactionDocument } from "./Collection";
 
 /**

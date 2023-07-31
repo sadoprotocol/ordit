@@ -10,6 +10,7 @@
     "worker": "DEBUG=ordit-* ts-node ./src/Workers/Watcher.ts",
     "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
+    "btc:spender": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Spender.ts",
     "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ord/Indexer.ts",
     "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ord/Snapshot.ts",
     "ord:command": "ts-node ./src/Workers/Ord/Command.ts",

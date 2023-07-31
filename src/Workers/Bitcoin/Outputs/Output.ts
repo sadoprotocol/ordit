@@ -1,10 +1,12 @@
 import { networks, payments } from "bitcoinjs-lib";
 import debug from "debug";
 
-import { config } from "../../Config";
-import { logger } from "../../Logger";
-import { addOutputs, OutputDocument, setSpentOutputs, SpentOutput } from "../../Models/Output";
-import { isCoinbase, rpc, Vout } from "../../Services/Bitcoin";
+import { config } from "../../../Config";
+import { logger } from "../../../Logger";
+import { addOutputs, OutputDocument, SpentOutput } from "../../../Models/Output";
+import { PARSER_DATA } from "../../../Paths";
+import { isCoinbase, rpc, Vout } from "../../../Services/Bitcoin";
+import { writeFile } from "../../../Utilities/Files";
 
 const log = debug("bitcoin-crawler");
 
@@ -83,7 +85,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
   // ### Insert
 
   await addOutputs(outputs);
-  await setSpentOutputs(spents);
+  await writeFile(`${PARSER_DATA}/${block.height}`, JSON.stringify(spents));
 
   // ### Debug
 

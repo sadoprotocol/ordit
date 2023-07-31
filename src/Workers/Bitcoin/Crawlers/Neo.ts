@@ -1,9 +1,9 @@
 import debug from "debug";
 
-import { config } from "../../Config";
-import { logger } from "../../Logger";
-import { isCoinbase, optional, rpc, Vout } from "../../Services/Bitcoin";
-import { neo } from "../../Services/Neo";
+import { config } from "../../../Config";
+import { logger } from "../../../Logger";
+import { isCoinbase, optional, rpc, Vout } from "../../../Services/Bitcoin";
+import { neo } from "../../../Services/Neo";
 
 const log = debug("bitcoin-crawler");
 
