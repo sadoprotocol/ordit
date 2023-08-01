@@ -18,11 +18,21 @@ const fastify = Fastify();
 fastify.register(cors);
 fastify.register(helmet);
 
-let indexing = false;
-
 fastify.get("/health", async () => true);
 
-fastify.all("/", async (req: any) => {
+/*
+ |--------------------------------------------------------------------------------
+ | Bitcoin
+ |--------------------------------------------------------------------------------
+ |
+ | Listens for new blocks coming in from the blockhain node and triggers indexing
+ | of the outputs and ordinals via ord service.
+ |
+ */
+
+let indexing = false;
+
+fastify.get("/hooks/bitcoin", async (req: any) => {
   if (indexing === true) {
     return;
   }
@@ -45,6 +55,27 @@ fastify.all("/", async (req: any) => {
   indexing = false;
 });
 
+/*
+ |--------------------------------------------------------------------------------
+ | Ordinals
+ |--------------------------------------------------------------------------------
+ |
+ | Hook listening for events sent from https://github.com/hirosystems/ordhook
+ | service. This service actively scans for changes to the bitcoin chain and
+ | emits events for ordinal and inscriptions changes.
+ |
+ */
+
+fastify.post("/hooks/ord", async (req) => {
+  console.log(req);
+});
+
+/*
+ |--------------------------------------------------------------------------------
+ | Utilities
+ |--------------------------------------------------------------------------------
+ */
+
 async function indexUtxos(currentBlockHeight: number): Promise<void> {
   let crawlerBlockHeight = await getHeighestBlock();
   while (crawlerBlockHeight <= currentBlockHeight) {
@@ -57,6 +88,12 @@ async function indexUtxos(currentBlockHeight: number): Promise<void> {
 async function indexOrdinals(): Promise<void> {
   await crawlOrdinals();
 }
+
+/*
+ |--------------------------------------------------------------------------------
+ | Start Watcher
+ |--------------------------------------------------------------------------------
+ */
 
 const start = async () => {
   await bootstrap();

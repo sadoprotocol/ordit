@@ -8,6 +8,7 @@
     "setup": "DEBUG=ordit-* ts-node ./src/Workers/Setup.ts",
     "start": "DEBUG=ordit-* ts-node ./src/main.ts",
     "worker": "DEBUG=ordit-* ts-node ./src/Workers/Watcher.ts",
+    "hord": "DEBUG=ordit-* ts-node ./src/Workers/Hord.ts",
     "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
     "btc:spender": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Spender.ts",
@@ -26,6 +27,7 @@
   "dependencies": {
     "@fastify/cors": "^8.3.0",
     "@fastify/helmet": "^10.1.1",
+    "@hirosystems/chainhook-client": "^1.3.4",
     "@valkyr/api": "^0.23.4",
     "big.js": "^6.2.1",
     "bitcoinjs-lib": "^6.1.3",

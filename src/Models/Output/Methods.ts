@@ -88,7 +88,7 @@ export async function getTransactionCountByAddress(address: string): Promise<{
       },
     ])
     .toArray()
-    .then(([{ totalVout, totalVin }]) => ({
+    .then(([{ totalVout = 0, totalVin = 0 }]) => ({
       sent: totalVout,
       received: totalVin,
       total: totalVout + totalVin,
