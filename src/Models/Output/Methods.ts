@@ -88,11 +88,17 @@ export async function getTransactionCountByAddress(address: string): Promise<{
       },
     ])
     .toArray()
-    .then(([{ totalVout = 0, totalVin = 0 }]) => ({
-      sent: totalVout,
-      received: totalVin,
-      total: totalVout + totalVin,
-    }));
+    .then((result) => {
+      if (result.length === 0) {
+        return { sent: 0, received: 0, total: 0 };
+      }
+      const [{ totalVout, totalVin }] = result;
+      return {
+        sent: totalVout,
+        received: totalVin,
+        total: totalVout + totalVin,
+      };
+    });
 }
 
 export async function getSpendingVin(outpoint: string): Promise<string | undefined> {
