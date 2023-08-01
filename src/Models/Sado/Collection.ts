@@ -27,7 +27,6 @@ export type SadoDocument = {
   expiry?: number;
   meta?: Record<string, unknown>;
   block: Block;
-  rejection?: any;
 };
 
 type Type = "buy" | "sell";

@@ -2,7 +2,7 @@ import { rpc } from "../../../Services/Bitcoin";
 import { ipfs } from "../../../Services/IPFS";
 import { getOutput } from "../../Output";
 import { OrderInvalidMaker, OrderTransactionNotFound, OrderVoutNotFound } from "../Exceptions/OrderException";
-import { addOrder, setRejected } from "../Methods";
+import { addOrder } from "../Methods";
 import { validateSignature } from "../Validators/ValidateSignature";
 import { parseLocation } from "./ParseLocation";
 
@@ -19,27 +19,27 @@ export async function parseOrder(cid: string, block: Block) {
     return; // skip if output is not found or has been spent
   }
 
-  // ### Register Order
-
-  await addOrder({
-    cid,
-    type: order.type,
-    status: "pending",
-    location: order.location,
-    cardinals: order.cardinals,
-    maker: order.maker,
-    offers: [],
-    orderbooks: order.orderbooks?.map(getOrderbook) ?? [],
-    block,
-  });
-
   // ### Validate Order
 
   try {
     await validateLocation(order.location, order.maker);
     await validateSignature(order);
+    await addOrder({
+      cid,
+      type: order.type,
+      status: "pending",
+      location: order.location,
+      cardinals: order.cardinals,
+      maker: order.maker,
+      offers: [],
+      orderbooks: order.orderbooks?.map(getOrderbook) ?? [],
+      instant: order.instant,
+      expiry: order.expiry,
+      meta: order.meta,
+      block,
+    });
   } catch (error) {
-    await setRejected(cid, error);
+    return console.log(error);
   }
 }
 
