@@ -10,6 +10,7 @@ import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
 import { crawl as crawlOrdinals } from "./Ord/Crawl";
+import { parse } from "./Sado/Parse";
 
 const log = debug("ordit-worker");
 
@@ -67,7 +68,7 @@ fastify.get("/hooks/bitcoin", async (req: any) => {
  */
 
 fastify.post("/hooks/ord", async (req) => {
-  console.log(req);
+  console.log("hord", req.body);
 });
 
 /*
@@ -83,6 +84,7 @@ async function indexUtxos(currentBlockHeight: number): Promise<void> {
     crawlerBlockHeight += 1;
   }
   await spend();
+  await parse();
 }
 
 async function indexOrdinals(): Promise<void> {

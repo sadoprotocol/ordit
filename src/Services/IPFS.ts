@@ -120,19 +120,26 @@ async function get<Data extends IPFSData>(cid: string): Promise<Data | undefined
     return document as Data;
   }
 
-  const response = await fetch(config.ipfs.gateway + "/ipfs/" + cid, {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1000);
+
+  return fetch(config.ipfs.gateway + "/ipfs/" + cid, {
     method: "GET",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
     },
-  });
-
-  if (response.status === 200) {
-    const data = await response.json();
-    setIPFS(data);
-    return data;
-  }
+    signal: controller.signal,
+  })
+    .then((response) => {
+      clearTimeout(timeoutId);
+      return response.json();
+    })
+    .then((data) => {
+      setIPFS(data);
+      return data;
+    })
+    .catch(() => undefined);
 }
 
 function successResponse<Data extends IPFSData>(data: Data): IPFSResponse<Data> {

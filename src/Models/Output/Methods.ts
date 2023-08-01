@@ -47,6 +47,17 @@ export async function setSpentOutputs(spents: SpentOutput[], chunkSize = 1000) {
   logger.addDatabase("spents", performance.now() - ts);
 }
 
+export async function getOutput(
+  filter: Filter<OutputDocument>,
+  options?: FindOptions<OutputDocument>
+): Promise<OutputDocument | undefined> {
+  const output = await collection.findOne(filter, options);
+  if (output === null) {
+    return undefined;
+  }
+  return output;
+}
+
 export async function getOutputsByAddress(
   address: string,
   filter?: Filter<OutputDocument>,

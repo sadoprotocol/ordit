@@ -1,3 +1,7 @@
+import { networks } from "bitcoinjs-lib";
+
+import { config } from "../Config";
+
 export const VALID_NETWORK = ["mainnet", "testnet", "regtest"] as const;
 
 export type Network = (typeof VALID_NETWORK)[number];
@@ -11,6 +15,20 @@ export type Network = (typeof VALID_NETWORK)[number];
  */
 export function isValidNetwork(value: unknown): value is Network {
   return VALID_NETWORK.find((n) => n === value) !== undefined;
+}
+
+export function getBitcoinNetwork(): networks.Network {
+  switch (config.chain.network) {
+    case "mainnet": {
+      return networks.bitcoin;
+    }
+    case "testnet": {
+      return networks.testnet;
+    }
+    case "regtest": {
+      return networks.regtest;
+    }
+  }
 }
 
 /**

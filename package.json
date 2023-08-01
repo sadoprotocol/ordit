@@ -16,6 +16,7 @@
     "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ord/Snapshot.ts",
     "ord:command": "ts-node ./src/Workers/Ord/Command.ts",
     "sado:indexer": "DEBUG=ordit-*,sado-* ts-node ./src/Workers/Sado/Indexer.ts",
+    "sado:parser": "DEBUG=ordit-*,sado-* ts-node ./src/Workers/Sado/Parser.ts",
     "bitcoin:start": "docker compose -f  ./docker-compose-bitcoin.yaml up -d",
     "bitcoin:stop": "docker compose -f  ./docker-compose-bitcoin.yaml down",
     "mongodb:start": "docker compose -f ./docker-compose-mongo.yaml up -d",
@@ -31,7 +32,9 @@
     "@hirosystems/chainhook-client": "^1.3.4",
     "@valkyr/api": "^0.23.4",
     "big.js": "^6.2.1",
+    "bip32": "^4.0.0",
     "bitcoinjs-lib": "^6.1.3",
+    "bitcoinjs-message": "^2.2.0",
     "computed-types": "^1.11.2",
     "debug": "~4.3.4",
     "dotenv": "^16.1.4",
@@ -40,7 +43,8 @@
     "mongodb": "^5.6.0",
     "neo4j-driver": "^5.11.0",
     "node-fetch": "^2.6.11",
-    "p-limit": "^3.1.0"
+    "p-limit": "^3.1.0",
+    "tiny-secp256k1": "^2.2.3"
   },
   "devDependencies": {
     "@types/big.js": "^6.1.6",

@@ -31,6 +31,9 @@ export const config = {
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
+  sado: {
+    startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),
+  },
   ipfs: {
     gateway: getEnvironmentVariable("IPFS_GATEWAY"),
     api: getEnvironmentVariable("IPFS_API"),

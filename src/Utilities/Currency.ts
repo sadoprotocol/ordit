@@ -1,48 +1,36 @@
+import debug from "debug";
 import fetch from "node-fetch";
 
-import { Response, ResponseError } from "./Response";
+const log = debug("sado-dex");
 
-let cache: Currency | undefined;
-let cacheTime: number;
+export const currency: Currency = {};
 
-export async function getCurrency(): Promise<Response<Currency, CurrencyFetchError>> {
-  const current = getCachedCurrency();
-  if (current !== undefined) {
-    return current;
-  }
+/*
+ |--------------------------------------------------------------------------------
+ | Dex Price Updater
+ |--------------------------------------------------------------------------------
+ */
 
+setInterval(setCurrency, 1000 * 60 * 15);
+
+async function setCurrency(): Promise<void> {
   const res = await fetch("https://blockchain.info/ticker");
   if (res.status !== 200) {
-    return CurrencyFetchError.Report();
+    return;
   }
 
   const data = await res.json();
-
-  const result: Currency = {};
   for (const key in data) {
-    result[key] = {
+    currency[key] = {
       value: data[key].last,
       symbol: data[key].symbol,
     };
   }
-  cache = result;
 
-  return cache;
+  log("USD: %d | SGD: %d | CNY: %d", currency.USD.value, currency.SGD.value, currency.CNY.value);
 }
 
-function getCachedCurrency(): Currency | undefined {
-  const isStaleCache = cacheTime + 1000 * 60 * 15 < Date.now();
-  if (isStaleCache) {
-    cache = undefined;
-  }
-  return cache;
-}
-
-class CurrencyFetchError extends ResponseError {
-  constructor() {
-    super("Failed to fetch currency data");
-  }
-}
+setCurrency();
 
 type Currency = {
   [key: string]: {

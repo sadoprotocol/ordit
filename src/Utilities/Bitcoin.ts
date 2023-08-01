@@ -1,6 +1,9 @@
 import { Big, BigSource } from "big.js";
 
 import { Vout } from "../Services/Bitcoin";
+import { currency } from "./Currency";
+
+export const BTC_TO_SAT = 1e8;
 
 /**
  * Get the number of satoshis from a value.
@@ -9,6 +12,18 @@ import { Vout } from "../Services/Bitcoin";
  */
 export function sats(value: BigSource): number {
   return new Big(value).times(1e8).round(0, 0).toNumber();
+}
+
+export function satToBtc(sat: number): number {
+  return sat / BTC_TO_SAT;
+}
+
+export function btcToSat(btc: number): number {
+  return Math.floor(btc * BTC_TO_SAT);
+}
+
+export function btcToUsd(btc: number): number {
+  return btc * currency.USD.value;
 }
 
 /**

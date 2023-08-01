@@ -31,7 +31,6 @@ export type IPFSOffer = {
   cid: string;
   ts: number;
   origin: string;
-  order: IPFSOrder;
   offer: string;
   offer_format?: string;
   taker: string;

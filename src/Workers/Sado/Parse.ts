@@ -1,7 +1,5 @@
 import debug from "debug";
 
-import { limiter } from "../../Libraries/Limiter";
-import { SadoDocument, SadoOffer } from "../../Models/Sado";
 import { parseOffer } from "../../Models/Sado/Utilities/ParseOffer";
 import { parseOrder } from "../../Models/Sado/Utilities/ParseOrder";
 import { SADO_DATA } from "../../Paths";
@@ -10,44 +8,46 @@ import { readDir, readFile, removeFile, writeFile } from "../../Utilities/Files"
 
 const log = debug("sado-parser");
 
-const queue = limiter(20);
-
 export async function parse() {
   const blocks = await readDir(SADO_DATA);
   if (blocks.length === 0) {
     return log("all items processed");
   }
   log("processing %d items", blocks.length);
-  // for (const block of blocks) {
-  //   queue.push(async () => {
-  //     const data = await readFile(`${PARSER_DATA}/${block}`);
-  //     if (data === undefined) {
-  //       writeFile(`${PARSER_ERROR}/${block}`, `Could not read block file ${block}`);
-  //       return;
-  //     }
-  //     const spents = JSON.parse(data);
-  //     return setSpentOutputs(spents).then(() => {
-  //       removeFile(`${PARSER_DATA}/${block}`);
-  //       log("block %d processed %d spents", block, spents.length);
-  //     });
-  //   });
-  // }
-  await queue.run();
+  for (const block of blocks) {
+    const data = await readFile(`${SADO_DATA}/${block}`);
+    if (data === undefined) {
+      return;
+    }
+    const json = getParsedBlock(data);
+    if (json === undefined) {
+      throw new Error(`Failed to parse block ${block}`);
+    }
+    for (const { cid, txid } of json.orders) {
+      log("processing order %s", cid);
+      await parseOrder(cid, { ...json.block, txid });
+    }
+    for (const { cid, txid } of json.offers) {
+      log("processing offer %s", cid);
+      await parseOffer(cid, { ...json.block, txid });
+    }
+    await removeFile(`${SADO_DATA}/${block}`);
+  }
 }
 
 export async function parseBlock(block: Block & Transactions) {
-  const orders: string[] = [];
-  const offers: string[] = [];
+  const orders: SadoEntry[] = [];
+  const offers: SadoEntry[] = [];
 
   const txs = getSadoTransactions(block.tx);
-  for (const { type, cid } of txs) {
+  for (const { type, cid, txid } of txs) {
     switch (type) {
       case "order": {
-        orders.push(cid);
+        orders.push({ cid, txid });
         break;
       }
       case "offer": {
-        offers.push(cid);
+        offers.push({ cid, txid });
         break;
       }
     }
@@ -69,6 +69,14 @@ export async function parseBlock(block: Block & Transactions) {
       offers,
     })
   );
+}
+
+function getParsedBlock(data: string): SadoBlock | undefined {
+  try {
+    return JSON.parse(data) as SadoBlock;
+  } catch {
+    return;
+  }
 }
 
 function getSadoTransactions(txs: RawTransaction[]): SadoTransaction[] {
@@ -104,6 +112,18 @@ function parseSadoOutput(utf8?: string): Omit<SadoTransaction, "txid"> | undefin
     }
   }
 }
+
+type SadoBlock = {
+  block: {
+    hash: string;
+    height: number;
+    time: number;
+  };
+  orders: SadoEntry[];
+  offers: SadoEntry[];
+};
+
+type SadoEntry = Omit<SadoTransaction, "type">;
 
 type SadoTransaction = {
   type: SadoType;

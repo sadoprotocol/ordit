@@ -5,6 +5,7 @@ export const collection = mongo.db.collection<SadoDocument>("sado");
 export const registrar: CollectionRegistrar = {
   name: "sado",
   indexes: [
+    [{ cid: 1 }, { unique: true }],
     [{ location: 1 }],
     [{ maker: 1 }],
     [{ orderbooks: 1 }],
@@ -26,17 +27,18 @@ export type SadoDocument = {
   expiry?: number;
   meta?: Record<string, unknown>;
   block: Block;
+  rejection?: any;
 };
 
 type Type = "buy" | "sell";
 
-type Status = "pending" | "rejected" | "completed";
+type Status = "incoming" | "rejected" | "pending" | "completed";
 
 export type SadoOffer = {
   cid: string;
   origin: string;
   taker: string;
-  cardinals: number;
+  offer: string;
   block: Block;
 };
 

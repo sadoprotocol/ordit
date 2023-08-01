@@ -1,3 +1,5 @@
+import "./Utilities/Currency";
+
 import { registrar as ipfs } from "./Models/IPFS";
 import { registrar as media } from "./Models/Media";
 import { registrar as output } from "./Models/Output";
