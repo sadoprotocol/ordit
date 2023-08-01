@@ -3,7 +3,7 @@ import debug from "debug";
 import { config } from "../../../Config";
 import { logger } from "../../../Logger";
 import { addOutputs, OutputDocument, SpentOutput } from "../../../Models/Output";
-import { PARSER_DATA } from "../../../Paths";
+import { PARSER_DATA, SADO_DATA } from "../../../Paths";
 import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../../Utilities/Address";
 import { writeFile } from "../../../Utilities/Files";
@@ -81,6 +81,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   await addOutputs(outputs);
   await writeFile(`${PARSER_DATA}/${block.height}`, JSON.stringify(spents));
+  await writeFile(`${SADO_DATA}/${block.height}`, JSON.stringify(block));
 
   // ### Debug
 

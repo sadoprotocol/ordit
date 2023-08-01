@@ -22,6 +22,10 @@ export const ORD_DATA_SNAPSHOTS = resolve(ORD_DATA_SNAPSHOT, "snapshots");
 export const PARSER_DATA = resolve(DATA_DIR, "outputs");
 export const PARSER_ERROR = resolve(DATA_DIR, "failed");
 
+// ### Sado Parser
+
+export const SADO_DATA = resolve(DATA_DIR, "sado");
+
 // ### Ensure Paths Exists
 
 mkdirSync(DATA_DIR, { recursive: true });
@@ -32,3 +36,4 @@ mkdirSync(getNetworkPath(ORD_DATA_SNAPSHOT), { recursive: true });
 mkdirSync(ORD_DATA_SNAPSHOTS, { recursive: true });
 mkdirSync(PARSER_DATA, { recursive: true });
 mkdirSync(PARSER_ERROR, { recursive: true });
+mkdirSync(SADO_DATA, { recursive: true });

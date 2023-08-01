@@ -31,6 +31,10 @@ export const config = {
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
+  ipfs: {
+    gateway: getEnvironmentVariable("IPFS_GATEWAY"),
+    api: getEnvironmentVariable("IPFS_API"),
+  },
   mongo: {
     hostname: getEnvironmentVariable("MONGO_HOSTNAME"),
     port: getEnvironmentVariable("MONGO_PORT", envToNumber),
