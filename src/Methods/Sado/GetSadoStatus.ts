@@ -44,7 +44,7 @@ async function getOrderStatus(entry: SadoDocument) {
     };
   }
 
-  const order = await getOrder(entry.cid);
+  const order = await getOrder({ cid: entry.cid });
   if (order !== undefined) {
     delete (order as any)._id;
     return {
@@ -186,7 +186,7 @@ async function getOfferStatus(entry: SadoDocument) {
     }
   }
 
-  const sadoOrder = await getOrder(data.origin);
+  const sadoOrder = await getOrder({ cid: data.origin });
   if (sadoOrder !== undefined) {
     return {
       type: "offer",
