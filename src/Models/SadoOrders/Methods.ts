@@ -1,15 +1,5 @@
 import { config } from "../../Config";
-import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, SadoOffer, SadoOrder } from "./Collection";
-
-export async function addOrders(orders: SadoOrder[], chunkSize = 1000) {
-  const promises = [];
-  for (let i = 0; i < orders.length; i += chunkSize) {
-    const chunk = orders.slice(i, i + chunkSize);
-    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
-  }
-  await Promise.all(promises);
-}
 
 export async function addOrder(order: SadoOrder) {
   await collection.updateOne({ cid: order.cid }, { $set: order }, { upsert: true });

@@ -3,7 +3,7 @@ import { Filter, FindOptions } from "mongodb";
 import { collection, SadoDocument } from "./Collection";
 
 export async function addSado(sado: SadoDocument) {
-  collection.insertOne(sado);
+  await collection.updateOne({ cid: sado.cid }, { $set: sado }, { upsert: true });
 }
 
 export async function getSadoEntries(filter: Filter<SadoDocument>, options?: FindOptions<SadoDocument>) {
