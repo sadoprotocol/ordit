@@ -7,7 +7,7 @@ import { printProgress } from "../../Utilities/Progress";
 import { addBlock } from "./AddBlock";
 import { getBlockHeight } from "./Status";
 
-const log = debug("bitcoin-indexer");
+const log = debug("sado-indexer");
 
 main().finally(() => process.exit(0));
 
@@ -18,6 +18,10 @@ async function main() {
 
   const blockHeight = await rpc.blockchain.getBlockCount();
   const sadoHeight = await getBlockHeight();
+
+  if (blockHeight === sadoHeight) {
+    return log("sado is synced with network");
+  }
 
   log("indexing from %d to %d", sadoHeight, blockHeight);
 

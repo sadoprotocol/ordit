@@ -6,14 +6,7 @@ import { parse } from "./Parse";
 
 const log = debug("sado-parser");
 
-main()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.log(error);
-    process.exit(1);
-  });
+main().finally(() => process.exit(0));
 
 async function main() {
   log("network: %s", config.chain.network);

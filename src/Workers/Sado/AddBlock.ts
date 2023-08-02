@@ -34,8 +34,9 @@ export async function addBlock(block: Block & Transactions) {
         offers,
       })
     );
-    await setBlockHeight(block.height);
   }
+
+  await setBlockHeight(block.height);
 }
 
 function getSadoTransactions(txs: RawTransaction[]): SadoTransaction[] {
