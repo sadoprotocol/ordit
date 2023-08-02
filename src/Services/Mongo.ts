@@ -65,6 +65,11 @@ function collection<T extends Document>(name: string) {
  |--------------------------------------------------------------------------------
  */
 
+export function stripMongoId<T>(doc: any): Omit<T, "_id"> {
+  delete (doc as any)._id;
+  return doc;
+}
+
 function getMongoUri() {
   const { hostname, port, username, password } = config.mongo;
   if (username && password) {

@@ -1,4 +1,5 @@
 import { CollectionRegistrar, mongo } from "../../Services/Mongo";
+import { Inscription } from "../../Services/Ord";
 
 export const collection = mongo.db.collection<SadoOrder>("sado_orders");
 
@@ -27,6 +28,7 @@ export type SadoOrder = {
   expiry?: number;
   meta?: Record<string, unknown>;
   block: Block;
+  inscriptions: Inscription[];
 };
 
 export type Type = "buy" | "sell" | "collection";

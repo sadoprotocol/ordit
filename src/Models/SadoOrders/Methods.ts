@@ -1,3 +1,5 @@
+import { Filter, FindOptions } from "mongodb";
+
 import { config } from "../../Config";
 import { collection, SadoOffer, SadoOrder } from "./Collection";
 
@@ -9,16 +11,23 @@ export async function addOffer(cid: string, offer: SadoOffer) {
   await collection.updateOne({ cid }, { $push: { offers: offer } });
 }
 
-export async function getOrder(cid: string): Promise<SadoOrder | undefined> {
-  const order = await collection.findOne({ cid });
+export async function getOrdersByAddress(address: string): Promise<SadoOrder[]> {
+  return getOrders({ $or: [{ "orderbooks.address": address }, { maker: address }] });
+}
+
+export async function getOrders(filter: Filter<SadoOrder>, options?: FindOptions<SadoOrder>) {
+  return collection.find(filter, options).toArray();
+}
+
+export async function getOrder(
+  filter: Filter<SadoOrder>,
+  options?: FindOptions<SadoOrder>
+): Promise<SadoOrder | undefined> {
+  const order = await collection.findOne(filter, options);
   if (order === null) {
     return undefined;
   }
   return order;
-}
-
-export async function getOrdersByAddress(address: string): Promise<SadoOrder[]> {
-  return collection.find({ $or: [{ "orderbooks.address": address }, { maker: address }] }).toArray();
 }
 
 export async function getHeighestBlock(): Promise<number> {

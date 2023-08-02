@@ -1,6 +1,8 @@
 import { api } from "../../Api";
-import { getOrdersByAddress } from "./GetOrdersByAddress";
+import { getSadoEntriesByAddress } from "./GetSadoEntriesByAddress";
+import { getSadoOrderbook } from "./GetSadoOrderbook";
 import { getSadoStatus } from "./GetSadoStatus";
 
-api.register("GetOrdersByAddress", getOrdersByAddress);
+api.register("GetSadoOrderbook", getSadoOrderbook);
+api.register("GetSadoEntriesByAddress", getSadoEntriesByAddress);
 api.register("GetSadoStatus", getSadoStatus);
