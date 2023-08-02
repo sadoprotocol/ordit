@@ -28,7 +28,7 @@ export type SadoOrder = {
   expiry?: number;
   meta?: Record<string, unknown>;
   block: Block;
-  inscriptions: Inscription[];
+  inscriptions?: Inscription[];
 };
 
 export type Type = "buy" | "sell" | "collection";

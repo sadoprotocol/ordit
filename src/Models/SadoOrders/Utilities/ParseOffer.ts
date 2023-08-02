@@ -12,7 +12,7 @@ export async function parseOffer(cid: string, block: Block) {
 
   // ### Get Order
 
-  const order = await getOrder(offer.origin);
+  const order = await getOrder({ cid: offer.origin });
   if (order === undefined) {
     return;
   }
