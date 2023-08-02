@@ -6,14 +6,7 @@ import { spend } from "./Outputs/Spend";
 
 const log = debug("bitcoin-spend");
 
-main()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.log(error);
-    process.exit(1);
-  });
+main().finally(() => process.exit(0));
 
 async function main() {
   log("network: %s", config.chain.network);

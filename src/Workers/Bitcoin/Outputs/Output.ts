@@ -7,7 +7,6 @@ import { PARSER_DATA } from "../../../Paths";
 import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../../Utilities/Address";
 import { writeFile } from "../../../Utilities/Files";
-import { parseBlock } from "../../Sado/Parse";
 
 const log = debug("bitcoin-crawler");
 
@@ -82,7 +81,6 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   await addOutputs(outputs);
   await writeFile(`${PARSER_DATA}/${block.height}`, JSON.stringify(spents));
-  await parseBlock(block);
 
   // ### Debug
 

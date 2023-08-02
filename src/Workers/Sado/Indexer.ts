@@ -2,42 +2,34 @@ import debug from "debug";
 
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
-import { getHeighestBlock } from "../../Models/SadoOrders";
 import { rpc } from "../../Services/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
-import { parseBlock } from "./Parse";
+import { addBlock } from "./AddBlock";
+import { getBlockHeight } from "./Status";
 
 const log = debug("bitcoin-indexer");
 
-main()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.log(error);
-    process.exit(1);
-  });
+main().finally(() => process.exit(0));
 
 async function main() {
   log("network: %s", config.chain.network);
 
   await bootstrap();
 
-  const currentBlockHeight = await rpc.blockchain.getBlockCount();
-  log("current network block height is %d", currentBlockHeight);
+  const blockHeight = await rpc.blockchain.getBlockCount();
+  const sadoHeight = await getBlockHeight();
 
-  const lastCrawledBlockHeight = await getHeighestBlock();
-  let crawlerBlockHeight = lastCrawledBlockHeight === 0 ? 0 : lastCrawledBlockHeight - 1;
-  log("current indexed block height is %d", crawlerBlockHeight);
+  log("indexing from %d to %d", sadoHeight, blockHeight);
 
-  while (crawlerBlockHeight <= currentBlockHeight) {
-    const hash = await rpc.blockchain.getBlockHash(crawlerBlockHeight);
+  let height = sadoHeight + 1;
+  while (height <= blockHeight) {
+    const hash = await rpc.blockchain.getBlockHash(height);
     const block = await rpc.blockchain.getBlock(hash, 2);
 
-    await parseBlock(block);
+    await addBlock(block);
 
-    printProgress("sado-parser", crawlerBlockHeight, currentBlockHeight);
+    printProgress("sado-parser", height, blockHeight);
 
-    crawlerBlockHeight += 1;
+    height += 1;
   }
 }
