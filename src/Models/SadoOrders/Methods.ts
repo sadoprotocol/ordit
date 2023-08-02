@@ -37,3 +37,7 @@ export async function getHeighestBlock(): Promise<number> {
   }
   return order.block.height;
 }
+
+export async function deleteSadoOrdersAfterHeight(height: number) {
+  await collection.deleteMany({ "block.height": { $gt: height } });
+}

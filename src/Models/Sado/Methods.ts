@@ -17,3 +17,7 @@ export async function getSadoEntry(filter: Filter<SadoDocument>, options?: FindO
   }
   return document;
 }
+
+export async function deleteSadoAfterHeight(height: number) {
+  await collection.deleteMany({ height: { $gt: height } });
+}

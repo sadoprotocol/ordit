@@ -33,6 +33,7 @@ export const config = {
   },
   sado: {
     startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),
+    enabled: getEnvironmentVariable("SADO_PARSER_ENABLED", envToBoolean),
   },
   ipfs: {
     gateway: getEnvironmentVariable("IPFS_GATEWAY"),

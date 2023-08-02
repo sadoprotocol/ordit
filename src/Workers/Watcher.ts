@@ -5,12 +5,14 @@ import Fastify from "fastify";
 
 import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
-import { getHeighestBlock } from "../Models/Output";
+import { deleteOutputsAfterHeight, getHeighestBlock as getHeighestOutputBlock, getOutput } from "../Models/Output";
+import { deleteSadoAfterHeight } from "../Models/Sado";
+import { deleteSadoOrdersAfterHeight, getHeighestBlock as getHeighestSadoBlock } from "../Models/SadoOrders";
 import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
 import { crawl as crawlOrdinals } from "./Ord/Crawl";
-import { parse } from "./Sado/Parse";
+import { parse, parseBlock } from "./Sado/Parse";
 
 const log = debug("ordit-worker");
 
@@ -42,9 +44,17 @@ fastify.get("/hooks/bitcoin", async (req: any) => {
   log("received new block %s", req.query.block);
 
   const currentBlockHeight = await rpc.blockchain.getBlockCount();
+  const lastOutputHeight = await getHeighestOutputBlock();
+  const reorgHeight = await getReorgHeight(0, lastOutputHeight);
+
+  // ### Parse
 
   if (config.parser.enabled === true) {
-    await indexUtxos(currentBlockHeight);
+    await indexUtxos(currentBlockHeight, reorgHeight);
+  }
+
+  if (config.sado.enabled === true) {
+    await indexSado(currentBlockHeight, reorgHeight);
   }
 
   if (config.ord.enabled === true) {
@@ -77,18 +87,53 @@ fastify.post("/hooks/ord", async (req) => {
  |--------------------------------------------------------------------------------
  */
 
-async function indexUtxos(currentBlockHeight: number): Promise<void> {
-  let crawlerBlockHeight = await getHeighestBlock();
+async function indexUtxos(currentBlockHeight: number, reorgHeight: number): Promise<void> {
+  let crawlerBlockHeight = await getHeighestOutputBlock();
+  if (reorgHeight !== crawlerBlockHeight) {
+    log("Reorg detected, rolling back to block %d from %d", reorgHeight, crawlerBlockHeight);
+    await deleteOutputsAfterHeight(reorgHeight);
+    crawlerBlockHeight = reorgHeight;
+  }
   while (crawlerBlockHeight <= currentBlockHeight) {
     await crawlBlock(crawlerBlockHeight, currentBlockHeight);
     crawlerBlockHeight += 1;
   }
   await spend();
+}
+
+async function indexSado(currentBlockHeight: number, reorgHeight: number): Promise<void> {
+  let crawlerBlockHeight = await getHeighestSadoBlock();
+  if (reorgHeight !== crawlerBlockHeight) {
+    log("Reorg detected, rolling back to block %d from %d", reorgHeight, crawlerBlockHeight);
+    await deleteSadoAfterHeight(reorgHeight);
+    await deleteSadoOrdersAfterHeight(reorgHeight);
+    crawlerBlockHeight = reorgHeight;
+  }
+  while (crawlerBlockHeight <= currentBlockHeight) {
+    const hash = await rpc.blockchain.getBlockHash(crawlerBlockHeight);
+    const block = await rpc.blockchain.getBlock(hash, 2);
+    await parseBlock(block);
+    crawlerBlockHeight += 1;
+  }
   await parse();
 }
 
 async function indexOrdinals(): Promise<void> {
   await crawlOrdinals();
+}
+
+async function getReorgHeight(start: number, end: number): Promise<number> {
+  while (start <= end) {
+    const mid = Math.floor((start + end) / 2);
+    const blockHash = await rpc.blockchain.getBlockHash(mid);
+    const output = await getOutput({ "vout.block.height": mid });
+    if (output === undefined || output.vout.block.hash !== blockHash) {
+      end = mid - 1;
+    } else {
+      start = mid + 1;
+    }
+  }
+  return end;
 }
 
 /*
