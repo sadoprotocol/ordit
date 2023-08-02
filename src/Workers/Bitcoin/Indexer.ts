@@ -34,7 +34,7 @@ async function main() {
 
   // ### Reorg Checks
 
-  const reorgHeight = await getReorgHeight(crawlerBlockHeight);
+  const reorgHeight = await getReorgHeight(0, lastCrawledBlockHeight);
   if (reorgHeight !== crawlerBlockHeight) {
     log("Reorg detected, rolling back to block %d from %d", reorgHeight, crawlerBlockHeight);
     await deleteOutputsAfterHeight(reorgHeight);
@@ -50,11 +50,16 @@ async function main() {
   }
 }
 
-async function getReorgHeight(height: number): Promise<number> {
-  const blockHash = await rpc.blockchain.getBlockHash(height);
-  const output = await getOutput({ "vout.block.height": height });
-  if (output === undefined || output.vout.block.hash !== blockHash) {
-    return getReorgHeight(height - 1);
+async function getReorgHeight(start: number, end: number): Promise<number> {
+  while (start <= end) {
+    const mid = Math.floor((start + end) / 2);
+    const blockHash = await rpc.blockchain.getBlockHash(mid);
+    const output = await getOutput({ "vout.block.height": mid });
+    if (output === undefined || output.vout.block.hash !== blockHash) {
+      end = mid - 1;
+    } else {
+      start = mid + 1;
+    }
   }
-  return height;
+  return end;
 }

@@ -47,6 +47,10 @@ export async function setSpentOutputs(spents: SpentOutput[], chunkSize = 1000) {
   logger.addDatabase("spents", performance.now() - ts);
 }
 
+export async function getOutputs(filter: Filter<OutputDocument>, options?: FindOptions<OutputDocument>) {
+  return collection.find(filter, options).toArray();
+}
+
 export async function getOutput(
   filter: Filter<OutputDocument>,
   options?: FindOptions<OutputDocument>
