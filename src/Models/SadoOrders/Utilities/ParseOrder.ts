@@ -1,10 +1,9 @@
 import { rpc } from "../../../Services/Bitcoin";
 import { ipfs } from "../../../Services/IPFS";
 import { getOutput } from "../../Output";
-import { OrderInvalidMaker, OrderTransactionNotFound, OrderVoutNotFound } from "../Exceptions/OrderException";
 import { addOrder } from "../Methods";
-import { validateSignature } from "../Validators/ValidateSignature";
 import { parseLocation } from "./ParseLocation";
+import { validateOrderSignature } from "./ValidateSignature";
 
 export async function parseOrder(cid: string, block: Block) {
   const order = await ipfs.getOrder(cid);
@@ -23,7 +22,7 @@ export async function parseOrder(cid: string, block: Block) {
 
   try {
     await validateLocation(order.location, order.maker);
-    await validateSignature(order);
+    await validateOrderSignature(order);
     await addOrder({
       cid,
       type: order.type,
@@ -74,16 +73,16 @@ async function validateLocation(location: string, maker: string): Promise<void> 
 
   const tx = await rpc.transactions.getRawTransaction(txid, true);
   if (tx === undefined) {
-    throw new OrderTransactionNotFound(location);
+    throw new Error(location);
   }
 
   const vout = tx.vout[n];
   if (vout === undefined) {
-    throw new OrderVoutNotFound(location);
+    throw new Error(location);
   }
 
   if (vout.scriptPubKey.address !== maker) {
-    throw new OrderInvalidMaker(location);
+    throw new Error(location);
   }
 }
 

@@ -1,7 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
-import { getOrdersByAddress as getSadoOrdersByAddress } from "../../Models/Sado";
+import { getOrdersByAddress as getSadoOrdersByAddress } from "../../Models/SadoOrders";
 
 export const getOrdersByAddress = method({
   params: Schema({

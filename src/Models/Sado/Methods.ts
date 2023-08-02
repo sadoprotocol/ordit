@@ -1,44 +1,19 @@
-import { config } from "../../Config";
-import { ignoreDuplicateErrors } from "../../Utilities/Database";
-import { collection, SadoDocument, SadoOffer } from "./Collection";
+import { Filter, FindOptions } from "mongodb";
 
-export async function addOrders(orders: SadoDocument[], chunkSize = 1000) {
-  const promises = [];
-  for (let i = 0; i < orders.length; i += chunkSize) {
-    const chunk = orders.slice(i, i + chunkSize);
-    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
-  }
-  await Promise.all(promises);
+import { collection, SadoDocument } from "./Collection";
+
+export async function addSado(sado: SadoDocument) {
+  collection.insertOne(sado);
 }
 
-export async function addOrder(order: SadoDocument) {
-  await collection.insertOne(order).catch(ignoreDuplicateErrors);
+export async function getSadoEntries(filter: Filter<SadoDocument>, options?: FindOptions<SadoDocument>) {
+  return collection.find(filter, options).toArray();
 }
 
-export async function addOffer(cid: string, offer: SadoOffer) {
-  await collection.updateOne({ cid }, { $push: { offers: offer } });
-}
-
-export async function getOrder(cid: string): Promise<SadoDocument | undefined> {
-  const order = await collection.findOne({ cid });
-  if (order === null) {
+export async function getSadoEntry(filter: Filter<SadoDocument>, options?: FindOptions<SadoDocument>) {
+  const document = await collection.findOne(filter, options);
+  if (document === null) {
     return undefined;
   }
-  return order;
-}
-
-export async function getOrdersByAddress(address: string): Promise<SadoDocument[]> {
-  return collection.find({ $or: [{ "orderbooks.address": address }, { maker: address }] }).toArray();
-}
-
-export async function setRejected(cid: string, rejection: any) {
-  await collection.updateOne({ cid }, { $set: { status: "rejected", rejection } });
-}
-
-export async function getHeighestBlock(): Promise<number> {
-  const order = await collection.findOne({}, { sort: { "block.height": -1 } });
-  if (order === null) {
-    return config.sado.startBlock;
-  }
-  return order.block.height;
+  return document;
 }

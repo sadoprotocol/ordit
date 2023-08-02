@@ -2,7 +2,7 @@ import debug from "debug";
 
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
-import { getHeighestBlock } from "../../Models/Sado";
+import { getHeighestBlock } from "../../Models/SadoOrders";
 import { rpc } from "../../Services/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
 import { parseBlock } from "./Parse";

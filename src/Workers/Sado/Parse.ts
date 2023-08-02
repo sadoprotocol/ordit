@@ -1,9 +1,11 @@
 import debug from "debug";
 
-import { parseOffer } from "../../Models/Sado/Utilities/ParseOffer";
-import { parseOrder } from "../../Models/Sado/Utilities/ParseOrder";
+import { addSado } from "../../Models/Sado";
+import { parseOffer } from "../../Models/SadoOrders/Utilities/ParseOffer";
+import { parseOrder } from "../../Models/SadoOrders/Utilities/ParseOrder";
 import { SADO_DATA } from "../../Paths";
-import { Block, RawTransaction, Transactions } from "../../Services/Bitcoin";
+import { Block, RawTransaction, rpc, Transactions } from "../../Services/Bitcoin";
+import { getAddressessFromVout } from "../../Utilities/Address";
 import { readDir, readFile, removeFile, writeFile } from "../../Utilities/Files";
 
 const log = debug("sado-parser");
@@ -25,10 +27,32 @@ export async function parse() {
     }
     for (const { cid, txid } of json.orders) {
       log("processing order %s", cid);
+      const tx = await rpc.transactions.getRawTransaction(txid, true);
+      if (tx === undefined) {
+        continue;
+      }
+      await addSado({
+        cid,
+        type: "order",
+        addresses: getAddressesFromTx(tx),
+        txid,
+        height: json.block.height,
+      });
       await parseOrder(cid, { ...json.block, txid });
     }
     for (const { cid, txid } of json.offers) {
       log("processing offer %s", cid);
+      const tx = await rpc.transactions.getRawTransaction(txid, true);
+      if (tx === undefined) {
+        continue;
+      }
+      await addSado({
+        cid,
+        type: "offer",
+        addresses: getAddressesFromTx(tx),
+        txid,
+        height: json.block.height,
+      });
       await parseOffer(cid, { ...json.block, txid });
     }
     await removeFile(`${SADO_DATA}/${block}`);
@@ -111,6 +135,14 @@ function parseSadoOutput(utf8?: string): Omit<SadoTransaction, "txid"> | undefin
       return { type, cid };
     }
   }
+}
+
+function getAddressesFromTx(tx: RawTransaction): string[] {
+  const addresses: string[] = [];
+  for (const vout of tx.vout) {
+    addresses.push(...getAddressessFromVout(vout));
+  }
+  return addresses;
 }
 
 type SadoBlock = {
