@@ -1,6 +1,5 @@
 import { Filter, FindOptions } from "mongodb";
 
-import { config } from "../../Config";
 import { collection, SadoOffer, SadoOrder } from "./Collection";
 
 export async function addOrder(order: SadoOrder) {
@@ -28,14 +27,6 @@ export async function getOrder(
     return undefined;
   }
   return order;
-}
-
-export async function getHeighestBlock(): Promise<number> {
-  const order = await collection.findOne({}, { sort: { "block.height": -1 } });
-  if (order === null) {
-    return config.sado.startBlock;
-  }
-  return order.block.height;
 }
 
 export async function deleteSadoOrdersAfterHeight(height: number) {

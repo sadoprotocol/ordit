@@ -1,5 +1,6 @@
 import { Filter, FindOptions } from "mongodb";
 
+import { config } from "../../Config";
 import { collection, SadoDocument } from "./Collection";
 
 export async function addSado(sado: SadoDocument) {
@@ -16,6 +17,14 @@ export async function getSadoEntry(filter: Filter<SadoDocument>, options?: FindO
     return undefined;
   }
   return document;
+}
+
+export async function getHeighestBlock(): Promise<number> {
+  const order = await collection.findOne({}, { sort: { height: -1 } });
+  if (order === null) {
+    return config.sado.startBlock;
+  }
+  return order.height;
 }
 
 export async function deleteSadoAfterHeight(height: number) {
