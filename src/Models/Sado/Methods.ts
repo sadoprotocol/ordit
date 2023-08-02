@@ -19,6 +19,10 @@ export async function getSadoEntry(filter: Filter<SadoDocument>, options?: FindO
   return document;
 }
 
+export async function getSadoCount(filter: Filter<SadoDocument>) {
+  return collection.countDocuments(filter);
+}
+
 export async function getHeighestBlock(): Promise<number> {
   const order = await collection.findOne({}, { sort: { height: -1 } });
   if (order === null) {

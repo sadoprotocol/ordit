@@ -10,8 +10,8 @@ export async function addOffer(cid: string, offer: SadoOffer) {
   await collection.updateOne({ cid }, { $push: { offers: offer } });
 }
 
-export async function getOrdersByAddress(address: string): Promise<SadoOrder[]> {
-  return getOrders({ $or: [{ "orderbooks.address": address }, { maker: address }] });
+export async function getOrdersByAddress(address: string, options?: FindOptions<SadoOrder>): Promise<SadoOrder[]> {
+  return getOrders({ $or: [{ "orderbooks.address": address }, { maker: address }] }, options);
 }
 
 export async function getOrders(filter: Filter<SadoOrder>, options?: FindOptions<SadoOrder>) {
@@ -27,6 +27,10 @@ export async function getOrder(
     return undefined;
   }
   return order;
+}
+
+export async function getOrderCount(filter: Filter<SadoOrder>) {
+  return collection.countDocuments(filter);
 }
 
 export async function deleteSadoOrdersAfterHeight(height: number) {

@@ -70,8 +70,11 @@ export async function getOutputsByAddress(
   return collection.find({ addresses: address, ...filter }, options).toArray();
 }
 
-export async function getUnspentOutputsByAddress(address: string): Promise<OutputDocument[]> {
-  return collection.find({ addresses: address, vin: { $exists: false } }).toArray();
+export async function getUnspentOutputsByAddress(
+  address: string,
+  options?: FindOptions<OutputDocument>
+): Promise<OutputDocument[]> {
+  return collection.find({ addresses: address, vin: { $exists: false } }, options).toArray();
 }
 
 export async function getTransactionCountByAddress(address: string): Promise<{

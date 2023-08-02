@@ -1,4 +1,4 @@
-import type { Options as TransactionsOptions, Pagination } from "../Methods/Address/GetTransactions";
+import type { Options as TransactionsOptions } from "../Methods/Address/GetTransactions";
 import type { Options as UnspentOptions } from "../Methods/Address/GetUnspents";
 import {
   getHeighestOutput,
@@ -8,6 +8,7 @@ import {
 } from "../Models/Output";
 import { sats } from "../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../Utilities/Oip";
+import { getPagination, Pagination } from "../Utilities/Pagination";
 import {
   getExpandedTransaction,
   getInscriptionsByOutpoint,
@@ -36,14 +37,12 @@ async function getTotalTransactions(address: string): Promise<number> {
 async function getTransactions(
   address: string,
   options: TransactionsOptions = {},
-  { limit = 10, page = 1 }: Pagination = {}
+  pagination: Pagination = {}
 ): Promise<any[]> {
-  const skip = (page - 1) * limit;
-
   const outputs = await getOutputsByAddress(
     address,
     {},
-    { sort: { "vout.block.height": -1, "vin.block.height": -1 }, limit, skip }
+    { sort: { "vout.block.height": 1, "vin.block.height": 1 }, ...getPagination(pagination) }
   );
 
   const transactions: any = [];
@@ -65,13 +64,14 @@ async function getTransactions(
 
 async function getUnspents(
   address: string,
-  { ord = true, safetospend = false, allowedrarity = ["common", "uncommon"] }: UnspentOptions = {}
+  { ord = true, safetospend = false, allowedrarity = ["common", "uncommon"] }: UnspentOptions = {},
+  pagination: Pagination = {}
 ) {
   const result = [];
 
   const blockHeight = await rpc.blockchain.getBlockCount();
 
-  const unspents = await getUnspentOutputsByAddress(address);
+  const unspents = await getUnspentOutputsByAddress(address, getPagination(pagination));
   for (const unspent of unspents) {
     const tx = await rpc.transactions.getRawTransaction(unspent.vout.txid, true);
     if (tx === undefined) {

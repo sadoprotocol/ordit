@@ -1,20 +1,16 @@
 import { method } from "@valkyr/api";
-import Schema, { boolean, number, string, Type } from "computed-types";
+import Schema, { boolean, string, Type } from "computed-types";
 
 import { config } from "../../Config";
 import { TransactionDocument } from "../../Models/Transactions";
 import { lookup } from "../../Services/Lookup";
 import { sochain } from "../../Services/SoChain";
+import { pagination } from "../../Utilities/Pagination";
 
 const options = Schema({
   ord: boolean.optional(),
   hex: boolean.optional(),
   witness: boolean.optional(),
-});
-
-const pagination = Schema({
-  page: number.gt(0).optional(),
-  limit: number.max(50).optional(),
 });
 
 export const getTransactions = method({
