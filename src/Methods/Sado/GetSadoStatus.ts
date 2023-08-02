@@ -31,7 +31,11 @@ export const getSadoStatus = method({
 async function getOrderStatus(entry: SadoDocument) {
   const data = await ipfs.getOrder(entry.cid);
   if ("error" in data) {
-    throw new NotFoundError("Order no longer exist on IPFS");
+    return {
+      type: "order",
+      status: "ipfs-error",
+      error: data.error,
+    };
   }
 
   try {
@@ -84,7 +88,11 @@ async function getOrderStatus(entry: SadoDocument) {
 async function getOfferStatus(entry: SadoDocument) {
   const data = await ipfs.getOffer(entry.cid);
   if ("error" in data) {
-    throw new NotFoundError("Offer no longer exist on IPFS");
+    return {
+      type: "offer",
+      status: "ipfs-error",
+      error: data.error,
+    };
   }
 
   // ### Validate Offer PSBT
