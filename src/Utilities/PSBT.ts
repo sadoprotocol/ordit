@@ -13,15 +13,16 @@ import { btcToSat } from "./Bitcoin";
  * @returns The PSBT or undefined if it could not be parsed.
  */
 export function decodePsbt(psbt: string): Psbt | undefined {
+  const network = getBitcoinNetwork();
   try {
-    return Psbt.fromHex(psbt);
+    return Psbt.fromHex(psbt, { network });
   } catch (err) {
     // TODO: Add better check in case the error is not about failure to
     //       parse the hex.
     // not a PSBT hex offer
   }
   try {
-    return Psbt.fromBase64(psbt);
+    return Psbt.fromBase64(psbt, { network });
   } catch (err) {
     // TODO: Add better check in case the error is not about failure to
     //       parse the base64.

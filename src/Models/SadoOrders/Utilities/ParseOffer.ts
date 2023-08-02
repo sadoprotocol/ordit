@@ -1,58 +1,25 @@
-import { ipfs } from "../../../Services/IPFS";
-import { decodePsbt, getPsbtAsJSON } from "../../../Utilities/PSBT";
-import { getOutput } from "../../Output";
-import { addOffer, getOrder } from "../Methods";
-import { parseLocation } from "./ParseLocation";
+import { getSadoEntry } from "../../Sado";
+import { addOffer } from "../Methods";
+import { getOfferStatus } from "./GetOfferStatus";
 
 export async function parseOffer(cid: string, block: Block) {
-  const offer = await ipfs.getOffer(cid);
-  if ("error" in offer) {
+  const entry = await getSadoEntry({ cid });
+  if (entry === undefined) {
     return;
   }
 
-  // ### Get Order
-
-  const order = await getOrder({ cid: offer.origin });
-  if (order === undefined) {
+  const status = await getOfferStatus(entry);
+  if (status.status !== "pending") {
     return;
-  }
-
-  const [orderTxid, orderVout] = parseLocation(order.location);
-
-  // ### Validate Offer
-
-  const psbt = decodePsbt(offer.offer);
-  if (psbt === undefined) {
-    return;
-  }
-
-  const data = getPsbtAsJSON(psbt);
-
-  // ### Ordinal Input
-  // Verify that the first input is the order being transfered.
-
-  const input = data.inputs[0];
-  if (input.txid !== orderTxid || input.vout !== orderVout) {
-    return;
-  }
-
-  // ### Spents Check
-  // Go through all the inputs and ensure that none of them have been spent.
-
-  for (const input of data.inputs) {
-    const output = await getOutput({ "vout.txid": input.txid, "vout.n": input.vout });
-    if (output !== undefined && output.vin !== undefined) {
-      return;
-    }
   }
 
   // ### Add Offer
 
-  await addOffer(order.cid, {
+  await addOffer(status.order.cid, {
     cid,
-    origin: offer.origin,
-    taker: offer.taker,
-    offer: offer.offer,
+    origin: status.offer.origin,
+    taker: status.offer.taker,
+    offer: status.offer.offer,
     block,
   });
 }

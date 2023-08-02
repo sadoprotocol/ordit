@@ -1,3 +1,4 @@
+import { Transaction } from "bitcoinjs-lib";
 import Schema, { boolean, Type } from "computed-types";
 
 import { config } from "../Config";
@@ -144,6 +145,14 @@ export function getSafeToSpendState(
     }
   }
   return true;
+}
+
+export function decodeRawTransaction(hex: string): Transaction | undefined {
+  try {
+    return Transaction.fromHex(hex);
+  } catch (_) {
+    return undefined;
+  }
 }
 
 /*
