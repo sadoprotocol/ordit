@@ -135,3 +135,7 @@ export function getHeighestOutput(output: OutputDocument): OutputDocument["vout"
   }
   return output.vout;
 }
+
+export async function deleteOutputsAfterHeight(height: number) {
+  await collection.deleteMany({ "vout.block.height": { $gt: height } });
+}
