@@ -12,7 +12,7 @@ export async function addOrders(orders: SadoOrder[], chunkSize = 1000) {
 }
 
 export async function addOrder(order: SadoOrder) {
-  await collection.insertOne(order).catch(ignoreDuplicateErrors);
+  await collection.updateOne({ cid: order.cid }, { $set: order }, { upsert: true });
 }
 
 export async function addOffer(cid: string, offer: SadoOffer) {
