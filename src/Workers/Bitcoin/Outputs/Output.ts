@@ -65,6 +65,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
       }
       outputs.push({
         addresses,
+        value: vout.value,
         vout: {
           block: {
             hash: block.hash,

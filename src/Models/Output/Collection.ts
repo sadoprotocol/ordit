@@ -12,6 +12,12 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
+        addresses: 1,
+        value: 1,
+      },
+    ],
+    [
+      {
         "vout.txid": 1,
         "vout.n": 1,
       },
@@ -47,6 +53,7 @@ export const registrar: CollectionRegistrar = {
 
 export type OutputDocument = {
   addresses: string[];
+  value: number;
   vout: OutputTransaction;
   vin?: OutputTransaction;
 };

@@ -17,6 +17,36 @@ export async function addOutputs(outputs: OutputDocument[], chunkSize = 1000) {
   logger.addDatabase("outputs", performance.now() - ts);
 }
 
+export async function setOutputValues(values: { txid: string; n: number; value: number }[], chunkSize = 1000) {
+  if (values.length === 0) {
+    return;
+  }
+  const ts = performance.now();
+
+  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
+  for (const { txid, n, value } of values) {
+    bulkops.push({
+      updateOne: {
+        filter: { "vout.txid": txid, "vout.n": n },
+        update: {
+          $set: {
+            value: value,
+          },
+        },
+      },
+    });
+    if (bulkops.length === chunkSize) {
+      await collection.bulkWrite(bulkops);
+      bulkops.length = 0;
+    }
+  }
+  if (bulkops.length > 0) {
+    await collection.bulkWrite(bulkops);
+  }
+
+  logger.addDatabase("values", performance.now() - ts);
+}
+
 export async function setSpentOutputs(spents: SpentOutput[], chunkSize = 1000) {
   if (spents.length === 0) {
     return;

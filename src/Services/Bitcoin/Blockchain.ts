@@ -34,13 +34,20 @@ export const blockchain = {
  *  - If verbosity is 2, returns an Object with information about block ‘hash’ and
  *    information about each transaction.
  *
- * @param hash      - Block hash to retrieve.
- * @param verbosity - Verbosity level of the returned data.
+ * @param hashOrHeight - Block to retrieve by its hash or height.
+ * @param verbosity    - Verbosity level of the returned data.
  */
-async function getBlock(hash: string, verbosity: 0): Promise<string>;
-async function getBlock(hash: string, verbosity?: 1): Promise<Block>;
-async function getBlock(hash: string, verbosity: 2): Promise<Block & Transactions>;
-async function getBlock(hash: string, verbosity = 1): Promise<Block | (Block & Transactions) | string> {
+async function getBlock(hashOrHeight: string | number, verbosity: 0): Promise<string>;
+async function getBlock(hashOrHeight: string | number, verbosity?: 1): Promise<Block>;
+async function getBlock(hashOrHeight: string | number, verbosity: 2): Promise<Block & Transactions>;
+async function getBlock(
+  hashOrHeight: string | number,
+  verbosity = 1
+): Promise<Block | (Block & Transactions) | string> {
+  let hash = hashOrHeight;
+  if (typeof hashOrHeight === "number") {
+    hash = await getBlockHash(hashOrHeight);
+  }
   return rpc("getblock", [hash, verbosity]);
 }
 
