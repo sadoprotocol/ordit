@@ -56,7 +56,7 @@ export async function index() {
  */
 
 async function indexUtxos(blockHeight: number, reorgHeight: number): Promise<void> {
-  let outputBlockHeight = await getHeighestOutputBlock();
+  const outputBlockHeight = await getHeighestOutputBlock();
 
   // ### Reorg Check
   // Check if the last output block mined is newer than the reorg height. If so,
@@ -65,8 +65,8 @@ async function indexUtxos(blockHeight: number, reorgHeight: number): Promise<voi
 
   if (reorgHeight < outputBlockHeight) {
     log("Reorg detected, rolling back outputs to block %d", reorgHeight);
-    await deleteOutputsAfterHeight(reorgHeight);
-    outputBlockHeight = reorgHeight - 1;
+    // await deleteOutputsAfterHeight(reorgHeight);
+    // outputBlockHeight = reorgHeight - 1;
   }
 
   // ### Crawl
@@ -82,7 +82,7 @@ async function indexUtxos(blockHeight: number, reorgHeight: number): Promise<voi
 }
 
 async function indexSado(blockHeight: number, reorgHeight: number): Promise<void> {
-  let sadoBlockHeight = await getHeighestSadoBlock();
+  const sadoBlockHeight = await getHeighestSadoBlock();
 
   // ### Reorg Check
   // Check if the last sado block mined is newer than the reorg height. If so,
@@ -91,10 +91,10 @@ async function indexSado(blockHeight: number, reorgHeight: number): Promise<void
 
   if (reorgHeight < sadoBlockHeight) {
     log("Reorg detected, rolling back sado to block %d", reorgHeight);
-    await deleteSadoAfterHeight(reorgHeight);
-    await deleteSadoOrdersAfterHeight(reorgHeight);
-    await setBlockHeight(reorgHeight);
-    sadoBlockHeight = reorgHeight - 1;
+    // await deleteSadoAfterHeight(reorgHeight);
+    // await deleteSadoOrdersAfterHeight(reorgHeight);
+    // await setBlockHeight(reorgHeight);
+    // sadoBlockHeight = reorgHeight - 1;
   }
 
   // ### Parse
