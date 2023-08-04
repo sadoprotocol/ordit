@@ -3,8 +3,8 @@ import debug from "debug";
 import { bootstrap } from "../../../Bootstrap";
 import { config } from "../../../Config";
 import { limiter } from "../../../Libraries/Limiter";
-import { setOutputValues } from "../../../Models/Output";
-import { DATA_DIR, PARSER_VALUES } from "../../../Paths";
+import { collection, setOutputValues } from "../../../Models/Output";
+import { PARSER_VALUES } from "../../../Paths";
 import { rpc } from "../../../Services/Bitcoin";
 import { readDir, readFile, removeFile, writeFile } from "../../../Utilities/Files";
 
@@ -47,7 +47,6 @@ async function mineBlocks() {
       }
     }
     await writeFile(`${PARSER_VALUES}/${height}`, JSON.stringify(values));
-    await setBlockHeight(height);
     height += 1;
   }
 
@@ -75,7 +74,7 @@ async function parseValues() {
             log("block %d valued %d outputs", block, values.length);
           });
         } catch (error) {
-          console.log(block);
+          console.log(block, data);
           throw error;
         }
       });
@@ -84,19 +83,10 @@ async function parseValues() {
   }
 }
 
-async function setBlockHeight(value: number | string) {
-  await writeFile(`${DATA_DIR}/value_n`, typeof value === "string" ? value : JSON.stringify(value));
-  log("set block height to %d", value);
-}
-
 async function getBlockHeight() {
-  const data = await readFile(`${DATA_DIR}/value_n`);
-  if (data === undefined) {
+  const output = await collection.findOne({ value: null }, { sort: { "vout.block.height": 1 } });
+  if (output === null) {
     return 0;
   }
-  const height = parseInt(data);
-  if (isNaN(height)) {
-    return 0;
-  }
-  return height ?? 0;
+  return output.vout.block.height;
 }

@@ -6,7 +6,7 @@ import {
   getTransactionCountByAddress,
   getUnspentOutputsByAddress,
 } from "../Models/Output";
-import { sats } from "../Utilities/Bitcoin";
+import { btcToSat } from "../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../Utilities/Oip";
 import { getPagination, Pagination } from "../Utilities/Pagination";
 import {
@@ -86,7 +86,7 @@ async function getUnspents(
       blockN: unspent.vout.block.height,
       scriptPubKey: vout.scriptPubKey,
       value: vout.value,
-      sats: sats(vout.value),
+      sats: btcToSat(vout.value),
     };
 
     if (ord === true) {

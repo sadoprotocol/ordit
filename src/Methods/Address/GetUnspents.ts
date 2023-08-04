@@ -17,9 +17,6 @@ export const getUnspents = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
-    // if (config.chain.network === "mainnet") {
-    //   return sochain.getUnspents(address, options);
-    // }
     return lookup.getUnspents(address, options, pagination);
   },
 });

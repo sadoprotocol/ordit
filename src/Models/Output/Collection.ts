@@ -53,7 +53,7 @@ export const registrar: CollectionRegistrar = {
 
 export type OutputDocument = {
   addresses: string[];
-  value: number;
+  value: number | null;
   vout: OutputTransaction;
   vin?: OutputTransaction;
 };

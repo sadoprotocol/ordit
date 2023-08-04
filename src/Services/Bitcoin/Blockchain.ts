@@ -9,6 +9,7 @@ export const blockchain = {
     BLOCK_NOT_FOUND,
     BLOCK_HASH_NOT_FOUND,
   },
+  getLatestBlock,
   getBlock,
   getBlockchainInfo,
   getBlockCount,
@@ -25,6 +26,13 @@ export const blockchain = {
  |--------------------------------------------------------------------------------
  */
 
+async function getLatestBlock(verosity: 0): Promise<string>;
+async function getLatestBlock(verosity?: 1): Promise<Block>;
+async function getLatestBlock(verbosity: 2): Promise<Block<2>>;
+async function getLatestBlock(verbosity = 1): Promise<Block | Block<2> | string> {
+  return getBlock(await getBlockCount(), verbosity as any);
+}
+
 /**
  * Return block data.
  *
@@ -39,11 +47,8 @@ export const blockchain = {
  */
 async function getBlock(hashOrHeight: string | number, verbosity: 0): Promise<string>;
 async function getBlock(hashOrHeight: string | number, verbosity?: 1): Promise<Block>;
-async function getBlock(hashOrHeight: string | number, verbosity: 2): Promise<Block & Transactions>;
-async function getBlock(
-  hashOrHeight: string | number,
-  verbosity = 1
-): Promise<Block | (Block & Transactions) | string> {
+async function getBlock(hashOrHeight: string | number, verbosity: 2): Promise<Block<2>>;
+async function getBlock(hashOrHeight: string | number, verbosity = 1): Promise<Block | Block<2> | string> {
   let hash = hashOrHeight;
   if (typeof hashOrHeight === "number") {
     hash = await getBlockHash(hashOrHeight);
@@ -249,7 +254,7 @@ export type RawMempoolTransation = {
   unbroadcast: boolean;
 };
 
-export type Block = {
+export type Block<Verbosity = 1> = {
   hash: string;
   confirmations: number;
   height: number;
@@ -266,7 +271,7 @@ export type Block = {
   strippedsize: number;
   size: number;
   weight: number;
-  tx: string[];
+  tx: Verbosity extends 1 ? string[] : RawTransaction[];
 };
 
 type TxOut = {

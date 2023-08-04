@@ -4,19 +4,22 @@ import { rpc } from "../../Services/Bitcoin";
 
 export const getLatestTransactions = method({
   handler: async () => {
-    const blockCount = await rpc.blockchain.getBlockCount();
-    const blockHash = await rpc.blockchain.getBlockHash(blockCount);
-    const block = await rpc.blockchain.getBlock(blockHash, 2);
-    return block.tx
-      .reverse()
-      .slice(0, 20)
-      .map((tx: any) => ({
-        block: {
-          hash: block.hash,
-          height: block.height,
-          time: block.time,
-        },
-        ...tx,
-      }));
+    const txs: any[] = [];
+
+    let blockCount = await rpc.blockchain.getBlockCount();
+    while (txs.length < 20) {
+      const block = await rpc.blockchain.getBlock(blockCount, 2);
+      for (const tx of block.tx.reverse()) {
+        txs.push({
+          blockHash: block.hash,
+          blockHeight: block.height,
+          blockTime: block.time,
+          ...tx,
+        });
+      }
+      blockCount -= 1;
+    }
+
+    return txs;
   },
 });

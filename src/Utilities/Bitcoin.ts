@@ -5,25 +5,16 @@ import { currency } from "./Currency";
 
 export const BTC_TO_SAT = 1e8;
 
-/**
- * Get the number of satoshis from a value.
- *
- * @param value - Value to convert to satoshis.
- */
-export function sats(value: BigSource): number {
-  return new Big(value).times(1e8).round(0, 0).toNumber();
+export function satToBtc(sat: BigSource): number {
+  return new Big(sat).div(BTC_TO_SAT).toNumber();
 }
 
-export function satToBtc(sat: number): number {
-  return sat / BTC_TO_SAT;
+export function btcToSat(btc: BigSource): number {
+  return new Big(btc).times(BTC_TO_SAT).round(0, 0).toNumber();
 }
 
-export function btcToSat(btc: number): number {
-  return Math.floor(btc * BTC_TO_SAT);
-}
-
-export function btcToUsd(btc: number): number {
-  return btc * currency.USD.value;
+export function btcToUsd(btc: BigSource): number {
+  return new Big(btc).times(currency.USD.value).toNumber();
 }
 
 /**
