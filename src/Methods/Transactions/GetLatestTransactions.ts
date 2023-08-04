@@ -1,18 +1,30 @@
 import { method } from "@valkyr/api";
+import Schema, { number } from "computed-types";
 
 import { RawTransaction, rpc } from "../../Services/Bitcoin";
 import { getTransactionAmount, getTransactionFee } from "../../Utilities/Transaction";
 
 export const getLatestTransactions = method({
-  handler: async () => {
-    const txs: LatestTransaction[] = [];
+  params: Schema({
+    pagination: Schema({
+      block: number.optional(),
+      cursor: number.optional(),
+    }).optional(),
+  }),
+  handler: async ({ pagination }) => {
+    const transactions: Transaction[] = [];
 
-    let blockCount = await rpc.blockchain.getBlockCount();
-    while (txs.length < 10) {
+    let cursor = pagination?.cursor ?? 0;
+    let index = 0;
+
+    let blockCount = pagination?.block ?? (await rpc.blockchain.getBlockCount());
+    while (transactions.length < 10) {
       const block = await rpc.blockchain.getBlock(blockCount, 2);
-      for (const tx of block.tx.reverse()) {
+
+      const txs = block.tx.slice(cursor);
+      for (const tx of txs) {
         const fee = await getTransactionFee(tx);
-        txs.push({
+        transactions.push({
           txid: tx.txid,
           age: block.time,
           amount: getTransactionAmount(tx),
@@ -21,18 +33,30 @@ export const getLatestTransactions = method({
           vsize: tx.vsize,
           block: block.height,
         });
-        if (txs.length === 10) {
+        if (transactions.length === 10) {
           break;
         }
+        index += 1;
       }
-      blockCount -= 1;
+
+      if (txs.length <= 10) {
+        blockCount -= 1;
+        cursor = 0;
+        index = 0;
+      }
     }
 
-    return txs;
+    return {
+      transactions,
+      pagination: {
+        block: blockCount,
+        cursor: cursor + index + 1,
+      },
+    };
   },
 });
 
-type LatestTransaction = Pick<RawTransaction, "txid" | "size" | "vsize"> & {
+type Transaction = Pick<RawTransaction, "txid" | "size" | "vsize"> & {
   age: number;
   amount: number;
   fee: number;
