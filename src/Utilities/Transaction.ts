@@ -91,6 +91,29 @@ export async function getExpandedTransaction(
   return tx as ExpandedTransaction;
 }
 
+export async function getTransactionFee(tx: RawTransaction): Promise<number> {
+  let fee = 0;
+  for (const vin of tx.vin) {
+    if (isCoinbase(vin)) {
+      continue;
+    }
+    const tx = await rpc.transactions.getRawTransaction(vin.txid, true);
+    fee += tx.vout[vin.vout].value;
+  }
+  for (const vout of tx.vout) {
+    fee -= vout.value;
+  }
+  return fee;
+}
+
+export function getTransactionAmount(tx: RawTransaction): number {
+  let amount = 0;
+  for (const vout of tx.vout) {
+    amount += vout.value;
+  }
+  return amount;
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Utilities

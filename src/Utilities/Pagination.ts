@@ -2,7 +2,7 @@ import Schema, { number, Type } from "computed-types";
 
 export const pagination = Schema({
   page: number.gt(0).optional(),
-  limit: number.max(10).optional(),
+  limit: number.max(50).optional(),
 });
 
 export function getPagination({ page = 1, limit = 10 }: Pagination = {}): {
