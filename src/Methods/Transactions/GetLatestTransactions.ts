@@ -8,13 +8,13 @@ export const getLatestTransactions = method({
   params: Schema({
     pagination: Schema({
       block: number.optional(),
-      cursor: number.optional(),
+      index: number.optional(),
     }).optional(),
   }),
   handler: async ({ pagination }) => {
     const transactions: Transaction[] = [];
 
-    let cursor = pagination?.cursor ?? 0;
+    let cursor = pagination?.index ?? 0;
     let index = 0;
 
     let blockCount = pagination?.block ?? (await rpc.blockchain.getBlockCount());
@@ -50,7 +50,7 @@ export const getLatestTransactions = method({
       transactions,
       pagination: {
         block: blockCount,
-        cursor: cursor + index + 1,
+        index: cursor + index + 1,
       },
     };
   },
