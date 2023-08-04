@@ -1,9 +1,9 @@
 import { SADO_DATA } from "../../Paths";
-import { Block, RawTransaction, Transactions } from "../../Services/Bitcoin";
+import { Block, RawTransaction } from "../../Services/Bitcoin";
 import { writeFile } from "../../Utilities/Files";
 import { setBlockHeight } from "./Status";
 
-export async function addBlock(block: Block & Transactions) {
+export async function addBlock(block: Block<2>) {
   const orders: SadoEntry[] = [];
   const offers: SadoEntry[] = [];
 

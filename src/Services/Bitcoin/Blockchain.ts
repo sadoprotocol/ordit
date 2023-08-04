@@ -289,7 +289,3 @@ export type ScriptPubKey = {
   type: string;
   addresses: string[];
 };
-
-export type Transactions = {
-  tx: RawTransaction[];
-};
