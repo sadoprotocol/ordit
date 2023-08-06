@@ -13,9 +13,11 @@ import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
 const log = debug("ordit-worker");
 
 let indexing = false;
+let outdated = false;
 
 export async function index() {
   if (indexing === true) {
+    outdated = true;
     return;
   }
   indexing = true;
@@ -49,6 +51,10 @@ export async function index() {
   log("indexed to block %d", blockHeight);
 
   indexing = false;
+  if (outdated === true) {
+    outdated = false;
+    await index();
+  }
 }
 
 /*
