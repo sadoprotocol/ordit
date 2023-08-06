@@ -1,5 +1,4 @@
 import { config } from "../Config";
-import { getOutpointFromId } from "../Database/Media";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
 import { isError } from "../Utilities/Response";
@@ -32,6 +31,7 @@ export const ord = {
   index,
   list,
   traits,
+  latestInscriptionIds,
   inscription,
   inscriptions,
   reorg,
@@ -77,6 +77,21 @@ async function list(location: string): Promise<Satoshi[]> {
  */
 async function traits(satoshi: number): Promise<Traits> {
   const result = await run<Traits>(["traits", satoshi.toString()]);
+  if (isError(result)) {
+    throw new Error(result.error);
+  }
+  return result;
+}
+
+async function latestInscriptionIds(limit?: number, from?: number): Promise<LatestInscriptionIds> {
+  const args = ["gli"];
+  if (limit) {
+    args.push(limit.toString());
+  }
+  if (from) {
+    args.push(from.toString());
+  }
+  const result = await run<LatestInscriptionIds>(args);
   if (isError(result)) {
     throw new Error(result.error);
   }
@@ -147,19 +162,7 @@ async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<
  */
 
 function toInscription(id: string, inscription: any): Inscription {
-  return {
-    id,
-    outpoint: getOutpointFromId(id),
-    owner: "",
-    fee: inscription.fee,
-    height: inscription.height,
-    number: inscription.number,
-    sat: inscription.sat,
-    timestamp: inscription.timestamp,
-    mediaType: inscription.media_type,
-    mediaSize: inscription.media_size,
-    mediaContent: inscription.media_content,
-  };
+  return { id, ...inscription };
 }
 
 /*
@@ -174,16 +177,19 @@ export type RarityOptions = {
 
 export type Inscription = {
   id: string;
-  outpoint: string;
-  owner?: string;
-  fee: number;
-  height: number;
-  number: number;
+  address: string;
   sat?: Satoshi;
+  media: {
+    kind: string;
+    size: number;
+    content: string;
+  };
   timestamp: number;
-  mediaType: string;
-  mediaSize: number;
-  mediaContent: string;
+  height: number;
+  fee: number;
+  genesis: string;
+  number: number;
+  outpoint: string;
   meta?: any;
 };
 
@@ -209,6 +215,12 @@ export type Traits = {
 };
 
 export type Rarity = (typeof rarity)[number];
+
+type LatestInscriptionIds = {
+  inscriptions: string[];
+  prev: number | null;
+  next: number | null;
+};
 
 type Response<R> =
   | R
