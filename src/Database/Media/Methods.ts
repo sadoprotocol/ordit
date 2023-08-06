@@ -4,7 +4,11 @@ import { ord } from "../../Services/Ord";
 import { collection, MediaDocument } from "./Collection";
 import { getOutpointFromId } from "./Utilities";
 
-export async function getMediaByInscriptionId(inscriptionId: string): Promise<WithId<MediaDocument>> {
+export const media = {
+  getByInscriptionId,
+};
+
+async function getByInscriptionId(inscriptionId: string): Promise<WithId<MediaDocument>> {
   const outpoint = getOutpointFromId(inscriptionId);
 
   const media = await collection.findOne({ outpoint });
@@ -25,7 +29,6 @@ export async function getMediaByInscriptionId(inscriptionId: string): Promise<Wi
   };
 
   const result = await collection.insertOne(document);
-
   return {
     _id: result.insertedId,
     ...document,

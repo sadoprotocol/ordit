@@ -5,7 +5,7 @@ import { ORD_DATA, ORD_DATA_BLUE, ORD_DATA_GREEN, ORD_DATA_SNAPSHOT } from "../P
 import { cli } from "../Services/Cli";
 import { bitcoinArgs } from "../Services/Ord";
 import { copyFile } from "../Utilities/Files";
-import { getIndexPath } from "./Ord/Utilities";
+import { getIndexPath } from "./Ordinals/Utilities";
 
 const log = debug("ordit-setup");
 

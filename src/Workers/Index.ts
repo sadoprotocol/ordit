@@ -5,7 +5,7 @@ import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
-import { crawl as crawlOrdinals } from "./Ord/Crawl";
+import { crawl as crawlOrdinals } from "./Ordinals/Crawl";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
 import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
@@ -66,17 +66,6 @@ export async function index() {
 async function indexUtxos(blockHeight: number): Promise<void> {
   const outputBlockHeight = await db.outputs.getHeighestBlock();
 
-  // ### Reorg Check
-  // Check if the last output block mined is newer than the reorg height. If so,
-  // we need to roll back the outputs to the reorg height and parse from that
-  // point forward.
-
-  // if (reorgHeight < outputBlockHeight) {
-  //   log("Reorg detected, rolling back outputs to block %d", reorgHeight);
-  //   // await deleteOutputsAfterHeight(reorgHeight);
-  //   // outputBlockHeight = reorgHeight - 1;
-  // }
-
   // ### Crawl
   // Crawl all blocks up until current block height.
 
@@ -86,24 +75,12 @@ async function indexUtxos(blockHeight: number): Promise<void> {
     log("parsed output block %d", height);
     height += 1;
   }
+
   await spend();
 }
 
 async function indexSado(blockHeight: number): Promise<void> {
   const sadoBlockHeight = await getHeighestSadoBlock();
-
-  // ### Reorg Check
-  // Check if the last sado block mined is newer than the reorg height. If so,
-  // we need to roll back the sado and sado orders to the reorg height and parse
-  // from that point forward.
-
-  // if (reorgHeight < sadoBlockHeight) {
-  //   log("Reorg detected, rolling back sado to block %d", reorgHeight);
-  //   await deleteSadoAfterHeight(reorgHeight);
-  //   await deleteSadoOrdersAfterHeight(reorgHeight);
-  //   await setBlockHeight(reorgHeight);
-  //   sadoBlockHeight = reorgHeight - 1;
-  // }
 
   // ### Parse
   // Parse all sado blocks up until current block height.

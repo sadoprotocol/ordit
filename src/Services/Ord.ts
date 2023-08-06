@@ -3,7 +3,7 @@ import { getOutpointFromId } from "../Database/Media";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
 import { isError } from "../Utilities/Response";
-import { getStatus } from "../Workers/Ord/Status";
+import { getStatus } from "../Workers/Ordinals/Status";
 import { cli } from "./Cli";
 
 export const networkFlag = {

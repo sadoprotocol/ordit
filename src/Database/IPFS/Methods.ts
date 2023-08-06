@@ -1,11 +1,21 @@
+import { Filter, FindOptions } from "mongodb";
+
 import { collection, IPFSDocument } from "./Collection";
 
-export async function setIPFS(document: IPFSDocument): Promise<void> {
+export const ipfs = {
+  insertOne,
+  findOne,
+};
+
+async function insertOne(document: IPFSDocument): Promise<void> {
   await collection.updateOne({ cid: document.cid }, { $set: document }, { upsert: true });
 }
 
-export async function getIPFS(cid: string): Promise<IPFSDocument | undefined> {
-  const document = await collection.findOne({ cid });
+async function findOne(
+  filter: Filter<IPFSDocument>,
+  options?: FindOptions<IPFSDocument>
+): Promise<IPFSDocument | undefined> {
+  const document = await collection.findOne(filter, options);
   if (document === null) {
     return undefined;
   }

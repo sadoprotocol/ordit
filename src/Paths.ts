@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { getNetworkPath } from "./Workers/Ord/Utilities";
+import { getNetworkPath } from "./Workers/Ordinals/Utilities";
 
 export const DIR_ROOT = resolve(__dirname, "..");
 export const DATA_DIR = resolve(DIR_ROOT, ".data");

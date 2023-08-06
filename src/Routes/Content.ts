@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 
+import { db } from "../Database";
 import { fastify } from "../Fastify";
-import { getMediaByInscriptionId } from "../Database/Media";
 
 type MediaRequest = FastifyRequest<{
   Params: {
@@ -19,7 +19,7 @@ fastify.get(
     },
   },
   async (request: MediaRequest, reply) => {
-    const media = await getMediaByInscriptionId(request.params.inscription);
+    const media = await db.media.getByInscriptionId(request.params.inscription);
     const buffer = Buffer.from(media.content, "base64");
     reply
       .code(200)

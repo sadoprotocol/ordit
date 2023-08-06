@@ -3,7 +3,8 @@ import FormData from "form-data";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
-import { getIPFS, IPFSCollection, IPFSImage, IPFSOffer, IPFSOrder, setIPFS } from "../Database/IPFS";
+import { db } from "../Database";
+import { IPFSCollection, IPFSImage, IPFSOffer, IPFSOrder } from "../Database/IPFS";
 
 const hasValidOrderKeys = makeObjectKeyChecker(["ts", "type", "maker", "location", "signature"]);
 const hasValidOfferKeys = makeObjectKeyChecker(["ts", "origin", "taker", "offer"]);
@@ -115,7 +116,7 @@ async function getImage(cid: string): Promise<IPFSResponse<IPFSImage>> {
  */
 
 async function get<Data extends IPFSData>(cid: string): Promise<Data | undefined> {
-  const document = await getIPFS(cid);
+  const document = await db.ipfs.findOne({ cid });
   if (document !== undefined) {
     return document as Data;
   }
@@ -136,7 +137,7 @@ async function get<Data extends IPFSData>(cid: string): Promise<Data | undefined
       return response.json();
     })
     .then((data) => {
-      setIPFS(data);
+      db.ipfs.insertOne(data);
       return data;
     })
     .catch(() => undefined);
