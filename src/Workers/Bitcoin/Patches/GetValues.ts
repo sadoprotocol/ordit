@@ -1,12 +1,17 @@
 import debug from "debug";
+import { mkdirSync } from "fs";
+import { resolve } from "path";
 
-import { bootstrap } from "../../Bootstrap";
-import { config } from "../../Config";
-import { BLOCKS_DIR } from "../../Paths";
-import { rpc } from "../../Services/Bitcoin";
-import { readDir, writeFile } from "../../Utilities/Files";
+import { bootstrap } from "../../../Bootstrap";
+import { config } from "../../../Config";
+import { DATA_DIR } from "../../../Paths";
+import { rpc } from "../../../Services/Bitcoin";
+import { readDir, writeFile } from "../../../Utilities/Files";
 
 const log = debug("bitcoin-values");
+
+const VALUES_DIR = resolve(DATA_DIR, "values");
+mkdirSync(VALUES_DIR, { recursive: true });
 
 main()
   .catch(console.log)
@@ -15,11 +20,11 @@ main()
 async function main() {
   log("network: %s", config.chain.network);
   await bootstrap();
-  await parseBlocks();
+  await getValues();
   log("done");
 }
 
-async function parseBlocks() {
+async function getValues() {
   const blockHeight = await rpc.blockchain.getBlockCount();
   const outputHeight = await getBlockHeight();
 
@@ -40,12 +45,13 @@ async function parseBlocks() {
         });
       }
     }
-    await writeFile(`${BLOCKS_DIR}/${height}`, JSON.stringify(values));
+    await writeFile(`${VALUES_DIR}/${height}`, JSON.stringify(values));
+    log(`block ${height.toLocaleString()} added ${values.length.toLocaleString()} values`);
     height += 1;
   }
 }
 
 async function getBlockHeight() {
-  const files = await readDir(BLOCKS_DIR);
+  const files = await readDir(VALUES_DIR);
   return files.length;
 }

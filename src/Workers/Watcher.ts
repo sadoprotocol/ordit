@@ -26,24 +26,7 @@ fastify.get("/health", async () => true);
  |
  */
 
-fastify.get("/hooks/bitcoin", async () => {
-  await index();
-});
-
-/*
- |--------------------------------------------------------------------------------
- | Ordinals
- |--------------------------------------------------------------------------------
- |
- | Hook listening for events sent from https://github.com/hirosystems/ordhook
- | service. This service actively scans for changes to the bitcoin chain and
- | emits events for ordinal and inscriptions changes.
- |
- */
-
-fastify.post("/hooks/ord", async (req) => {
-  console.log("hord", req.body);
-});
+fastify.get("/hooks/bitcoin", index);
 
 /*
  |--------------------------------------------------------------------------------
