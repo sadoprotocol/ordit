@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 
 import { fastify } from "../Fastify";
-import { getMediaByInscriptionId } from "../Models/Media";
+import { getMediaByInscriptionId } from "../Database/Media";
 
 type MediaRequest = FastifyRequest<{
   Params: {

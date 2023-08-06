@@ -1,24 +1,23 @@
 import { method, NotFoundError, ServerError } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
-import { getSadoEntry } from "../../Models/Sado";
-import { getOfferStatus } from "../../Models/SadoOrders/Utilities/GetOfferStatus";
-import { getOrderStatus } from "../../Models/SadoOrders/Utilities/GetOrderStatus";
+import { db } from "../../Database";
+import { getOfferStatus, getOrderStatus } from "../../Database/SadoOrders";
 
 export const getSadoStatus = method({
   params: Schema({
     cid: string,
   }),
   handler: async ({ cid }) => {
-    const entry = await getSadoEntry({ cid });
-    if (entry === undefined) {
+    const sado = await db.sado.findOne({ cid });
+    if (sado === undefined) {
       throw new NotFoundError();
     }
-    if (entry.type === "order") {
-      return getOrderStatus(entry);
+    if (sado.type === "order") {
+      return getOrderStatus(sado);
     }
-    if (entry.type === "offer") {
-      return getOfferStatus(entry);
+    if (sado.type === "offer") {
+      return getOfferStatus(sado);
     }
     throw new ServerError(-32001, "Unknown sado entry type");
   },

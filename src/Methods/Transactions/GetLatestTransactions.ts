@@ -1,7 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { number } from "computed-types";
 
-import { RawTransaction, rpc } from "../../Services/Bitcoin";
+import { isCoinbase, RawTransaction, rpc } from "../../Services/Bitcoin";
 import { getTransactionAmount, getTransactionFee } from "../../Utilities/Transaction";
 
 export const getLatestTransactions = method({
@@ -24,8 +24,10 @@ export const getLatestTransactions = method({
       const txs = block.tx.slice(cursor);
       for (const tx of txs) {
         const fee = await getTransactionFee(tx);
+        const coinbase = isCoinbase(tx.vin[0]);
         transactions.push({
           txid: tx.txid,
+          coinbase,
           age: block.time,
           amount: getTransactionAmount(tx),
           fee,
@@ -57,6 +59,7 @@ export const getLatestTransactions = method({
 });
 
 type Transaction = Pick<RawTransaction, "txid" | "size" | "vsize"> & {
+  coinbase: boolean;
   age: number;
   amount: number;
   fee: number;

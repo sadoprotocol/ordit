@@ -27,6 +27,7 @@ export const config = {
     enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
   parser: {
+    host: getEnvironmentVariable("UTXO_PARSER_HOST"),
     port: getEnvironmentVariable("UTXO_PARSER_PORT", envToNumber),
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),

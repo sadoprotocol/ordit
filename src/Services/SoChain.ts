@@ -4,7 +4,12 @@ import fetch from "node-fetch";
 import { config } from "../Config";
 import type { Options as TransactionsOptions, Pagination } from "../Methods/Address/GetTransactions";
 import type { Options } from "../Methods/Address/GetUnspents";
-import { addTransaction, getAddressesFromTx, getTransactionsByIds, TransactionDocument } from "../Models/Transactions";
+import {
+  addTransaction,
+  getAddressesFromTx,
+  getTransactionsByIds,
+  TransactionDocument,
+} from "../Database/Transactions";
 import { sats } from "../Utilities/Bitcoin";
 import {
   getExpandedTransaction,

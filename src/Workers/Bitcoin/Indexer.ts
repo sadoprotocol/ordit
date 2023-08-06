@@ -2,7 +2,7 @@ import debug from "debug";
 
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
-import { getHeighestBlock } from "../../Models/Output";
+import { db } from "../../Database";
 import { rpc } from "../../Services/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
 import { crawl } from "./Outputs/Output";
@@ -19,7 +19,7 @@ async function main() {
   // ### Resolved Heights
 
   const blockHeight = await rpc.blockchain.getBlockCount();
-  const outputHeight = await getHeighestBlock();
+  const outputHeight = await db.outputs.getHeighestBlock();
 
   log("indexing from %d to %d", outputHeight, blockHeight);
 

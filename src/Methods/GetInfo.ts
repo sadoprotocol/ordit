@@ -2,14 +2,14 @@ import { method } from "@valkyr/api";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
-import { getHeighestBlock } from "../Models/Output";
+import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
 import { ord } from "../Services/Ord";
 
 export const getInfo = method({
   handler: async () => {
     const block = await rpc.blockchain.getBlockchainInfo();
-    const indexed = await getHeighestBlock();
+    const indexed = await db.outputs.getHeighestBlock();
     return {
       chain: block.chain,
       blocks: block.blocks,
@@ -31,7 +31,7 @@ export const getInfo = method({
 
 async function getWorkerHealth(): Promise<boolean> {
   try {
-    await fetch(`http://localhost:${config.parser.port}/health`);
+    await fetch(`http://${config.parser.host}:${config.parser.port}/health`);
     return true;
   } catch (error) {
     return false;

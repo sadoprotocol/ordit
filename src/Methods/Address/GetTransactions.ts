@@ -1,10 +1,13 @@
 import { method } from "@valkyr/api";
 import Schema, { boolean, string, Type } from "computed-types";
 
-import { TransactionDocument } from "../../Models/Transactions";
-import { lookup } from "../../Services/Lookup";
+import { db } from "../../Database";
+import { getHeighestOutput } from "../../Database/Output";
+import { TransactionDocument } from "../../Database/Transactions";
+import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { pagination } from "../../Utilities/Pagination";
+import { getPagination, pagination } from "../../Utilities/Pagination";
+import { getExpandedTransaction } from "../../Utilities/Transaction";
 
 const options = Schema({
   ord: boolean.optional(),
@@ -19,8 +22,27 @@ export const getTransactions = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
+    const outputs = await db.outputs.getByAddress(
+      address,
+      {},
+      { sort: { "vout.block.height": 1, "vin.block.height": 1 }, ...getPagination(pagination) }
+    );
+
+    const transactions: any = [];
+    for (const output of outputs) {
+      const entry = getHeighestOutput(output);
+      const tx = await rpc.transactions.getRawTransaction(entry.txid, true);
+      if (tx === undefined) {
+        continue;
+      }
+      transactions.push({
+        blockHeight: entry.block.height,
+        ...(await getExpandedTransaction(tx, options)),
+      });
+    }
+
     return {
-      transactions: (await lookup.getTransactions(address, options, pagination)).map(format),
+      transactions: transactions.map(format),
       options: {
         ord: options?.ord ?? false,
         hex: options?.hex ?? false,
@@ -29,11 +51,16 @@ export const getTransactions = method({
       pagination: {
         page: pagination?.page ?? 1,
         limit: 10,
-        total: await lookup.getTotalTransactions(address),
+        total: await getTotalTransactions(address),
       },
     };
   },
 });
+
+async function getTotalTransactions(address: string): Promise<number> {
+  const { total } = await db.outputs.getCountByAddress(address);
+  return total;
+}
 
 function format(tx: TransactionDocument) {
   return {

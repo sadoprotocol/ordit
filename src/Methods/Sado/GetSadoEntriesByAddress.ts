@@ -1,7 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
-import { getSadoCount, getSadoEntries } from "../../Models/Sado";
+import { db } from "../../Database";
 import { stripMongoId } from "../../Services/Mongo";
 import { getPagination, pagination } from "../../Utilities/Pagination";
 
@@ -13,11 +13,11 @@ export const getSadoEntriesByAddress = method({
   handler: async ({ address, pagination }) => {
     const filter = { addresses: address };
     return {
-      entries: (await getSadoEntries(filter, getPagination(pagination))).map(stripMongoId),
+      entries: (await db.sado.find(filter, getPagination(pagination))).map(stripMongoId),
       pagination: {
         page: pagination?.page ?? 1,
         limit: 10,
-        total: await getSadoCount(filter),
+        total: await db.sado.count(filter),
       },
     };
   },

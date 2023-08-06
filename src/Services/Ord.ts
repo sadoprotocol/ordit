@@ -1,5 +1,5 @@
 import { config } from "../Config";
-import { getOutpointFromId } from "../Models/Media";
+import { getOutpointFromId } from "../Database/Media";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
 import { isError } from "../Utilities/Response";

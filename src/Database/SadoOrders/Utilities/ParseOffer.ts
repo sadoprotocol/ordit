@@ -1,9 +1,8 @@
-import { getSadoEntry } from "../../Sado";
-import { addOffer } from "../Methods";
+import { db } from "../..";
 import { getOfferStatus } from "./GetOfferStatus";
 
 export async function parseOffer(cid: string, block: Block) {
-  const entry = await getSadoEntry({ cid });
+  const entry = await db.sado.findOne({ cid });
   if (entry === undefined) {
     return;
   }
@@ -15,7 +14,7 @@ export async function parseOffer(cid: string, block: Block) {
 
   // ### Add Offer
 
-  await addOffer(status.order.cid, {
+  await db.orders.addOffer(status.order.cid, {
     cid,
     origin: status.offer.origin,
     taker: status.offer.taker,

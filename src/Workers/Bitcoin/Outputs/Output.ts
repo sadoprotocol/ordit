@@ -1,9 +1,10 @@
 import debug from "debug";
 
 import { config } from "../../../Config";
+import { db } from "../../../Database";
+import { OutputDocument, SpentOutput } from "../../../Database/Output";
 import { logger } from "../../../Logger";
-import { addOutputs, OutputDocument, SpentOutput } from "../../../Models/Output";
-import { PARSER_DATA } from "../../../Paths";
+import { SPENTS_DATA } from "../../../Paths";
 import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../../Utilities/Address";
 import { writeFile } from "../../../Utilities/Files";
@@ -80,8 +81,8 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   // ### Insert
 
-  await addOutputs(outputs);
-  await writeFile(`${PARSER_DATA}/${block.height}`, JSON.stringify(spents));
+  await db.outputs.insertMany(outputs);
+  await writeFile(`${SPENTS_DATA}/${block.height}`, JSON.stringify(spents));
 
   // ### Debug
 

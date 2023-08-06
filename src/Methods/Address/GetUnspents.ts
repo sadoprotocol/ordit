@@ -1,7 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { array, boolean, string } from "computed-types";
 
-import { getOutputCount, getOutputs } from "../../Models/Output";
+import { db } from "../../Database";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../../Utilities/Oip";
@@ -25,7 +25,7 @@ export const getUnspents = method({
     const height = await rpc.blockchain.getBlockCount();
     const filter = { addresses: address, vin: { $exists: false } };
 
-    const unspents = await getOutputs(filter, getPagination(pagination));
+    const unspents = await db.outputs.find(filter, getPagination(pagination));
     for (const unspent of unspents) {
       const tx = await rpc.transactions.getRawTransaction(unspent.vout.txid, true);
       if (tx === undefined) {
@@ -74,7 +74,7 @@ export const getUnspents = method({
       pagination: {
         page: pagination?.page ?? 1,
         limit: 10,
-        total: await getOutputCount(filter),
+        total: await db.outputs.count(filter),
       },
     };
   },

@@ -7,7 +7,7 @@
     "build": "tsc",
     "setup": "DEBUG=ordit-* ts-node ./src/Workers/Setup.ts",
     "start": "DEBUG=ordit-* ts-node ./src/main.ts",
-    "worker": "DEBUG=ordit-* ts-node ./src/Workers/Watcher.ts",
+    "worker": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Watcher.ts",
     "hord": "DEBUG=ordit-* ts-node ./src/Workers/Hord.ts",
     "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
     "indexer": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Indexer.ts",

@@ -1,7 +1,6 @@
 import { rpc } from "../../../Services/Bitcoin";
 import { ipfs } from "../../../Services/IPFS";
-import { getOutput } from "../../Output";
-import { addOrder } from "../Methods";
+import { db } from "../..";
 import { parseLocation } from "./ParseLocation";
 import { validateOrderSignature } from "./ValidateSignature";
 
@@ -13,7 +12,7 @@ export async function parseOrder(cid: string, block: Block) {
 
   const [txid, n] = parseLocation(order.location);
 
-  const output = await getOutput({ "vout.txid": txid, "vout.n": n });
+  const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
   if (output === undefined || output.vin !== undefined) {
     return; // skip if output is not found or has been spent
   }
@@ -23,7 +22,7 @@ export async function parseOrder(cid: string, block: Block) {
   try {
     await validateLocation(order.location, order.maker);
     await validateOrderSignature(order);
-    await addOrder({
+    await db.orders.insertOne({
       cid,
       type: order.type,
       status: "pending",

@@ -3,7 +3,7 @@ import FormData from "form-data";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
-import { getIPFS, IPFSCollection, IPFSImage, IPFSOffer, IPFSOrder, setIPFS } from "../Models/IPFS";
+import { getIPFS, IPFSCollection, IPFSImage, IPFSOffer, IPFSOrder, setIPFS } from "../Database/IPFS";
 
 const hasValidOrderKeys = makeObjectKeyChecker(["ts", "type", "maker", "location", "signature"]);
 const hasValidOfferKeys = makeObjectKeyChecker(["ts", "origin", "taker", "offer"]);

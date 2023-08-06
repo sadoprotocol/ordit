@@ -2,7 +2,7 @@ import { Transaction } from "bitcoinjs-lib";
 import Schema, { boolean, Type } from "computed-types";
 
 import { config } from "../Config";
-import { getSpendingVin } from "../Models/Output";
+import { db } from "../Database";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
 import { ord, Rarity } from "../Services/Ord";
 import { getAddressessFromVout } from "./Address";
@@ -76,7 +76,7 @@ export async function getExpandedTransaction(
       (vout as any).inscriptions = await getInscriptionsByOutpoint(outpoint, meta);
     }
 
-    (vout as any).spent = (await getSpendingVin(outpoint)) ?? false;
+    (vout as any).spent = (await db.outputs.getVinLocation(outpoint)) ?? false;
 
     fee -= vout.value;
   }

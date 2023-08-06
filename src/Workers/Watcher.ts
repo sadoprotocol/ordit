@@ -54,7 +54,7 @@ fastify.post("/hooks/ord", async (req) => {
 const start = async () => {
   await bootstrap();
   await fastify
-    .listen({ host: "0.0.0.0", port: config.parser.port })
+    .listen({ host: config.parser.host, port: config.parser.port })
     .then((address) => {
       log(`listening on ${address}`);
     })
