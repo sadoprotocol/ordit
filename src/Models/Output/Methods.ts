@@ -92,6 +92,10 @@ export async function getOutput(
   return output;
 }
 
+export async function getOutputCount(filter: Filter<OutputDocument>) {
+  return collection.countDocuments(filter);
+}
+
 export async function getOutputsByAddress(
   address: string,
   filter?: Filter<OutputDocument>,
