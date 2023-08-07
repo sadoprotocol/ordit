@@ -25,7 +25,7 @@ export const getInscriptions = method({
         inscription.meta = meta;
       }
       if (options === undefined || options.url === true) {
-        inscription.media.content = `${config.api.domain}/content/${id}`;
+        inscription.mediaContent = `${config.api.domain}/content/${id}`;
       }
       data.push(inscription);
     }

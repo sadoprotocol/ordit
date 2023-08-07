@@ -23,9 +23,9 @@ async function getByInscriptionId(inscriptionId: string): Promise<WithId<MediaDo
 
   const document: MediaDocument = {
     outpoint,
-    type: inscription.media.kind,
-    size: inscription.media.size,
-    content: inscription.media.content,
+    type: inscription.mediaType,
+    size: inscription.mediaSize,
+    content: inscription.mediaContent,
   };
 
   const result = await collection.insertOne(document);

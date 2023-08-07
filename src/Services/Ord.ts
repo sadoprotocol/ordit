@@ -162,7 +162,17 @@ async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<
  */
 
 function toInscription(id: string, inscription: any): Inscription {
-  return { id, ...inscription };
+  const data = {
+    id,
+    owner: inscription.address,
+    ...inscription,
+    mediaType: inscription.media.kind,
+    mediaSize: inscription.media.size,
+    mediaContent: inscription.media.content,
+  };
+  delete data.address;
+  delete data.media;
+  return data;
 }
 
 /*
@@ -177,13 +187,11 @@ export type RarityOptions = {
 
 export type Inscription = {
   id: string;
-  address: string;
+  owner: string;
   sat?: Satoshi;
-  media: {
-    kind: string;
-    size: number;
-    content: string;
-  };
+  mediaType: string;
+  mediaSize: number;
+  mediaContent: string;
   timestamp: number;
   height: number;
   fee: number;

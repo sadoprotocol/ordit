@@ -137,14 +137,10 @@ export async function getOrdinalsByOutpoint(outpoint: string): Promise<any[]> {
 export async function getInscriptionsByOutpoint(outpoint: string, meta?: any): Promise<any[]> {
   const inscriptions = [];
 
-  const [txid, n] = outpoint.split(":");
-  const tx = await rpc.transactions.getRawTransaction(txid, true);
-
   const inscriptionIds = await ord.inscriptions(outpoint);
   for (const inscriptionId of inscriptionIds) {
     const inscription = await ord.inscription(inscriptionId);
     inscriptions.push({
-      owner: getAddressessFromVout(tx.vout[parseInt(n)])[0],
       ...inscription,
       mediaContent: `${config.api.domain}/content/${inscriptionId}`,
       meta,
