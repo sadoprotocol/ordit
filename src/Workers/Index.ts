@@ -25,28 +25,37 @@ export async function index() {
   log("starting indexer");
 
   const blockHeight = await rpc.blockchain.getBlockCount();
-  const reorgHeight = await getReorgHeight(0, blockHeight);
 
+  // ### Reorg
+  // Check for potential reorg event on the blockchain. If a reorg is detected,
+  // the indexer will stop and the user will be prompted to run resolution.
+  // TODO: Add robust automation for reorg resolution.
+
+  const reorgHeight = await getReorgHeight(0, blockHeight);
   if (reorgHeight !== -1) {
     throw new Error("Reorg detected, please run reorg command");
   }
 
   // ### Parse
 
+  const promises: Promise<void>[] = [];
+
   if (config.parser.enabled === true) {
     log("indexing outputs");
-    await indexUtxos(blockHeight);
+    promises.push(indexUtxos(blockHeight));
   }
 
   if (config.sado.enabled === true) {
     log("indexing sado");
-    await indexSado(blockHeight);
+    promises.push(indexSado(blockHeight));
   }
 
   if (config.ord.enabled === true) {
     log("indexing ordinals");
-    await indexOrdinals();
+    promises.push(indexOrdinals());
   }
+
+  await Promise.all(promises);
 
   log("indexed to block %d", blockHeight);
 
