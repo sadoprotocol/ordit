@@ -1,5 +1,6 @@
 import "./Address";
 import "./Blockchain";
+import "./Generating";
 import "./Ord";
 import "./Sado";
 import "./Transactions";
