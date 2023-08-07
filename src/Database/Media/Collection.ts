@@ -18,4 +18,6 @@ export type MediaDocument = {
   type: string;
   size: number;
   content: string;
+  number: number;
+  timestamp: number;
 };
