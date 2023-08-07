@@ -22,10 +22,9 @@ export const getTransactions = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
-    const outputs = await db.outputs.getByAddress(
-      address,
-      {},
-      { sort: { "vout.block.height": 1, "vin.block.height": 1 }, ...getPagination(pagination) }
+    const outputs = await db.outputs.find(
+      { addresses: address },
+      { sort: { "vout.block.height": -1, "vin.block.height": -1 }, ...getPagination(pagination) }
     );
 
     const transactions: any = [];

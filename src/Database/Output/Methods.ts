@@ -72,10 +72,7 @@ async function findOne(
   return output;
 }
 
-function aggregate<T extends Document = Document>(
-  pipeline?: Document[],
-  options?: AggregateOptions
-): AggregationCursor<T> {
+function aggregate(pipeline?: Document[], options?: AggregateOptions): AggregationCursor<OutputDocument> {
   return collection.aggregate(pipeline, options);
 }
 
