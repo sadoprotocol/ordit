@@ -164,6 +164,7 @@ async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<
 function toInscription(id: string, inscription: any): Inscription {
   const data = {
     id,
+    outpoint: inscription.output,
     owner: inscription.address,
     ...inscription,
     mediaType: inscription.media.kind,
@@ -172,6 +173,7 @@ function toInscription(id: string, inscription: any): Inscription {
   };
   delete data.address;
   delete data.media;
+  delete data.output;
   return data;
 }
 
