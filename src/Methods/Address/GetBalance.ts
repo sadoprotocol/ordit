@@ -13,9 +13,7 @@ export const getBalance = method({
 
     const outputs = await db.outputs.find({ addresses: address, vin: { $exists: false } });
     for (const output of outputs) {
-      if (output.value !== null) {
-        balance += output.value;
-      } else {
+      if (!output.value) {
         const tx = await rpc.transactions.getRawTransaction(output.vout.txid, true);
         if (tx === undefined) {
           continue;
@@ -25,6 +23,8 @@ export const getBalance = method({
           continue;
         }
         balance += vout.value;
+      } else {
+        balance += output.value;
       }
     }
 
