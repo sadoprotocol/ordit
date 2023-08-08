@@ -27,13 +27,15 @@ export async function index() {
   const blockHeight = await rpc.blockchain.getBlockCount();
 
   // ### Reorg
-  // Check for potential reorg event on the blockchain. If a reorg is detected,
-  // the indexer will stop and the user will be prompted to run resolution.
-  // TODO: Add robust automation for reorg resolution.
+  // Check for potential reorg event on the blockchain.
 
   const reorgHeight = await getReorgHeight(0, blockHeight);
   if (reorgHeight !== -1) {
-    throw new Error("Reorg detected, please run reorg command");
+    log("Reorg detected at block %d, starting rollback", reorgHeight);
+    if (blockHeight - reorgHeight > 100) {
+      return log("Reorg at block %d is unexpectedly far behind, needs manual review", reorgHeight);
+    }
+    await Promise.all([reorgUtxos(reorgHeight), reorgSado(reorgHeight)]);
   }
 
   // ### Parse
@@ -88,6 +90,10 @@ async function indexUtxos(blockHeight: number): Promise<void> {
   await spend();
 }
 
+async function reorgUtxos(blockHeight: number) {
+  await db.outputs.deleteMany({ "vout.block.height": { $gt: blockHeight } });
+}
+
 async function indexSado(blockHeight: number): Promise<void> {
   const sadoBlockHeight = await getHeighestSadoBlock();
 
@@ -104,6 +110,13 @@ async function indexSado(blockHeight: number): Promise<void> {
   }
 
   await parse();
+}
+
+async function reorgSado(blockHeight: number) {
+  await Promise.all([
+    db.sado.deleteMany({ height: { $gt: blockHeight } }),
+    db.orders.deleteMany({ "block.height": { $gt: blockHeight } }),
+  ]);
 }
 
 async function indexOrdinals(): Promise<void> {
@@ -125,5 +138,8 @@ async function getReorgHeight(start: number, end: number): Promise<number> {
       start = mid + 1;
     }
   }
-  return result;
+  if (result === -1) {
+    return -1;
+  }
+  return result - 1;
 }
