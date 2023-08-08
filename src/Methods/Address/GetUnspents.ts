@@ -73,7 +73,7 @@ export const getUnspents = method({
       unspents: result,
       pagination: {
         page: pagination?.page ?? 1,
-        limit: 10,
+        limit: pagination?.limit ?? 10,
         total: await db.outputs.count(filter),
       },
     };
