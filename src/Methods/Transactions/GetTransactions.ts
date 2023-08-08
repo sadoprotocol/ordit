@@ -9,22 +9,24 @@ export const getTransactions = method({
     pagination: Schema({
       block: number.optional(),
       index: number.optional(),
+      limit: number.gt(0).lt(20).optional(),
     }).optional(),
   }),
   handler: async ({ pagination }) => {
     const transactions: Transaction[] = [];
 
+    const limit = pagination?.limit ?? 10;
     let cursor = pagination?.index ?? 0;
     let index = 0;
 
     let blockCount = pagination?.block ?? (await rpc.blockchain.getBlockCount());
-    while (transactions.length < 10) {
+    while (transactions.length < limit) {
       const block = await rpc.blockchain.getBlock(blockCount, 2);
 
       const txs = block.tx.slice(cursor);
       for (const tx of txs) {
-        const fee = await getTransactionFee(tx);
         const coinbase = isCoinbase(tx.vin[0]);
+        const fee = coinbase === true ? 0 : await getTransactionFee(tx);
         transactions.push({
           txid: tx.txid,
           coinbase,
@@ -53,6 +55,7 @@ export const getTransactions = method({
       pagination: {
         block: blockCount,
         index: cursor + index + 1,
+        limit,
       },
     };
   },
