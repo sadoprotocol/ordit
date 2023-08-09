@@ -37,7 +37,7 @@ async function setInscriptions() {
         id: inscription.id,
         owner: inscription.address,
         sat: inscription.sat,
-        mediaKind: type.split("/")[0],
+        mediaKind: type.split("/")[1],
         mediaType: type,
         mediaCharset: format?.split("=")[1],
         mediaSize: inscription.media.size,
