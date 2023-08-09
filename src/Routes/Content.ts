@@ -24,6 +24,7 @@ fastify.get(
     reply
       .code(200)
       .header("X-Frame-Options", "ALLOWALL")
+      .header("Content-Security-Policy", "frame-src https://regtest-v2.ordit.io/") // TODO: add rest of sub-domains
       .header("X-Content-Number", media.number)
       .header("X-Content-Timestamp", media.timestamp)
       .header("Content-Type", media.type)
