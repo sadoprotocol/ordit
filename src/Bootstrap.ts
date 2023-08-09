@@ -1,5 +1,6 @@
 import "./Utilities/Currency";
 
+import { registrar as inscriptions } from "./Database/Inscriptions";
 import { registrar as ipfs } from "./Database/IPFS";
 import { registrar as media } from "./Database/Media";
 import { registrar as output } from "./Database/Output";
@@ -14,5 +15,5 @@ export async function bootstrap() {
 
 async function database() {
   await mongo.connect();
-  await mongo.register([ipfs, media, output, sado, orders, transactions]);
+  await mongo.register([inscriptions, ipfs, media, output, sado, orders, transactions]);
 }

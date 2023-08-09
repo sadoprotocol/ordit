@@ -6,6 +6,8 @@ import {
   Document,
   Filter,
   FindOptions,
+  UpdateFilter,
+  UpdateOptions,
 } from "mongodb";
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
@@ -20,6 +22,8 @@ export const outputs = {
   insertMany,
   find,
   findOne,
+  updateOne,
+  cursor,
   aggregate,
   count,
   deleteMany,
@@ -70,6 +74,18 @@ async function findOne(
     return undefined;
   }
   return output;
+}
+
+async function updateOne(
+  filter: Filter<OutputDocument>,
+  update: UpdateFilter<OutputDocument> | Partial<OutputDocument>,
+  options?: UpdateOptions
+) {
+  return collection.updateOne(filter, update, options);
+}
+
+function cursor(filter: Filter<OutputDocument>, options?: FindOptions<OutputDocument>) {
+  return collection.find(filter, options);
 }
 
 function aggregate(pipeline?: Document[], options?: AggregateOptions): AggregationCursor<OutputDocument> {
