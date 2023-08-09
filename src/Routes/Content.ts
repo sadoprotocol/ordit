@@ -24,8 +24,7 @@ fastify.get(
     reply
       .code(200)
       .header("X-Frame-Options", "ALLOWALL")
-      .header("X-Content-Number", media.number)
-      .header("X-Content-Timestamp", media.timestamp)
+      .header("Content-Security-Policy", "frame-src https://*.ordit.io/")
       .header("Content-Type", media.type)
       .header("Content-Length", buffer.length)
       .send(buffer);
