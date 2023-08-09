@@ -37,6 +37,9 @@ export const findInscriptions = method({
     }
 
     const inscriptions = await db.inscriptions.find(filter ?? {}, {
+      sort: {
+        number: -1,
+      },
       limit: pagination?.limit ?? 10,
     });
 
