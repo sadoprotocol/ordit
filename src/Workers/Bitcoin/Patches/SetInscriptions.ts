@@ -32,13 +32,15 @@ async function setInscriptions() {
   for (const line of lines) {
     try {
       const inscription = JSON.parse(line);
-      const [type, format] = inscription.media.kind.split(";");
+      const [media, format] = inscription.media.kind.split(";");
+      const [type, subtype] = media.split("/");
       inscriptions.push({
         id: inscription.id,
         owner: inscription.address,
         sat: inscription.sat,
-        mediaKind: type.split("/")[1],
-        mediaType: type,
+        mimeType: type,
+        mimeSubtype: subtype,
+        mediaType: media,
         mediaCharset: format?.split("=")[1],
         mediaSize: inscription.media.size,
         mediaContent: inscription.media.content,

@@ -31,7 +31,17 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        mediaKind: 1,
+        mimeType: 1,
+      },
+    ],
+    [
+      {
+        mimeSubtype: 1,
+      },
+    ],
+    [
+      {
+        mediaType: 1,
       },
     ],
   ],
@@ -41,7 +51,8 @@ export type Inscription = {
   id: string;
   owner: string;
   sat: number;
-  mediaKind: string;
+  mimeType: string;
+  mimeSubtype: string;
   mediaType: string;
   mediaCharset: string;
   mediaSize: number;

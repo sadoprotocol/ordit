@@ -9,13 +9,13 @@ import { Inscription } from "../../Database/Inscriptions";
 export const findInscriptions = method({
   params: Schema({
     type: string.optional(),
-    kind: string.optional(),
+    subtype: string.optional(),
     pagination: Schema({
       limit: number.max(100).optional(),
       from: string.optional(),
     }).optional(),
   }),
-  handler: async ({ type, kind, pagination }) => {
+  handler: async ({ type, subtype, pagination }) => {
     const filter: Filter<Inscription> = {};
 
     if (number !== undefined) {
@@ -23,11 +23,11 @@ export const findInscriptions = method({
     }
 
     if (type !== undefined) {
-      filter.mediaType = type;
+      filter.mimeType = type;
     }
 
-    if (kind !== undefined) {
-      filter.mediaKind = kind;
+    if (subtype !== undefined) {
+      filter.mimeSubtype = subtype;
     }
 
     if (pagination?.from !== undefined) {
