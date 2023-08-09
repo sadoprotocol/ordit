@@ -3,6 +3,7 @@ import debug from "debug";
 import { bootstrap } from "../../../Bootstrap";
 import { config } from "../../../Config";
 import { db } from "../../../Database";
+import { Inscription } from "../../../Database/Inscriptions";
 import { DIR_ROOT } from "../../../Paths";
 import { readFile } from "../../../Utilities/Files";
 
@@ -25,12 +26,29 @@ async function setInscriptions() {
     throw new Error("No inscriptions file generated");
   }
 
-  const inscriptions = [];
+  const inscriptions: Inscription[] = [];
 
   const lines = file.trim().split("\n");
   for (const line of lines) {
     try {
-      inscriptions.push(JSON.parse(line));
+      const inscription = JSON.parse(line);
+      const [type, format] = inscription.media.kind.split(";");
+      inscriptions.push({
+        id: inscription.id,
+        owner: inscription.address,
+        sat: inscription.sat,
+        mediaKind: type.split("/")[0],
+        mediaType: type,
+        mediaCharset: format?.split("=")[1],
+        mediaSize: inscription.media.size,
+        mediaContent: inscription.media.content,
+        timestamp: inscription.timestamp,
+        height: inscription.height,
+        fee: inscription.fee,
+        genesis: inscription.genesis,
+        number: inscription.number,
+        outpoint: inscription.output,
+      });
     } catch (e) {
       console.log(line);
     }

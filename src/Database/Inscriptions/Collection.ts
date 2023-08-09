@@ -3,8 +3,16 @@ import { CollectionRegistrar, mongo } from "../../Services/Mongo";
 export const collection = mongo.db.collection<Inscription>("inscriptions");
 
 export const registrar: CollectionRegistrar = {
-  name: "outputs",
+  name: "inscriptions",
   indexes: [
+    [
+      {
+        id: 1,
+      },
+      {
+        unique: true,
+      },
+    ],
     [
       {
         number: 1,
@@ -21,24 +29,28 @@ export const registrar: CollectionRegistrar = {
         unique: true,
       },
     ],
+    [
+      {
+        mediaKind: 1,
+      },
+    ],
   ],
 };
 
 export type Inscription = {
   id: string;
   owner: string;
-  sat?: number;
-  media: InscriptionMedia;
+  sat: number;
+  mediaKind: string;
+  mediaType: string;
+  mediaCharset: string;
+  mediaSize: number;
+  mediaContent: string;
   timestamp: number;
   height: number;
   fee: number;
   genesis: string;
   number: number;
   outpoint: string;
-};
-
-type InscriptionMedia = {
-  kind: string;
-  size: number;
-  content: string;
+  meta?: any;
 };

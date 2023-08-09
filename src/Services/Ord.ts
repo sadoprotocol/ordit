@@ -1,4 +1,5 @@
 import { config } from "../Config";
+import { Inscription } from "../Database/Inscriptions";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
 import { isError } from "../Utilities/Response";
@@ -185,22 +186,6 @@ function toInscription(id: string, inscription: any): Inscription {
 
 export type RarityOptions = {
   allowedrarity?: Rarity[];
-};
-
-export type Inscription = {
-  id: string;
-  owner: string;
-  sat?: Satoshi;
-  mediaType: string;
-  mediaSize: number;
-  mediaContent: string;
-  timestamp: number;
-  height: number;
-  fee: number;
-  genesis: string;
-  number: number;
-  outpoint: string;
-  meta?: any;
 };
 
 export type Satoshi = {
