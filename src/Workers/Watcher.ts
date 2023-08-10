@@ -11,10 +11,16 @@ const log = debug("ordit-worker");
 
 const fastify = Fastify();
 
+const health = {
+  redundancyCount: 0,
+};
+
+let timeout: NodeJS.Timeout | undefined;
+
 fastify.register(cors);
 fastify.register(helmet);
 
-fastify.get("/health", async () => true);
+fastify.get("/health", async () => health);
 
 /*
  |--------------------------------------------------------------------------------
@@ -26,22 +32,32 @@ fastify.get("/health", async () => true);
  |
  */
 
-fastify.get("/hooks/bitcoin", index);
+fastify.get("/hooks/bitcoin", () => {
+  health.redundancyCount = 0;
+  clearTimeout(timeout);
+  index().finally(startRedundancyRunner);
+});
 
 /*
  |--------------------------------------------------------------------------------
- | Ordinals
+ | Redundancy
  |--------------------------------------------------------------------------------
  |
- | Hook listening for events sent from https://github.com/hirosystems/ordhook
- | service. This service actively scans for changes to the bitcoin chain and
- | emits events for ordinal and inscriptions changes.
+ | Trigger a manual index run after X minutes to ensure that the indexer is
+ | catching up in case of the blockchain failing to inform the watcher of new
+ | blocks.
+ |
+ | Should inform of potential issues via the health endpoint.
  |
  */
 
-fastify.post("/hooks/ordinals", async (req) => {
-  console.log("hord", req.body);
-});
+async function startRedundancyRunner() {
+  clearTimeout(timeout);
+  timeout = setTimeout(() => {
+    health.redundancyCount += 1;
+    index().finally(startRedundancyRunner);
+  }, 1000 * 60 * 10);
+}
 
 /*
  |--------------------------------------------------------------------------------

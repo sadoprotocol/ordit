@@ -6,11 +6,13 @@ import debug from "debug";
 import { bootstrap } from "./Bootstrap";
 import { config } from "./Config";
 import { fastify } from "./Fastify";
+import { startCurrencyTracker } from "./Utilities/Currency";
 
 const log = debug("ordit-fastify");
 
 const start = async () => {
   await bootstrap();
+  await startCurrencyTracker();
   await fastify
     .listen({ host: "0.0.0.0", port: config.api.port })
     .then((address) => {

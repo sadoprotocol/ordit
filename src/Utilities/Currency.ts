@@ -1,17 +1,20 @@
 import debug from "debug";
 import fetch from "node-fetch";
 
-const log = debug("sado-dex");
+const log = debug("ordit-api");
 
 export const currency: Currency = {};
+
+export async function startCurrencyTracker() {
+  await setCurrency();
+  setInterval(setCurrency, 1000 * 60 * 15);
+}
 
 /*
  |--------------------------------------------------------------------------------
  | Dex Price Updater
  |--------------------------------------------------------------------------------
  */
-
-setInterval(setCurrency, 1000 * 60 * 15);
 
 async function setCurrency(): Promise<void> {
   const res = await fetch("https://blockchain.info/ticker");
@@ -29,8 +32,6 @@ async function setCurrency(): Promise<void> {
 
   log("USD: %d | SGD: %d | CNY: %d", currency.USD.value, currency.SGD.value, currency.CNY.value);
 }
-
-setCurrency();
 
 type Currency = {
   [key: string]: {

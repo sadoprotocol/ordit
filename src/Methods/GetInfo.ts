@@ -10,13 +10,15 @@ export const getInfo = method({
   handler: async () => {
     const block = await rpc.blockchain.getBlockchainInfo();
     const indexed = await db.outputs.getHeighestBlock();
+    const worker = await getWorkerHealth();
     return {
       chain: block.chain,
       blocks: block.blocks,
       headers: block.headers,
       worker: {
         height: indexed,
-        active: await getWorkerHealth(),
+        active: worker !== false,
+        network: getWorkerNetworkStatus(worker.redundancyCount),
         utxos: config.parser.enabled,
         ordinals: config.ord.enabled,
         synced: `${((indexed / block.blocks) * 100).toFixed(2)}%`,
@@ -29,11 +31,30 @@ export const getInfo = method({
   },
 });
 
-async function getWorkerHealth(): Promise<boolean> {
+async function getWorkerHealth(): Promise<any> {
   try {
-    await fetch(`http://${config.parser.host}:${config.parser.port}/health`);
-    return true;
+    const res = await fetch(`http://${config.parser.host}:${config.parser.port}/health`);
+    if (res.status === 200) {
+      return res.json();
+    }
+    return false;
   } catch (error) {
     return false;
+  }
+}
+
+function getWorkerNetworkStatus(redundancyCount?: number): string {
+  switch (redundancyCount) {
+    case 0:
+    case 1: {
+      return "optimal";
+    }
+    case 2:
+    case 3: {
+      return "degraded";
+    }
+    default: {
+      return "dormant";
+    }
   }
 }
