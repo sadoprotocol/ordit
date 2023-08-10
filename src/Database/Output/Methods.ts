@@ -114,7 +114,7 @@ async function deleteMany(filter: Filter<OutputDocument>, options?: DeleteOption
 async function getVinLocation(outpoint: string): Promise<string | undefined> {
   const [txid, n] = outpoint.split(":");
   const output = await collection.findOne({ "vout.txid": txid, "vout.n": parseInt(n, 10) });
-  if (output?.vin === undefined) {
+  if (output?.vin === undefined || output?.vin === null) {
     return undefined;
   }
   return `${output.vin.txid}:${output.vin.n}`;
