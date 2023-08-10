@@ -21,7 +21,7 @@ export async function parseOrder(cid: string, block: Block) {
 
   try {
     await validateLocation(order.location, order.maker);
-    await validateOrderSignature(order);
+    validateOrderSignature(order);
     await db.orders.insertOne({
       cid,
       type: order.type,
