@@ -63,5 +63,6 @@ export type Inscription = {
   genesis: string;
   number: number;
   outpoint: string;
+  // rome-ignore lint/suspicious/noExplicitAny: reason
   meta?: any;
 };
