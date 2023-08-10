@@ -186,14 +186,14 @@ const getUpdatePayload = {
   spents: ({ vout, vin }: any) => ({
     updateOne: {
       filter: { "vout.txid": vout.txid, "vout.n": vout.n },
-      update: { $set: { vin: vin } },
+      update: { $set: { vin } },
     },
   }),
   // rome-ignore lint/suspicious/noExplicitAny: reason
   values: ({ txid, n, value }: any) => ({
     updateOne: {
       filter: { "vout.txid": txid, "vout.n": n },
-      update: { $set: { value: value } },
+      update: { $set: { value } },
     },
   }),
 };
