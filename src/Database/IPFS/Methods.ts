@@ -19,6 +19,11 @@ async function findOne(
   if (document === null) {
     return undefined;
   }
-  delete (document as any)._id;
+
+  if ("_id" in document) {
+    const { _id, ...doc } = document;
+    return doc;
+  }
+
   return document;
 }
