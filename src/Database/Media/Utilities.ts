@@ -3,7 +3,8 @@ export function getIdFromOutpoint(outpoint: string) {
 }
 
 export function getOutpointFromId(id: string) {
-  const outpoint = id.split("");
-  outpoint[id.length - 2] = ":";
-  return outpoint.join("");
+  return id
+    .split("")
+    .map((x, i, arr) => (i === arr.length - 2 ? ":" : x))
+    .join("");
 }
