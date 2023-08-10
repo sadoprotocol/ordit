@@ -1,0 +1,9 @@
+{
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "suspicious": {},
+      "style": {}
+    }
+  }
+}

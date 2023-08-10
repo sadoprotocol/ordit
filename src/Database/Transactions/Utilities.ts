@@ -9,7 +9,7 @@ import { getAddressessFromVout } from "../../Utilities/Address";
 export async function getAddressesFromTx(tx: RawTransaction): Promise<string[]> {
   const addresses = new Set<string>();
   for (const vout of tx.vout) {
-    const address = getAddressessFromVout(vout)[0];
+    const [address] = getAddressessFromVout(vout);
     if (address !== undefined) {
       addresses.add(address);
     }

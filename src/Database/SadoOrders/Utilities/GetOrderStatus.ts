@@ -18,6 +18,8 @@ export async function getOrderStatus(entry: SadoDocument) {
 
   const order = await db.orders.findOne({ cid: entry.cid });
   if (order !== undefined) {
+    // rome-ignore lint/suspicious/noExplicitAny: reason
+    // rome-ignore lint/performance/noDelete: reason
     delete (order as any)._id;
     return status("pending", { order, ipfs: data });
   }
@@ -36,6 +38,7 @@ export async function getOrderStatus(entry: SadoDocument) {
   return status("unknown", { message: "Order is in an unknown state" });
 }
 
+// rome-ignore lint/suspicious/noExplicitAny: reason
 function status(status: string, data: any) {
   return {
     type: "order",

@@ -21,7 +21,7 @@ export async function getOfferStatus(entry: SadoDocument) {
   }
 
   const offer = getPsbtAsJSON(psbt);
-  const input = offer.inputs[0];
+  const [input] = offer.inputs;
   if (input === undefined) {
     return status("rejected", { reason: "Offer PSBT has no inputs" });
   }
@@ -83,6 +83,7 @@ export async function getOfferStatus(entry: SadoDocument) {
   return status("unknown", { message: "Offer is in an unknown state" });
 }
 
+// rome-ignore lint/suspicious/noExplicitAny: reason
 function status(status: string, data: any) {
   return {
     type: "offer",

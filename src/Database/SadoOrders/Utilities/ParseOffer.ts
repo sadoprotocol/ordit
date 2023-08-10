@@ -7,20 +7,18 @@ export async function parseOffer(cid: string, block: Block) {
     return;
   }
 
-  const status = await getOfferStatus(entry);
-  if (status.status !== "pending") {
+  const {
+    status,
+    order,
+    offer: { origin, taker, offer },
+  } = await getOfferStatus(entry);
+  if (status !== "pending") {
     return;
   }
 
   // ### Add Offer
 
-  await db.orders.addOffer(status.order.cid, {
-    cid,
-    origin: status.offer.origin,
-    taker: status.offer.taker,
-    offer: status.offer.offer,
-    block,
-  });
+  await db.orders.addOffer(order.cid, { cid, origin, taker, offer, block });
 }
 
 type Block = {
