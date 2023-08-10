@@ -202,9 +202,7 @@ type UpdatePicker = "spents" | "values";
 
 // rome-ignore lint/suspicious/noExplicitAny: reason
 async function bulkOperation(arr: any[], updatePicker: UpdatePicker, chunkSize: number) {
-  if (arr.length === 0) {
-    return;
-  }
+  if (arr.length === 0) return;
 
   const { list, promises } = arr.reduce(
     (acc, cur) => {
@@ -220,9 +218,7 @@ async function bulkOperation(arr: any[], updatePicker: UpdatePicker, chunkSize: 
     { list: [], promises: [] }
   );
 
-  if (list.length > 0) {
-    promises.push(collection.bulkWrite(list));
-  }
+  if (list.length > 0) promises.push(collection.bulkWrite(list));
 
   for (const promise of promises) {
     await promise;
