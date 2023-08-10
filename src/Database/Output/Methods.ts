@@ -238,28 +238,36 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
  |
  */
 
-async function addValues(values: { txid: string; n: number; value: number }[], chunkSize = 1000) {
+async function addValues(values: { txid: string; n: number; value: number }[], chunkSize = 1_000) {
   if (values.length === 0) {
     return;
   }
-  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
-  for (const { txid, n, value } of values) {
-    bulkops.push({
-      updateOne: {
-        filter: { "vout.txid": txid, "vout.n": n },
-        update: {
-          $set: {
-            value: value,
-          },
+
+  const { list, promises } = values.reduce(
+    // rome-ignore lint/suspicious/noExplicitAny: reason
+    (acc: any, cur) => {
+      const { txid, n, value } = cur;
+
+      if (acc.list.length === chunkSize) {
+        acc.promises.push(collection.bulkWrite(acc.list));
+        acc.list = [];
+      }
+
+      acc.list.push({
+        updateOne: {
+          filter: { "vout.txid": txid, "vout.n": n },
+          update: { $set: { value: value } },
         },
-      },
-    });
-    if (bulkops.length === chunkSize) {
-      await collection.bulkWrite(bulkops);
-      bulkops.length = 0;
-    }
+      });
+
+      return acc;
+    },
+    { list: [], promises: [] }
+  );
+
+  if (list.length > 0) {
+    promises.push(collection.bulkWrite(list));
   }
-  if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
-  }
+
+  await Promise.all(promises);
 }
