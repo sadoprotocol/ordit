@@ -1,6 +1,8 @@
 import {
   AggregateOptions,
   AggregationCursor,
+  AnyBulkWriteOperation,
+  BulkWriteResult,
   DeleteOptions,
   Document,
   Filter,
@@ -199,19 +201,25 @@ const getUpdatePayload = {
 };
 
 type UpdatePicker = "spents" | "values";
+type BulkInput = SpentOutput | ValuesOutput;
+type BulkAccumulator = {
+  list: AnyBulkWriteOperation<OutputDocument>[];
+  promises: Promise<BulkWriteResult>[];
+};
 
-// rome-ignore lint/suspicious/noExplicitAny: reason
-async function bulkOperation(arr: any[], updatePicker: UpdatePicker, chunkSize: number) {
+async function bulkOperation(arr: BulkInput[], updatePicker: UpdatePicker, chunkSize: number) {
   if (arr.length === 0) return;
 
   const { list, promises } = arr.reduce(
-    (acc, cur) => {
+    (acc: BulkAccumulator, cur: BulkInput) => {
+      const payload = getUpdatePayload[updatePicker](cur);
+
+      acc.list.push(payload);
+
       if (acc.list.length === chunkSize) {
         acc.promises.push(collection.bulkWrite(acc.list));
         acc.list = [];
       }
-
-      acc.list.push(getUpdatePayload[updatePicker](cur));
 
       return acc;
     },
