@@ -222,7 +222,9 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
     promises.push(collection.bulkWrite(list));
   }
 
-  await Promise.all(promises);
+  for (const promise of promises) {
+    await promise;
+  }
 }
 
 /*
@@ -269,5 +271,7 @@ async function addValues(values: { txid: string; n: number; value: number }[], c
     promises.push(collection.bulkWrite(list));
   }
 
-  await Promise.all(promises);
+  for (const promise of promises) {
+    await promise;
+  }
 }
