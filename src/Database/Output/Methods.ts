@@ -191,30 +191,38 @@ async function getCountByAddress(address: string): Promise<{
  |
  */
 
-async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
+async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
   if (spents.length === 0) {
     return;
   }
-  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
-  for (const { vout, vin } of spents) {
-    bulkops.push({
-      updateOne: {
-        filter: { "vout.txid": vout.txid, "vout.n": vout.n },
-        update: {
-          $set: {
-            vin: vin,
-          },
+
+  const { list, promises } = spents.reduce(
+    // rome-ignore lint/suspicious/noExplicitAny: reason
+    (acc: any, cur) => {
+      const { vout, vin } = cur;
+
+      if (acc.list.length === chunkSize) {
+        acc.promises.push(collection.bulkWrite(acc.list));
+        acc.list = [];
+      }
+
+      acc.list.push({
+        updateOne: {
+          filter: { "vout.txid": vout.txid, "vout.n": vout.n },
+          update: { $set: { vin: vin } },
         },
-      },
-    });
-    if (bulkops.length === chunkSize) {
-      await collection.bulkWrite(bulkops);
-      bulkops.length = 0;
-    }
+      });
+
+      return acc;
+    },
+    { list: [], promises: [] }
+  );
+
+  if (list.length > 0) {
+    promises.push(collection.bulkWrite(list));
   }
-  if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
-  }
+
+  await Promise.all(promises);
 }
 
 /*
