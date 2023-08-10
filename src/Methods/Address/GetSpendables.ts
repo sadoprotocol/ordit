@@ -12,10 +12,10 @@ export const getSpendables = method({
     address: string,
     value: number,
     allowedrarity: array.of(string).optional(),
-    blacklist: array.of(string).optional(),
+    filter: array.of(string).optional(),
     limit: number.optional(),
   }),
-  handler: async ({ address, value, allowedrarity = ["common", "uncommon"], blacklist = [], limit }) => {
+  handler: async ({ address, value, allowedrarity = ["common", "uncommon"], filter = [], limit }) => {
     const spendables = [];
 
     let totalValue = 0;
@@ -32,7 +32,7 @@ export const getSpendables = method({
       scanned += 1;
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
-      if (blacklist.includes(outpoint)) {
+      if (filter.includes(outpoint)) {
         continue;
       }
 
