@@ -1,7 +1,6 @@
 import {
   AggregateOptions,
   AggregationCursor,
-  AnyBulkWriteOperation,
   DeleteOptions,
   Document,
   Filter,
@@ -11,7 +10,7 @@ import {
 } from "mongodb";
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
-import { collection, OutputDocument, SpentOutput } from "./Collection";
+import { collection, OutputDocument, SpentOutput, ValuesOutput } from "./Collection";
 import { getHeighestOutput } from "./Utilities";
 
 export const outputs = {
@@ -182,36 +181,39 @@ async function getCountByAddress(address: string): Promise<{
     });
 }
 
-/*
- |--------------------------------------------------------------------------------
- | Indexer Methods
- |--------------------------------------------------------------------------------
- |
- | Methods used by indexing operations to update collection states.
- |
- */
+const getUpdatePayload = {
+  // rome-ignore lint/suspicious/noExplicitAny: reason
+  spents: ({ vout, vin }: any) => ({
+    updateOne: {
+      filter: { "vout.txid": vout.txid, "vout.n": vout.n },
+      update: { $set: { vin: vin } },
+    },
+  }),
+  // rome-ignore lint/suspicious/noExplicitAny: reason
+  values: ({ txid, n, value }: any) => ({
+    updateOne: {
+      filter: { "vout.txid": txid, "vout.n": n },
+      update: { $set: { value: value } },
+    },
+  }),
+};
 
-async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
-  if (spents.length === 0) {
+type UpdatePicker = "spents" | "values";
+
+// rome-ignore lint/suspicious/noExplicitAny: reason
+async function bulkOperation(arr: any[], updatePicker: UpdatePicker, chunkSize: number) {
+  if (arr.length === 0) {
     return;
   }
 
-  const { list, promises } = spents.reduce(
-    // rome-ignore lint/suspicious/noExplicitAny: reason
-    (acc: any, cur) => {
-      const { vout, vin } = cur;
-
+  const { list, promises } = arr.reduce(
+    (acc, cur) => {
       if (acc.list.length === chunkSize) {
         acc.promises.push(collection.bulkWrite(acc.list));
         acc.list = [];
       }
 
-      acc.list.push({
-        updateOne: {
-          filter: { "vout.txid": vout.txid, "vout.n": vout.n },
-          update: { $set: { vin: vin } },
-        },
-      });
+      acc.list.push(getUpdatePayload[updatePicker](cur));
 
       return acc;
     },
@@ -229,6 +231,19 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
 
 /*
  |--------------------------------------------------------------------------------
+ | Indexer Methods
+ |--------------------------------------------------------------------------------
+ |
+ | Methods used by indexing operations to update collection states.
+ |
+ */
+
+async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
+  await bulkOperation(spents, "spents", chunkSize);
+}
+
+/*
+ |--------------------------------------------------------------------------------
  | Indexer Patch Methods
  |--------------------------------------------------------------------------------
  |
@@ -240,38 +255,6 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1_000) {
  |
  */
 
-async function addValues(values: { txid: string; n: number; value: number }[], chunkSize = 1_000) {
-  if (values.length === 0) {
-    return;
-  }
-
-  const { list, promises } = values.reduce(
-    // rome-ignore lint/suspicious/noExplicitAny: reason
-    (acc: any, cur) => {
-      const { txid, n, value } = cur;
-
-      if (acc.list.length === chunkSize) {
-        acc.promises.push(collection.bulkWrite(acc.list));
-        acc.list = [];
-      }
-
-      acc.list.push({
-        updateOne: {
-          filter: { "vout.txid": txid, "vout.n": n },
-          update: { $set: { value: value } },
-        },
-      });
-
-      return acc;
-    },
-    { list: [], promises: [] }
-  );
-
-  if (list.length > 0) {
-    promises.push(collection.bulkWrite(list));
-  }
-
-  for (const promise of promises) {
-    await promise;
-  }
+async function addValues(values: ValuesOutput[], chunkSize = 1_000) {
+  await bulkOperation(values, "values", chunkSize);
 }

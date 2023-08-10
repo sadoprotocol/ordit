@@ -66,6 +66,12 @@ export type SpentOutput = {
   vin: OutputTransaction;
 };
 
+export type ValuesOutput = {
+  txid: string;
+  n: number;
+  value: number;
+};
+
 type OutputTransaction = {
   block: OutputBlock;
   txid: string;
