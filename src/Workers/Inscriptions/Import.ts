@@ -1,11 +1,13 @@
-import debug from "debug";
+import { createReadStream } from "node:fs";
 
-import { bootstrap } from "../../../Bootstrap";
-import { config } from "../../../Config";
-import { db } from "../../../Database";
-import { Inscription } from "../../../Database/Inscriptions";
-import { DIR_ROOT } from "../../../Paths";
-import { readFile } from "../../../Utilities/Files";
+import debug from "debug";
+import * as readline from "readline";
+
+import { bootstrap } from "../../Bootstrap";
+import { config } from "../../Config";
+import { db } from "../../Database";
+import { Inscription } from "../../Database/Inscriptions";
+import { DIR_ROOT } from "../../Paths";
 
 const log = debug("bitcoin-ordinals");
 
@@ -16,20 +18,23 @@ main()
 async function main() {
   log("network: %s", config.chain.network);
   await bootstrap();
-  await setInscriptions();
+  await importInscriptions();
   log("done");
 }
 
-async function setInscriptions() {
-  const file = await readFile(`${DIR_ROOT}/inscriptions.tsv`);
-  if (!file) {
-    throw new Error("No inscriptions file generated");
-  }
+async function importInscriptions() {
+  const fileStream = createReadStream(`${DIR_ROOT}/inscriptions.tsv`);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity,
+  });
 
-  const inscriptions: Inscription[] = [];
+  const ts = performance.now();
 
-  const lines = file.trim().split("\n");
-  for (const line of lines) {
+  let inscriptions: Inscription[] = [];
+  let resolved = 0;
+
+  for await (const line of rl) {
     try {
       const inscription = JSON.parse(line);
       const [media, format] = inscription.media.kind.split(";");
@@ -51,10 +56,18 @@ async function setInscriptions() {
         number: inscription.number,
         outpoint: inscription.output,
       });
+      resolved += 1;
     } catch (e) {
       console.log(line);
     }
+
+    if (inscriptions.length % 1000 === 0) {
+      db.inscriptions.collection.insertMany(inscriptions, { ordered: false }).catch(console.log);
+      inscriptions = [];
+    }
+
+    log(`${resolved} inscriptions inserted`);
   }
 
-  await db.inscriptions.insertMany(inscriptions);
+  log(`inscriptions completed after ${(performance.now() - ts) / 1000} seconds`);
 }

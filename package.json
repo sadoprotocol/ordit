@@ -13,10 +13,10 @@
     "indexer": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Indexer.ts",
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
     "btc:spender": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Spender.ts",
-    "btc:patch:set": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Patches/SetInscriptions.ts",
     "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ordinals/Indexer.ts",
     "ord:snapshot": "DEBUG=ord-* ts-node ./src/Workers/Ordinals/Snapshot.ts",
     "ord:command": "ts-node ./src/Workers/Ordinals/Command.ts",
+    "ins:import": "ts-node ./src/Workers/Inscriptions/Import.ts",
     "sado:indexer": "DEBUG=ordit-*,sado-* ts-node ./src/Workers/Sado/Indexer.ts",
     "sado:parser": "DEBUG=ordit-*,sado-* ts-node ./src/Workers/Sado/Parser.ts",
     "bitcoin:start": "docker compose -f  ./docker-compose-bitcoin.yaml up -d",
@@ -46,6 +46,7 @@
     "neo4j-driver": "^5.11.0",
     "node-fetch": "^2.6.11",
     "p-limit": "^3.1.0",
+    "readline": "^1.3.0",
     "tiny-secp256k1": "^2.2.3"
   },
   "devDependencies": {
