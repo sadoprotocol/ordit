@@ -40,24 +40,20 @@ export async function index() {
 
   // ### Parse
 
-  const promises: Promise<void>[] = [];
-
   if (config.parser.enabled === true) {
     log("indexing outputs");
-    promises.push(indexUtxos(blockHeight));
+    await indexUtxos(blockHeight);
   }
 
   if (config.sado.enabled === true) {
     log("indexing sado");
-    promises.push(indexSado(blockHeight));
+    await indexSado(blockHeight);
   }
 
   if (config.ord.enabled === true) {
     log("indexing ordinals");
-    promises.push(indexOrdinals());
+    await indexOrdinals();
   }
-
-  await Promise.all(promises);
 
   log("indexed to block %d", blockHeight);
 

@@ -32,22 +32,20 @@ export const findInscriptions = method({
 
     if (pagination?.from !== undefined) {
       filter._id = {
-        $gt: new ObjectId(pagination.from),
+        $lt: new ObjectId(pagination.from),
       };
     }
 
     const inscriptions = await db.inscriptions.find(filter ?? {}, {
-      sort: {
-        number: -1,
-      },
+      sort: { number: -1 },
       limit: pagination?.limit ?? 10,
     });
 
-    const next = inscriptions[inscriptions.length - 1]._id;
+    const next = inscriptions.length > 0 ? inscriptions[inscriptions.length - 1]._id : null;
 
     return {
       inscriptions: inscriptions.map((inscription) => {
-        // delete (inscription as any)._id;
+        delete (inscription as any)._id;
         return {
           ...inscription,
           mediaContent: `${config.api.domain}/content/${inscription.id}`,
