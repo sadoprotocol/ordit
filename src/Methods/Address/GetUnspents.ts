@@ -98,8 +98,8 @@ export const getUnspents = method({
     result = reverse ? result.reverse() : result;
     cursors = reverse ? cursors.reverse() : cursors;
 
-    const prev = cursors.shift();
-    const next = cursors.pop();
+    const prev = from === undefined ? null : cursors[0] ?? null;
+    const next = cursors[cursors.length - 1] ?? null;
 
     return {
       unspents: result,

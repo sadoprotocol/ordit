@@ -27,31 +27,51 @@ export const getTransactions = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
-    const transactions: any[] = [];
+    let result: any[] = [];
+    let cursors: string[] = [];
 
-    const documents = await getSearchAggregate(address, pagination).toArray();
-    for (const { txid, height } of documents) {
+    const limit = pagination?.limit ?? 10;
+    const from = pagination?.next ?? pagination?.prev;
+    const reverse = pagination?.prev !== undefined;
+
+    const cursor = await getSearchAggregate(address, pagination);
+    while (await cursor.hasNext()) {
+      const document = await cursor.next();
+      if (document === null) {
+        continue;
+      }
+      const { _id, txid, height } = document;
       const tx = await rpc.transactions.getRawTransaction(txid, true);
       if (tx === undefined) {
         continue;
       }
-      transactions.push({
+      result.push({
         blockHeight: height,
         ...(await getExpandedTransaction(tx, options)),
       });
+      cursors.push(_id.toString());
+      if (result.length === limit) {
+        break;
+      }
     }
 
+    result = reverse ? result.reverse() : result;
+    cursors = reverse ? cursors.reverse() : cursors;
+
+    const prev = from === undefined ? null : cursors[0] ?? null;
+    const next = cursors[cursors.length - 1] ?? null;
+
     return {
-      transactions: transactions.map(format),
+      transactions: result.map(format),
       options: {
         ord: options?.ord ?? false,
         hex: options?.hex ?? false,
         witness: options?.witness ?? false,
       },
       pagination: {
-        limit: 10,
-        prev: documents[0]?._id,
-        next: documents[documents.length - 1]?._id,
+        limit: pagination?.limit ?? 10,
+        prev: reverse ? ((await cursor.hasNext()) ? prev : null) : prev,
+        next: reverse ? next : (await cursor.hasNext()) ? next : null,
       },
     };
   },
@@ -111,9 +131,6 @@ function getSearchAggregate(
         _id: reverse ? 1 : -1,
         height: reverse ? 1 : -1,
       },
-    },
-    {
-      $limit: pagination?.limit ?? 10,
     },
     {
       $project: {
