@@ -1,18 +1,23 @@
 import { method } from "@valkyr/api";
-import Schema, { boolean, string, Type } from "computed-types";
+import Schema, { boolean, number, string, Type } from "computed-types";
+import { AggregationCursor, ObjectId, WithId } from "mongodb";
 
 import { db } from "../../Database";
-import { getHeighestOutput } from "../../Database/Output";
 import { TransactionDocument } from "../../Database/Transactions";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getPagination, pagination } from "../../Utilities/Pagination";
 import { getExpandedTransaction } from "../../Utilities/Transaction";
 
 const options = Schema({
   ord: boolean.optional(),
   hex: boolean.optional(),
   witness: boolean.optional(),
+});
+
+const pagination = Schema({
+  limit: number.optional(),
+  prev: string.optional(),
+  next: string.optional(),
 });
 
 export const getTransactions = method({
@@ -22,20 +27,16 @@ export const getTransactions = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
-    const outputs = await db.outputs.find(
-      { addresses: address },
-      { sort: { "vout.block.height": -1, "vin.block.height": -1 }, ...getPagination(pagination) }
-    );
+    const transactions: any[] = [];
 
-    const transactions: any = [];
-    for (const output of outputs) {
-      const entry = getHeighestOutput(output);
-      const tx = await rpc.transactions.getRawTransaction(entry.txid, true);
+    const documents = await getSearchAggregate(address, pagination).toArray();
+    for (const { txid, height } of documents) {
+      const tx = await rpc.transactions.getRawTransaction(txid, true);
       if (tx === undefined) {
         continue;
       }
       transactions.push({
-        blockHeight: entry.block.height,
+        blockHeight: height,
         ...(await getExpandedTransaction(tx, options)),
       });
     }
@@ -48,17 +49,80 @@ export const getTransactions = method({
         witness: options?.witness ?? false,
       },
       pagination: {
-        page: pagination?.page ?? 1,
-        limit: pagination?.limit ?? 10,
-        total: await getTotalTransactions(address),
+        limit: 10,
+        prev: documents[0]?._id,
+        next: documents[documents.length - 1]?._id,
       },
     };
   },
 });
 
-async function getTotalTransactions(address: string): Promise<number> {
-  const { total } = await db.outputs.getCountByAddress(address);
-  return total;
+function getSearchAggregate(
+  address: string,
+  pagination?: Pagination
+): AggregationCursor<
+  WithId<{
+    txid: string;
+    height: number;
+  }>
+> {
+  const matchStage: any = { addresses: address };
+
+  let reverse = false;
+
+  const offset = pagination?.next ?? pagination?.prev;
+  if (offset !== undefined) {
+    const cursor = new ObjectId(offset);
+    reverse = pagination?.prev !== undefined;
+    matchStage._id = reverse ? { $gt: cursor } : { $lt: cursor };
+  }
+
+  return db.outputs.collection.aggregate([
+    {
+      $match: matchStage,
+    },
+    {
+      $project: {
+        txid: {
+          $cond: {
+            if: { $eq: [{ $type: "$vin" }, "object"] },
+            then: "$vin.txid",
+            else: "$vout.txid",
+          },
+        },
+        height: {
+          $cond: {
+            if: { $eq: [{ $type: "$vin" }, "object"] },
+            then: "$vin.block.height",
+            else: "$vout.block.height",
+          },
+        },
+        type: {
+          $cond: {
+            if: { $eq: [{ $type: "$vin" }, "object"] },
+            then: "vin",
+            else: "vout",
+          },
+        },
+      },
+    },
+    {
+      $sort: {
+        _id: reverse ? 1 : -1,
+        height: reverse ? 1 : -1,
+      },
+    },
+    {
+      $limit: pagination?.limit ?? 10,
+    },
+    {
+      $project: {
+        _id: 1,
+        txid: 1,
+        height: 1,
+      },
+    },
+  ]);
 }
 
 function format(tx: TransactionDocument) {
