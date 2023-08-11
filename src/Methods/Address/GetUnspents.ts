@@ -64,6 +64,10 @@ export const getUnspents = method({
         sats: btcToSat(vout.value),
       };
 
+      if (vout.scriptPubKey.type === "pubkeyhash") {
+        utxo.txhex = tx.hex;
+      }
+
       if (options?.ord !== false) {
         utxo.ordinals = await getOrdinalsByOutpoint(`${output.vout.txid}:${output.vout.n}`);
         utxo.inscriptions = await getInscriptionsByOutpoint(
