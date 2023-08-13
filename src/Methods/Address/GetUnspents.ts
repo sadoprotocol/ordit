@@ -1,9 +1,7 @@
 import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
-import { WithId } from "mongodb";
 
 import { db } from "../../Database";
-import { OutputDocument } from "../../Database/Output";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../../Utilities/Oip";
@@ -37,6 +35,8 @@ export const getUnspents = method({
     const from = pagination?.next ?? pagination?.prev;
     const reverse = pagination?.prev !== undefined;
 
+    let shouldSkipOutput = true;
+
     const cursor = db.outputs.collection.find(
       { addresses: address, vin: { $exists: false } },
       { sort: { value: reverse ? 1 : -1 } }
@@ -44,8 +44,18 @@ export const getUnspents = method({
 
     while (await cursor.hasNext()) {
       const output = await cursor.next();
-      if (output === null || shouldSkipOutput(output, from, reverse)) {
+      if (output === null) {
         continue;
+      }
+
+      if (from !== undefined) {
+        if (output._id.toString() === from) {
+          shouldSkipOutput = false;
+          continue;
+        }
+        if (shouldSkipOutput) {
+          continue;
+        }
       }
 
       const tx = await rpc.transactions.getRawTransaction(output.vout.txid, true);
@@ -55,6 +65,7 @@ export const getUnspents = method({
 
       const vout = tx.vout[output.vout.n];
       const utxo: any = {
+        _id: output._id.toString(),
         txid: output.vout.txid,
         n: output.vout.n,
         blockHash: output.vout.block.hash,
@@ -115,13 +126,3 @@ export const getUnspents = method({
     };
   },
 });
-
-function shouldSkipOutput(output: WithId<OutputDocument>, from?: string, reverse = false) {
-  if (from === undefined) {
-    return false;
-  }
-  if (reverse === false) {
-    return output._id.toString() >= from;
-  }
-  return output._id.toString() <= from;
-}
