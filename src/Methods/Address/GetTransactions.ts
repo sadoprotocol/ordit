@@ -1,6 +1,6 @@
 import { method } from "@valkyr/api";
 import Schema, { boolean, number, string, Type } from "computed-types";
-import { AggregationCursor, ObjectId, WithId } from "mongodb";
+import { AggregationCursor, WithId } from "mongodb";
 
 import { db } from "../../Database";
 import { TransactionDocument } from "../../Database/Transactions";

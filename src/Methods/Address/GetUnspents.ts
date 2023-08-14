@@ -13,6 +13,10 @@ const options = Schema({
   allowedrarity: array.of(string).optional(),
 });
 
+const sort = Schema({
+  value: Schema.either("asc" as const, "desc" as const).optional(),
+});
+
 const pagination = Schema({
   limit: number.optional(),
   prev: string.optional(),
@@ -24,9 +28,10 @@ export const getUnspents = method({
     address: string,
     format: Schema.either("legacy" as const, "next" as const).optional(),
     options: options.optional(),
+    sort: sort.optional(),
     pagination: pagination.optional(),
   }),
-  handler: async ({ format = "legacy", address, options, pagination }) => {
+  handler: async ({ format = "legacy", address, options, sort, pagination }) => {
     let result: any[] = [];
     let cursors: string[] = [];
 
@@ -38,8 +43,11 @@ export const getUnspents = method({
     let shouldSkipOutput = true;
 
     const cursor = db.outputs.collection.find(
-      { addresses: address, vin: { $exists: false } },
-      { sort: { value: reverse ? 1 : -1 } }
+      {
+        addresses: address,
+        vin: { $exists: false },
+      },
+      { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } }
     );
 
     while (await cursor.hasNext()) {
