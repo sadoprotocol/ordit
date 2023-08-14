@@ -27,7 +27,7 @@ export const getSadoOrderbook = method({
       orders: orders.map(stripMongoId),
       pagination: {
         page: pagination?.page ?? 1,
-        limit: 10,
+        limit: pagination?.limit ?? 10,
         total: await db.orders.count(filter),
       },
     };

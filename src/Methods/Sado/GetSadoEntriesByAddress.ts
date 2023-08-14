@@ -16,7 +16,7 @@ export const getSadoEntriesByAddress = method({
       entries: (await db.sado.find(filter, getPagination(pagination))).map(stripMongoId),
       pagination: {
         page: pagination?.page ?? 1,
-        limit: 10,
+        limit: pagination?.limit ?? 10,
         total: await db.sado.count(filter),
       },
     };
