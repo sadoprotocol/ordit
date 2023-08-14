@@ -11,12 +11,20 @@ import { getInscriptionsByOutpoint } from "../../Utilities/Transaction";
 export const getSadoOrderbook = method({
   params: Schema({
     address: string,
+    sort: Schema({
+      time: Schema.either("asc" as const, "desc" as const).optional(),
+    }).optional(),
     pagination: pagination.optional(),
   }),
-  handler: async ({ address, pagination }) => {
+  handler: async ({ address, sort, pagination }) => {
     const filter = { $or: [{ "orderbooks.address": address }, { maker: address }] };
 
-    const orders = await db.orders.find(filter, getPagination(pagination));
+    const orders = await db.orders.find(filter, {
+      ...getPagination(pagination),
+      sort: {
+        "block.time": sort?.time === "asc" ? 1 : -1,
+      },
+    });
     for (const order of orders) {
       const [txid] = parseLocation(order.location);
       const meta = await getMetaFromTxId(txid);
