@@ -34,22 +34,38 @@ export const getTransactions = method({
     const from = pagination?.next ?? pagination?.prev;
     const reverse = pagination?.prev !== undefined;
 
-    const cursor = await getSearchAggregate(address, pagination);
+    let shouldSkipCursor = true;
+
+    const cursor = await getSearchAggregate(address, reverse);
     while (await cursor.hasNext()) {
       const document = await cursor.next();
       if (document === null) {
         continue;
       }
+
+      if (from !== undefined) {
+        if (document._id.toString() === from) {
+          shouldSkipCursor = false;
+          continue;
+        }
+        if (shouldSkipCursor) {
+          continue;
+        }
+      }
+
       const { _id, txid, height } = document;
       const tx = await rpc.transactions.getRawTransaction(txid, true);
       if (tx === undefined) {
         continue;
       }
+
+      cursors.push(_id.toString());
       result.push({
+        _id: _id.toString(),
         blockHeight: height,
         ...(await getExpandedTransaction(tx, options)),
       });
-      cursors.push(_id.toString());
+
       if (result.length === limit) {
         break;
       }
@@ -79,56 +95,51 @@ export const getTransactions = method({
 
 function getSearchAggregate(
   address: string,
-  pagination?: Pagination
+  reverse = false
 ): AggregationCursor<
   WithId<{
     txid: string;
     height: number;
   }>
 > {
-  const matchStage: any = { addresses: address };
-
-  let reverse = false;
-
-  const offset = pagination?.next ?? pagination?.prev;
-  if (offset !== undefined) {
-    const cursor = new ObjectId(offset);
-    reverse = pagination?.prev !== undefined;
-    matchStage._id = reverse ? { $gt: cursor } : { $lt: cursor };
-  }
-
   return db.outputs.collection.aggregate([
     {
-      $match: matchStage,
+      $match: { addresses: address },
     },
     {
       $project: {
         txid: {
           $cond: {
-            if: { $eq: [{ $type: "$vin" }, "object"] },
+            if: { $ifNull: ["$vin", false] }, // Check if 'vin' field exists
             then: "$vin.txid",
             else: "$vout.txid",
           },
         },
         height: {
           $cond: {
-            if: { $eq: [{ $type: "$vin" }, "object"] },
+            if: { $ifNull: ["$vin", false] }, // Check if 'vin' field exists
             then: "$vin.block.height",
             else: "$vout.block.height",
-          },
-        },
-        type: {
-          $cond: {
-            if: { $eq: [{ $type: "$vin" }, "object"] },
-            then: "vin",
-            else: "vout",
           },
         },
       },
     },
     {
       $sort: {
-        _id: reverse ? 1 : -1,
+        height: reverse ? 1 : -1,
+      },
+    },
+    {
+      $group: {
+        _id: "$txid",
+        doc: { $first: "$$ROOT" },
+      },
+    },
+    {
+      $replaceRoot: { newRoot: "$doc" },
+    },
+    {
+      $sort: {
         height: reverse ? 1 : -1,
       },
     },
@@ -142,8 +153,9 @@ function getSearchAggregate(
   ]);
 }
 
-function format(tx: TransactionDocument) {
+function format(tx: { _id: string } & TransactionDocument) {
   return {
+    _id: tx._id,
     txid: tx.txid,
     blockHash: tx.blockhash,
     blockHeight: tx.blockHeight,
