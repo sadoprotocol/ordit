@@ -3,10 +3,10 @@ import Schema, { string } from "computed-types";
 
 import { db } from "../../Database";
 import { parseLocation } from "../../Database/SadoOrders/Utilities/ParseLocation";
-import { stripMongoId } from "../../Services/Mongo";
+import { satToUsd } from "../../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../../Utilities/Oip";
 import { getPagination, pagination } from "../../Utilities/Pagination";
-import { getInscriptionsByOutpoint } from "../../Utilities/Transaction";
+import { getInscriptionsByOutpoint, getOrdinalsByOutpoint } from "../../Utilities/Transaction";
 
 export const getSadoOrderbook = method({
   params: Schema({
@@ -17,6 +17,7 @@ export const getSadoOrderbook = method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, sort, pagination }) => {
+    const result: any[] = [];
     const filter = { $or: [{ "orderbooks.address": address }, { maker: address }] };
 
     const orders = await db.orders.find(filter, {
@@ -27,12 +28,18 @@ export const getSadoOrderbook = method({
     });
     for (const order of orders) {
       const [txid] = parseLocation(order.location);
-      const meta = await getMetaFromTxId(txid);
-      order.inscriptions = await getInscriptionsByOutpoint(order.location, meta);
+      result.push({
+        ...order,
+        price: {
+          usd: satToUsd(order.cardinals),
+        },
+        inscriptions: await getInscriptionsByOutpoint(order.location, await getMetaFromTxId(txid)),
+        ordinals: await getOrdinalsByOutpoint(order.location),
+      });
     }
 
     return {
-      orders: orders.map(stripMongoId),
+      orders: result,
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 10,

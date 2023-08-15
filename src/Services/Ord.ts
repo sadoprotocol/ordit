@@ -188,6 +188,8 @@ export type RarityOptions = {
   allowedrarity?: Rarity[];
 };
 
+export type Ordinal = Satoshi & Traits;
+
 export type Satoshi = {
   output: string;
   start: number;
