@@ -7,7 +7,7 @@ import { SADO_DATA } from "../../Paths";
 import { RawTransaction, rpc } from "../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../Utilities/Address";
 import { readDir, readFile, removeFile } from "../../Utilities/Files";
-import { SadoEntry } from "./AddBlock";
+import { SadoEntry } from "../../Utilities/Sado";
 
 const log = debug("sado-parser");
 

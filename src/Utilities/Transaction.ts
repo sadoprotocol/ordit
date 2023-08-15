@@ -174,6 +174,12 @@ export function decodeRawTransaction(hex: string): Transaction | undefined {
   }
 }
 
+export function getNullData(asm: string): string | undefined {
+  if (asm.includes("OP_RETURN")) {
+    return Buffer.from(asm.replace("OP_RETURN", "").trim(), "hex").toString();
+  }
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Types

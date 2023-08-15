@@ -4,9 +4,9 @@ import { AggregationCursor, WithId } from "mongodb";
 
 import { db } from "../../Database";
 import { TransactionDocument } from "../../Database/Transactions";
-import { rpc } from "../../Services/Bitcoin";
+import { isCoinbaseTx, rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getExpandedTransaction } from "../../Utilities/Transaction";
+import { getExpandedTransaction, getNullData } from "../../Utilities/Transaction";
 
 const options = Schema({
   ord: boolean.optional(),
@@ -62,6 +62,7 @@ export const getTransactions = method({
       cursors.push(_id.toString());
       result.push({
         _id: _id.toString(),
+        coinbase: isCoinbaseTx(tx),
         blockHeight: height,
         ...(await getExpandedTransaction(tx, options)),
       });
@@ -153,10 +154,11 @@ function getSearchAggregate(
   ]);
 }
 
-function format(tx: { _id: string } & TransactionDocument) {
+function format(tx: { _id: string; coinbase: boolean } & TransactionDocument) {
   return {
     _id: tx._id,
     txid: tx.txid,
+    coinbase: tx.coinbase,
     blockHash: tx.blockhash,
     blockHeight: tx.blockHeight,
     blockTime: tx.blocktime,
@@ -169,6 +171,7 @@ function format(tx: { _id: string } & TransactionDocument) {
     vin: tx.vin,
     vout: tx.vout.map((vout: any) => {
       vout.sats = btcToSat(vout.value);
+      vout.scriptPubKey.utf8 = getNullData(vout.scriptPubKey.asm);
       return vout;
     }),
     vsize: tx.vsize,

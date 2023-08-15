@@ -78,6 +78,10 @@ async function sendRawTransaction(hex: string, maxFeeRate?: number): Promise<str
  |--------------------------------------------------------------------------------
  */
 
+export function isCoinbaseTx(tx: RawTransaction): boolean {
+  return tx.vin.length === 1 && isCoinbase(tx.vin[0]);
+}
+
 export function isCoinbase(vin: Vin): vin is Coinbase {
   return "coinbase" in vin;
 }
