@@ -9,6 +9,7 @@ import { getReorgHeight } from "./Bitcoin/Reorg";
 import { crawl as crawlOrdinals } from "./Ordinals/Crawl";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
+import { resolve } from "./Sado/Resolve";
 import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
 
 const log = debug("ordit-worker");
@@ -109,6 +110,7 @@ async function indexSado(blockHeight: number): Promise<void> {
   }
 
   await parse();
+  await resolve();
 }
 
 async function reorgSado(blockHeight: number) {

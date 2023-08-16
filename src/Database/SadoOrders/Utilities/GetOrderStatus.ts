@@ -33,7 +33,7 @@ export async function getOrderStatus(entry: SadoDocument) {
     return status("resolved", { receiver: `${output.vin.txid}:${output.vin.n}` });
   }
 
-  return status("unknown", { message: "Order is in an unknown state" });
+  return status("unknown", { message: "Order is in an unknown state", order, output });
 }
 
 function status(status: string, data: any) {

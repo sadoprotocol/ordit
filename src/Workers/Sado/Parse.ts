@@ -20,61 +20,65 @@ export async function parse() {
   log("processing %d items", blocks.length);
 
   for (const block of blocks) {
-    const data = await readFile(`${SADO_DATA}/${block}`);
-    if (data === undefined) {
-      return;
-    }
-
-    // ### Block JSON
-
-    const json = getParsedBlock(data);
-    if (json === undefined) {
-      throw new Error(`Failed to parse block ${block}`);
-    }
-
-    // ### Orders
-
-    for (const { cid, txid } of json.orders) {
-      log("processing order %s", cid);
-      const tx = await rpc.transactions.getRawTransaction(txid, true);
-      if (tx === undefined) {
-        continue;
-      }
-      await db.sado.insertOne({
-        cid,
-        type: "order",
-        addresses: getAddressesFromTx(tx),
-        txid,
-        height: json.block.height,
-      });
-      await parseOrder(cid, { ...json.block, txid });
-    }
-
-    // ### Offers
-
-    for (const { cid, txid } of json.offers) {
-      log("processing offer %s", cid);
-      const tx = await rpc.transactions.getRawTransaction(txid, true);
-      if (tx === undefined) {
-        continue;
-      }
-      await db.sado.insertOne({
-        cid,
-        type: "offer",
-        addresses: getAddressesFromTx(tx),
-        txid,
-        height: json.block.height,
-      });
-      await parseOffer(cid, { ...json.block, txid });
-    }
-
-    // ### Cleanup
-    // After all entries has been parsed we can remove the block file. This only
-    // happens if all entries has been parsed successfully. If an error occurs
-    // the block will be reprocessed on the next run.
-
-    await removeFile(`${SADO_DATA}/${block}`);
+    parseBlock(block);
   }
+}
+
+export async function parseBlock(block: string) {
+  const data = await readFile(`${SADO_DATA}/${block}`);
+  if (data === undefined) {
+    return;
+  }
+
+  // ### Block JSON
+
+  const json = getParsedBlock(data);
+  if (json === undefined) {
+    throw new Error(`Failed to parse block ${block}`);
+  }
+
+  // ### Orders
+
+  for (const { cid, txid } of json.orders) {
+    log("processing order %s", cid);
+    const tx = await rpc.transactions.getRawTransaction(txid, true);
+    if (tx === undefined) {
+      continue;
+    }
+    await db.sado.insertOne({
+      cid,
+      type: "order",
+      addresses: getAddressesFromTx(tx),
+      txid,
+      height: json.block.height,
+    });
+    await parseOrder(cid, { ...json.block, txid });
+  }
+
+  // ### Offers
+
+  for (const { cid, txid } of json.offers) {
+    log("processing offer %s", cid);
+    const tx = await rpc.transactions.getRawTransaction(txid, true);
+    if (tx === undefined) {
+      continue;
+    }
+    await db.sado.insertOne({
+      cid,
+      type: "offer",
+      addresses: getAddressesFromTx(tx),
+      txid,
+      height: json.block.height,
+    });
+    await parseOffer(cid, { ...json.block, txid });
+  }
+
+  // ### Cleanup
+  // After all entries has been parsed we can remove the block file. This only
+  // happens if all entries has been parsed successfully. If an error occurs
+  // the block will be reprocessed on the next run.
+
+  await removeFile(`${SADO_DATA}/${block}`);
 }
 
 /*

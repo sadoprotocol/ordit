@@ -55,7 +55,32 @@ export function validateOrditSignature(message: string, key: string, signature: 
  * @param signature - Signature to verify.
  */
 export function validateCoreSignature(message: string, address: string, signature: string): boolean {
-  return verify(message, address, signature, "", true);
+  return verify(message, address, signature) === true || fallbackVerification(message, address, signature) === true;
+}
+
+/*
+ |--------------------------------------------------------------------------------
+ | Helpers
+ |--------------------------------------------------------------------------------
+ */
+
+function fallbackVerification(message: string, address: string, signature: string) {
+  let isValid = false;
+  const flags = [...Array(12).keys()].map((i) => i + 31);
+  for (const flag of flags) {
+    const flagByte = Buffer.alloc(1);
+    flagByte.writeInt8(flag);
+    let sigBuffer = Buffer.from(signature, "base64").slice(1);
+    sigBuffer = Buffer.concat([flagByte, sigBuffer]);
+    const candidateSig = sigBuffer.toString("base64");
+    try {
+      isValid = verify(message, address, candidateSig);
+      if (isValid) break;
+    } catch (_) {
+      // ...
+    }
+  }
+  return isValid;
 }
 
 /*
