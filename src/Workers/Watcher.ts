@@ -15,6 +15,7 @@ const health = {
   redundancyCount: 0,
 };
 
+let lastHeight = 0;
 let timeout: NodeJS.Timeout | undefined;
 
 fastify.register(cors);
@@ -54,9 +55,21 @@ fastify.get("/hooks/bitcoin", () => {
 async function startRedundancyRunner() {
   clearTimeout(timeout);
   timeout = setTimeout(() => {
-    health.redundancyCount += 1;
-    index().finally(startRedundancyRunner);
+    index()
+      .then((blockHeight) => {
+        if (blockHeight !== undefined) {
+          incrementRedundancyCount(blockHeight);
+        }
+      })
+      .finally(startRedundancyRunner);
   }, 1000 * 60 * 10);
+}
+
+function incrementRedundancyCount(blockHeight: number) {
+  if (blockHeight !== 0 && blockHeight !== lastHeight) {
+    health.redundancyCount++;
+  }
+  lastHeight = blockHeight;
 }
 
 /*
@@ -79,3 +92,4 @@ const start = async () => {
 };
 
 start();
+startRedundancyRunner();

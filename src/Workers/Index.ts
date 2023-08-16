@@ -66,6 +66,8 @@ export async function index() {
     outdated = false;
     await index();
   }
+
+  return blockHeight;
 }
 
 /*

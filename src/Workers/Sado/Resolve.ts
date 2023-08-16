@@ -73,15 +73,15 @@ async function getDuplicateOrders() {
         $group: {
           _id: "$location",
           latestId: { $first: "$_id" },
-          count: { $sum: 1 }, // Count the duplicates
+          count: { $sum: 1 },
         },
       },
       {
         $project: {
-          _id: 0, // Exclude the _id field
-          location: "$_id", // Rename _id to location
+          _id: 0,
+          location: "$_id",
           latestId: 1,
-          count: 1, // Include the count field
+          count: 1,
         },
       },
     ])
