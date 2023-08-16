@@ -2,6 +2,7 @@ import { config } from "../Config";
 import { Inscription } from "../Database/Inscriptions";
 import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
 import { fileExists, readDir } from "../Utilities/Files";
+import { Queue } from "../Utilities/Queue";
 import { isError } from "../Utilities/Response";
 import { getStatus } from "../Workers/Ordinals/Status";
 import { cli } from "./Cli";
@@ -147,13 +148,19 @@ async function version(): Promise<string> {
  |--------------------------------------------------------------------------------
  */
 
-async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<Response<R>> {
+const queue = new Queue(async ({ args, dataDir }: { args: ReadonlyArray<string>; dataDir: string }) => {
   const data = await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${dataDir}`, ...args]);
   try {
-    return JSON.parse(data) as R;
+    return JSON.parse(data);
   } catch (_) {
     return { error: data } as const;
   }
+});
+
+async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<Response<R>> {
+  return new Promise<Response<R>>((resolve, reject) => {
+    queue.push({ args, dataDir }, resolve, reject);
+  });
 }
 
 /*
