@@ -37,7 +37,6 @@ function getOutput(tx: RawTransaction): SadoOutput | undefined {
 function getUtf8(tx: RawTransaction): string | undefined {
   for (const vout of tx.vout) {
     const utf8 = getNullData(vout.scriptPubKey.asm);
-    console.log(utf8);
     if (utf8 !== undefined && utf8.includes("sado=") === true) {
       return utf8;
     }
