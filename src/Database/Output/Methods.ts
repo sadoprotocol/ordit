@@ -12,7 +12,6 @@ import {
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, OutputDocument, SpentOutput } from "./Collection";
-import { getHeighestOutput } from "./Utilities";
 
 export const outputs = {
   collection,
@@ -121,11 +120,11 @@ async function getVinLocation(outpoint: string): Promise<string | undefined> {
 }
 
 async function getHeighestBlock(): Promise<number> {
-  const output = await collection.findOne({}, { sort: { "vout.block.height": -1, "vin.block.height": -1 } });
+  const output = await collection.findOne({}, { sort: { "vout.block.height": -1 } });
   if (output === null) {
     return 0;
   }
-  return getHeighestOutput(output).block.height;
+  return output.vout.block.height;
 }
 
 async function getByAddress(

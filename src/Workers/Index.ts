@@ -5,6 +5,7 @@ import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
+import { getReorgHeight } from "./Bitcoin/Reorg";
 import { crawl as crawlOrdinals } from "./Ordinals/Crawl";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
@@ -29,12 +30,14 @@ export async function index() {
   // ### Reorg
   // Check for potential reorg event on the blockchain.
 
-  const reorgHeight = await getReorgHeight(0, blockHeight);
+  log("reorg check");
+
+  const reorgHeight = await getReorgHeight();
   if (reorgHeight !== -1) {
-    log("Reorg detected at block %d, starting rollback", reorgHeight);
     if (blockHeight - reorgHeight > 100) {
-      return log("Reorg at block %d is unexpectedly far behind, needs manual review", reorgHeight);
+      return log("reorg at block %d is unexpectedly far behind, needs manual review", reorgHeight);
     }
+    log("reorg detected at block %d, starting rollback", reorgHeight);
     await Promise.all([reorgUtxos(reorgHeight), reorgSado(reorgHeight)]);
   }
 
@@ -117,25 +120,4 @@ async function reorgSado(blockHeight: number) {
 
 async function indexOrdinals(): Promise<void> {
   await crawlOrdinals();
-}
-
-async function getReorgHeight(start: number, end: number): Promise<number> {
-  let result = -1;
-  while (start <= end) {
-    const mid = Math.floor((start + end) / 2);
-    const blockHash = await rpc.blockchain.getBlockHash(mid);
-    const output = await db.outputs.findOne({ "vout.block.height": mid });
-    if (output === undefined) {
-      end = mid - 1;
-    } else if (output.vout.block.hash !== blockHash) {
-      result = mid;
-      end = mid - 1;
-    } else {
-      start = mid + 1;
-    }
-  }
-  if (result === -1) {
-    return -1;
-  }
-  return result - 1;
 }

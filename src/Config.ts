@@ -36,6 +36,11 @@ export const config = {
     startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("SADO_PARSER_ENABLED", envToBoolean),
   },
+  reorg: {
+    scanLength: getEnvironmentVariable("REORG_SCAN_LENGTH", envToNumber),
+    treshold: getEnvironmentVariable("REORG_MANUAL_TRESHOLD", envToNumber),
+    debug: getEnvironmentVariable("REORG_DEBUG", envToBoolean),
+  },
   ipfs: {
     gateway: getEnvironmentVariable("IPFS_GATEWAY"),
     api: getEnvironmentVariable("IPFS_API"),

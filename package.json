@@ -11,6 +11,7 @@
     "hord": "DEBUG=ordit-* ts-node ./src/Workers/Hord.ts",
     "dev": "DEBUG=ordit-* ts-node-dev ./src/main.ts",
     "indexer": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Indexer.ts",
+    "reorg": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Reorg.ts",
     "btc:indexer": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Indexer.ts",
     "btc:spender": "DEBUG=ordit-*,bitcoin-* ts-node ./src/Workers/Bitcoin/Spender.ts",
     "ord:indexer": "DEBUG=ord-* ts-node ./src/Workers/Ordinals/Indexer.ts",
