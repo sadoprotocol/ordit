@@ -39,6 +39,7 @@ export const outputs = {
   // ### Indexer Methods
 
   addSpents,
+  addRelayed,
   addValues,
 };
 
@@ -201,9 +202,7 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
       updateOne: {
         filter: { "vout.txid": vout.txid, "vout.n": vout.n },
         update: {
-          $set: {
-            vin: vin,
-          },
+          $set: { vin },
         },
       },
     });
@@ -215,6 +214,10 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
   if (bulkops.length > 0) {
     await collection.bulkWrite(bulkops);
   }
+}
+
+async function addRelayed(txid: string, n: number) {
+  await collection.updateOne({ "vout.txid": txid, "vout.n": n }, { $set: { spent: true } });
 }
 
 /*

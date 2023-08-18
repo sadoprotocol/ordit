@@ -48,6 +48,11 @@ export const registrar: CollectionRegistrar = {
         sparse: true,
       },
     ],
+    [
+      {
+        spent: 1,
+      },
+    ],
   ],
 };
 
@@ -56,6 +61,7 @@ export type OutputDocument = {
   value: number;
   vout: OutputTransaction;
   vin?: OutputTransaction | null;
+  spent?: true;
 };
 
 export type SpentOutput = {

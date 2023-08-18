@@ -9,6 +9,7 @@ export const transactions = {
   getRawTransaction,
   decodeScript,
   sendRawTransaction,
+  decodeRawTransaction,
 };
 
 /*
@@ -72,6 +73,20 @@ async function sendRawTransaction(hex: string, maxFeeRate?: number): Promise<str
   return rpc<string>("sendrawtransaction", args);
 }
 
+/**
+ * Return a JSON object representing the serialized, hex-encoded transaction.
+ *
+ * @param hex       - Transaction hex string.
+ * @param isWitness - Whether the transaction hex is a serialized witness transaction.
+ */
+async function decodeRawTransaction(hex: string, isWitness?: boolean): Promise<DecodedTransaction> {
+  const args: [string, boolean?] = [hex];
+  if (isWitness !== undefined) {
+    args.push(isWitness);
+  }
+  return rpc<DecodedTransaction>("decoderawtransaction", args);
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Utilities
@@ -107,6 +122,18 @@ export type RawTransaction = {
   time: number;
   blocktime: number;
   weight: number;
+};
+
+export type DecodedTransaction = {
+  txid: string;
+  hash: string;
+  size: number;
+  vsize: number;
+  weight: number;
+  version: number;
+  locktime: number;
+  vin: TxVin[];
+  vout: Vout[];
 };
 
 export type Script = {
