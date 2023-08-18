@@ -29,7 +29,7 @@ export async function getOrderStatus(entry: SadoDocument) {
     return status("rejected", { reason: "Order location does not exist" });
   }
 
-  if (output.vin !== undefined) {
+  if (output.vin !== undefined && output.vin !== null) {
     return status("resolved", { receiver: `${output.vin.txid}:${output.vin.n}` });
   }
 

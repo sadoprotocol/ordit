@@ -2,6 +2,7 @@ import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
 import { db } from "../../Database";
+import { noVinFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
 import { getMetaFromTxId } from "../../Utilities/Oip";
@@ -45,7 +46,7 @@ export const getUnspents = method({
     const cursor = db.outputs.collection.find(
       {
         addresses: address,
-        vin: { $exists: false },
+        ...noVinFilter,
       },
       { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } }
     );

@@ -40,7 +40,7 @@ export async function getOfferStatus(entry: SadoDocument) {
     return status("rejected", { reason: "Order location does not exist" });
   }
 
-  if (orderOutput.vin !== undefined) {
+  if (orderOutput.vin !== undefined && orderOutput.vin !== null) {
     const receiver = await db.outputs.findOne({ "vout.txid": orderOutput.vin.txid, "vout.n": orderOutput.vin.n });
     if (receiver === undefined) {
       return status("rejected", { reason: "Receiver of order location does not exist" });
@@ -66,7 +66,7 @@ export async function getOfferStatus(entry: SadoDocument) {
     if (output === undefined) {
       return status("rejected", { reason: "Input on offer PSBT does not exist", input });
     }
-    if (output.vin !== undefined) {
+    if (output.vin !== undefined && output.vin !== null) {
       return status("rejected", {
         reason: "Input on offer PSBT has already been spent",
         receiver: `${output.vin.txid}:${output.vin.n}`,

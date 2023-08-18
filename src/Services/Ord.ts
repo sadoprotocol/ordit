@@ -30,7 +30,6 @@ export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythi
  */
 
 export const ord = {
-  index,
   list,
   traits,
   latestInscriptionIds,
@@ -46,15 +45,6 @@ export const ord = {
  | Methods
  |--------------------------------------------------------------------------------
  */
-
-/**
- * Run ord index command.
- *
- * @param dataDir - Data directory to run ord index command on.
- */
-async function index(dataDir: string): Promise<void> {
-  await run(["--index-sats", "index", "run"], dataDir);
-}
 
 /**
  * List satoshis under a given location in the format of _(txid:vout)_.

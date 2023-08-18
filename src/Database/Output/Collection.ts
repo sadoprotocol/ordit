@@ -55,7 +55,7 @@ export type OutputDocument = {
   addresses: string[];
   value: number;
   vout: OutputTransaction;
-  vin?: OutputTransaction;
+  vin?: OutputTransaction | null;
 };
 
 export type SpentOutput = {

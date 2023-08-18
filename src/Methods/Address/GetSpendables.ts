@@ -2,6 +2,7 @@ import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
 import { db } from "../../Database";
+import { noVinFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
 import { ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
@@ -24,7 +25,7 @@ export const getSpendables = method({
     let safeToSpend = 0;
     let scanned = 0;
 
-    const cursor = db.outputs.collection.find({ addresses: address, vin: { $exists: false } }, { sort: { value: -1 } });
+    const cursor = db.outputs.collection.find({ addresses: address, ...noVinFilter }, { sort: { value: -1 } });
     while (await cursor.hasNext()) {
       const output = await cursor.next();
       if (output === null) {
