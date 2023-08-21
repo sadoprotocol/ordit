@@ -24,43 +24,67 @@ export async function getMetaFromTxId(txid: string): Promise<any> {
 export async function getMetaFromWitness(txinwitness: string[]): Promise<object | undefined> {
   const jsonHash = "6170706c69636174696f6e2f6a736f6e3b636861727365743d7574662d38";
 
-  const meta = txinwitness.find((witnessItem) => witnessItem.includes(jsonHash));
-  if (meta === undefined) {
+  const witness = txinwitness.find((witnessItem) => witnessItem.includes(jsonHash));
+  if (witness === undefined) {
     return undefined;
   }
 
-  // ### Decode Meta
-  // Decode the meta data from the witness using bitcoin core.
+  // ### Data
+  // Convert the witness buffer and convert it to a utf8 string.
 
-  const decodedScript = await rpc.transactions.decodeScript(meta);
-  if (decodedScript === undefined) {
+  const data = Buffer.from(witness, "hex").toString("utf8");
+
+  // ### JSON
+  // Extract the json string from the data. The json string is wrapped in a buffer
+
+  const json = extractJsonString(data);
+  if (json === undefined) {
     return undefined;
   }
 
-  // ### Build JSON
-  // Split the asm into its individual parts. The actual content is sliced buffers and
-  // bitcoin op codes. Find the index of the application/json;charset=utf-8 hash and
-  // slice the array from that point. Then create the expected json data by concatenating
-  // subsequent sliced buffers that is not undefined or "0". Once we hit an OP_CODE we
-  // assume the end is reached and attempt to parse the json.
+  // ### Sanitize
+  // Write side chunking produces additional non printable characters. In this case
+  // a consistent pattern of "M\b\x02" is added to the json string. The following
+  // code removes this combination of characters and any additional non printable
+  // characters.
 
-  let data = "";
+  let sanitized = "";
 
-  const asm = decodedScript.asm.split(" ");
-  const jsonIndex = asm.findIndex((item) => item === jsonHash);
-
-  const partials = asm.slice(jsonIndex + 1);
-  for (const buffer of partials) {
-    if (buffer === undefined || buffer === "0") {
-      continue; // skip data that is not part of the application/json
+  json.split("").forEach((char, i) => {
+    if (char === "M" && json[i + 1] === "\b" && json[i + 2] === "\x02") {
+      return;
     }
-    if (buffer.includes("OP")) {
-      try {
-        return JSON.parse(Buffer.from(data, "hex").toString("utf8"));
-      } catch (err) {
-        return undefined; // meta could not be extracted from witness buffer
-      }
+    if (char === "\b" && json[i + 1] === "\x02") {
+      return;
     }
-    data += buffer;
+    if (char === "\x02") {
+      return;
+    }
+    sanitized += char;
+  });
+
+  sanitized = sanitized.replace(/[^\x20-\x7E]/g, "");
+
+  // ### Parse JSON
+  // Parse the sanitized json string into a javascript object.
+
+  try {
+    return JSON.parse(sanitized);
+  } catch (error) {
+    console.log("Error parsing json from witness", { error });
+    return undefined;
+  }
+}
+
+/**
+ * Extract JSON string from a string containing surrounding non JSON characters.
+ *
+ * @param str - String containing JSON string.
+ */
+function extractJsonString(str: string): string | undefined {
+  const jsonObjectStart = str.indexOf("{");
+  const jsonObjectEnd = str.lastIndexOf("}");
+  if (jsonObjectStart !== -1 && jsonObjectEnd !== -1 && jsonObjectEnd > jsonObjectStart) {
+    return str.slice(jsonObjectStart, jsonObjectEnd + 1);
   }
 }
