@@ -59,10 +59,4 @@ export const config = {
     user: getEnvironmentVariable("NEO4J_USER"),
     pass: getEnvironmentVariable("NEO4J_PASS"),
   },
-  sochain: {
-    url: getEnvironmentVariable("SOCHAIN_URL"),
-    network: getEnvironmentVariable("SOCHAIN_NETWORK"),
-    coin: getEnvironmentVariable("SOCHAIN_COIN"),
-    token: getEnvironmentVariable("SOCHAIN_TOKEN"),
-  },
 };

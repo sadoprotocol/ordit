@@ -41,7 +41,7 @@ export class Queue<T> {
    |--------------------------------------------------------------------------------
    */
 
-  async #process(): Promise<this> {
+  #process(): this {
     if (this.is("working")) {
       return this;
     }
