@@ -24,9 +24,14 @@ export async function getMetaFromTxId(txid: string): Promise<any> {
 export async function getMetaFromWitness(txinwitness: string[]): Promise<object | undefined> {
   const jsonHash = "6170706c69636174696f6e2f6a736f6e3b636861727365743d7574662d38";
 
-  const witness = txinwitness.find((witnessItem) => witnessItem.includes(jsonHash));
+  let witness = txinwitness.find((witnessItem) => witnessItem.includes(jsonHash));
   if (witness === undefined) {
     return undefined;
+  }
+
+  const jsonIndex = witness.indexOf(jsonHash);
+  if (jsonIndex !== -1) {
+    witness = witness.slice(jsonIndex + jsonHash.length);
   }
 
   // ### Data

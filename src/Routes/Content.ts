@@ -24,6 +24,8 @@ fastify.get(
     reply
       .code(200)
       .header("X-Frame-Options", "ALLOWALL")
+      .header("Access-Control-Allow-Origin", "*")
+      .header("Cross-Origin-Resource-Policy", "cross-origin")
       .header("Content-Security-Policy", "frame-src https://*.ordit.io/")
       .header("Content-Type", media.type)
       .header("Content-Length", buffer.length)
