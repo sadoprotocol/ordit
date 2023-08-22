@@ -4,9 +4,7 @@ import Schema, { array, boolean, number, string } from "computed-types";
 import { db } from "../../Database";
 import { noVinFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
-import { ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getOrdinalsByOutpoint } from "../../Utilities/Transaction";
 
 const MAX_SPENDABLES = 200;
 
@@ -15,10 +13,9 @@ export const getSpendables = method({
     address: string,
     value: number,
     safetospend: boolean.optional(),
-    allowedrarity: array.of(string).optional(),
     filter: array.of(string).optional(),
   }),
-  handler: async ({ address, value, safetospend = true, allowedrarity = ["common", "uncommon"], filter = [] }) => {
+  handler: async ({ address, value, safetospend = true, filter = [] }) => {
     const spendables = [];
 
     let totalValue = 0;
@@ -44,18 +41,9 @@ export const getSpendables = method({
       // configured treshold is not safe to spend.
 
       if (safetospend === true) {
-        const inscriptions = await ord.inscriptions(outpoint);
-        if (inscriptions.length > 0) {
+        if (await db.inscriptions.hasInscriptions(output.vout.txid, output.vout.n)) {
           continue;
         }
-
-        const ordinals = await getOrdinalsByOutpoint(outpoint);
-        for (const ordinal of ordinals) {
-          if (allowedrarity.includes(ordinal.rarity) === false) {
-            continue;
-          }
-        }
-
         safeToSpend += 1;
       }
 

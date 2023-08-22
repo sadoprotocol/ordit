@@ -1,15 +1,5 @@
-import debug from "debug";
+import { index } from "./Index";
 
-import { crawl } from "./Crawl";
-
-const log = debug("ord-indexer");
-
-main()
+index()
   .then(() => process.exit(0))
   .catch(console.log);
-
-async function main() {
-  log("starting ord indexer");
-  await crawl();
-  log("done");
-}

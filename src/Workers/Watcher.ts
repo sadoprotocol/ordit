@@ -12,6 +12,7 @@ const log = debug("ordit-worker");
 const fastify = Fastify();
 
 const health = {
+  status: "ok",
   redundancyCount: 0,
 };
 
@@ -33,10 +34,11 @@ fastify.get("/health", async () => health);
  |
  */
 
-fastify.get("/hooks/bitcoin", () => {
+fastify.get("/hooks/bitcoin", async () => {
   health.redundancyCount = 0;
   clearTimeout(timeout);
-  index().finally(startRedundancyRunner);
+  await index().finally(startRedundancyRunner);
+  return "done";
 });
 
 /*

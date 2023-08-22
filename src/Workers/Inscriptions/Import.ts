@@ -9,7 +9,7 @@ import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 import { DIR_ROOT } from "../../Paths";
 
-const log = debug("bitcoin-ordinals");
+const log = debug("ord-inscriptions");
 
 main()
   .catch(console.log)
@@ -30,9 +30,12 @@ async function importInscriptions() {
   });
 
   const ts = performance.now();
+  const promises: Promise<any>[] = [];
 
   let inscriptions: Inscription[] = [];
   let resolved = 0;
+
+  log("importing inscriptions");
 
   for await (const line of rl) {
     try {
@@ -62,12 +65,12 @@ async function importInscriptions() {
     }
 
     if (inscriptions.length % 1000 === 0) {
-      db.inscriptions.collection.insertMany(inscriptions, { ordered: false }).catch(console.log);
+      promises.push(db.inscriptions.insertMany(inscriptions));
       inscriptions = [];
     }
-
-    log(`${resolved} inscriptions inserted`);
   }
 
-  log(`inscriptions completed after ${(performance.now() - ts) / 1000} seconds`);
+  await Promise.all(promises);
+
+  log(`${resolved} inscriptions completed after ${(performance.now() - ts) / 1000} seconds`);
 }

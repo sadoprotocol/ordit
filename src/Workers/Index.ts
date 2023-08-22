@@ -6,7 +6,7 @@ import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
 import { getReorgHeight } from "./Bitcoin/Reorg";
-import { crawl as crawlOrdinals } from "./Ordinals/Crawl";
+import { parse as indexInscriptions } from "./Inscriptions/Parse";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
 import { resolve } from "./Sado/Resolve";
@@ -44,6 +44,11 @@ export async function index() {
 
   // ### Parse
 
+  if (config.ord.enabled === true) {
+    log("indexing inscriptions");
+    await indexInscriptions();
+  }
+
   if (config.parser.enabled === true) {
     log("indexing outputs");
     await indexUtxos(blockHeight);
@@ -52,11 +57,6 @@ export async function index() {
   if (config.sado.enabled === true) {
     log("indexing sado");
     await indexSado(blockHeight);
-  }
-
-  if (config.ord.enabled === true) {
-    log("indexing ordinals");
-    await indexOrdinals();
   }
 
   log("indexed to block %d", blockHeight);
@@ -107,7 +107,6 @@ async function indexSado(blockHeight: number): Promise<void> {
     const hash = await rpc.blockchain.getBlockHash(height);
     const block = await rpc.blockchain.getBlock(hash, 2);
     await addBlock(block);
-    log("parsed sado block %d", height);
     height += 1;
   }
 
@@ -120,8 +119,4 @@ async function reorgSado(blockHeight: number) {
     db.sado.deleteMany({ height: { $gt: blockHeight } }),
     db.orders.deleteMany({ "block.height": { $gt: blockHeight } }),
   ]);
-}
-
-async function indexOrdinals(): Promise<void> {
-  await crawlOrdinals();
 }

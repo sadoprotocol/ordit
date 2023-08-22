@@ -21,16 +21,17 @@ export const config = {
     user: getEnvironmentVariable("RPC_USER"),
     password: getEnvironmentVariable("RPC_PASSWORD"),
   },
-  ord: {
-    bin: getEnvironmentVariable("ORD"),
-    maxSnapshots: getEnvironmentVariable("ORD_SNAPSHOT_LIMIT", envToNumber),
-    enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
-  },
   parser: {
     host: getEnvironmentVariable("UTXO_PARSER_HOST"),
     port: getEnvironmentVariable("UTXO_PARSER_PORT", envToNumber),
     maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
+  },
+  ord: {
+    host: getEnvironmentVariable("ORD_HOST"),
+    port: getEnvironmentVariable("ORD_PORT", envToNumber),
+    bin: getEnvironmentVariable("ORD_PATH"),
+    enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
   sado: {
     startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),

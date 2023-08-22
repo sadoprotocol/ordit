@@ -3,10 +3,9 @@ import Schema, { boolean, number, string, Type } from "computed-types";
 import { AggregationCursor, WithId } from "mongodb";
 
 import { db } from "../../Database";
-import { TransactionDocument } from "../../Database/Transactions";
 import { isCoinbaseTx, rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getExpandedTransaction, getNullData } from "../../Utilities/Transaction";
+import { ExpandedTransaction, getExpandedTransaction, getNullData } from "../../Utilities/Transaction";
 
 const options = Schema({
   ord: boolean.optional(),
@@ -154,7 +153,7 @@ function getSearchAggregate(
   ]);
 }
 
-function format(tx: { _id: string; coinbase: boolean } & TransactionDocument) {
+function format(tx: { _id: string; coinbase: boolean } & Transaction) {
   return {
     _id: tx._id,
     txid: tx.txid,
@@ -182,3 +181,8 @@ function format(tx: { _id: string; coinbase: boolean } & TransactionDocument) {
 export type Options = Type<typeof options>;
 
 export type Pagination = Type<typeof pagination>;
+
+type Transaction = {
+  addresses: string[];
+  blockHeight: number;
+} & ExpandedTransaction;

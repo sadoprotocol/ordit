@@ -1,6 +1,6 @@
 import { WithId } from "mongodb";
 
-import { ord } from "../../Services/Ord";
+import { inscriptions } from "../Inscriptions";
 import { collection, MediaDocument } from "./Collection";
 import { getOutpointFromId } from "./Utilities";
 
@@ -16,7 +16,7 @@ async function getByInscriptionId(inscriptionId: string): Promise<WithId<MediaDo
     return media;
   }
 
-  const inscription = await ord.inscription(inscriptionId);
+  const inscription = await inscriptions.findOne({ id: inscriptionId });
   if (inscription === undefined) {
     throw new Error(`No inscription found for ${inscriptionId}.`);
   }

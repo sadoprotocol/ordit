@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  ord:
+    image: ord
+    container_name: ord
+    ports:
+      - ${ORD_PORT}:3030
+    volumes:
+      - ./.data/ord:/app/data
+    environment:
+      - BITCOIN_NETWORK=testnet
+      - BITCOIN_RPC_USER=bitcoin
+      - BITCOIN_RPC_PASS=bitcoin
+      - BITCOIN_RPC_URL=http://host.docker.internal:${RPC_PORT}

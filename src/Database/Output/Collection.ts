@@ -60,7 +60,7 @@ export type OutputDocument = {
   addresses: string[];
   value: number;
   vout: OutputTransaction;
-  vin?: OutputTransaction | null;
+  vin?: OutputTransaction;
   spent?: true;
 };
 

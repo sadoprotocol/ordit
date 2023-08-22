@@ -4,9 +4,7 @@ import Schema, { string } from "computed-types";
 import { db } from "../../Database";
 import { parseLocation } from "../../Database/SadoOrders/Utilities/ParseLocation";
 import { satToUsd } from "../../Utilities/Bitcoin";
-import { getMetaFromTxId } from "../../Utilities/Oip";
 import { getPagination, pagination } from "../../Utilities/Pagination";
-import { getInscriptionsByOutpoint, getOrdinalsByOutpoint } from "../../Utilities/Transaction";
 
 export const getSadoOrderbook = method({
   params: Schema({
@@ -27,14 +25,13 @@ export const getSadoOrderbook = method({
       },
     });
     for (const order of orders) {
-      const [txid] = parseLocation(order.location);
+      const [txid, n] = parseLocation(order.location);
       result.push({
         ...order,
         price: {
           usd: satToUsd(order.cardinals),
         },
-        inscriptions: await getInscriptionsByOutpoint(order.location, await getMetaFromTxId(txid)),
-        ordinals: await getOrdinalsByOutpoint(order.location),
+        inscriptions: await db.inscriptions.getInscriptionsByOutpoint(`${txid}:${n}`),
       });
     }
 

@@ -1,18 +1,18 @@
 version: "3.8"
 
 services:
-  bitcoin-core:
+  bitcoin:
     image: ruimarinho/bitcoin-core
-    container_name: ordit-bitcoin-server
+    container_name: ordit-bitcoin
     ports:
-      - ${RPC_PORT}:${RPC_PORT}
+      - ${RPC_PORT}:${RPC_PORT} # regtest:18443 testnet:18332 mainnet:8332
     volumes:
-      - ./.bitcoin:/home/bitcoin/.bitcoin
+      - ./.data/bitcoin:/home/bitcoin/.bitcoin
     command: -printtoconsole
       -txindex=1
       -testnet=1
       -rpcallowip=0.0.0.0/0
       -rpcbind=0.0.0.0
-      -rpcuser='${RPC_USER}'
-      -rpcpassword='${RPC_PASSWORD}'
-      -blocknotify='curl http://host.docker.internal:${UTXO_PARSER_PORT}/hooks/bitcoin?block=%s'
+      -rpcuser='bitcoin'
+      -rpcpassword='bitcoin'
+      -blocknotify='curl http://host.docker.internal:3031/hooks/bitcoin?block=%s'

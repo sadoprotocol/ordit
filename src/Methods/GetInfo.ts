@@ -4,28 +4,27 @@ import fetch from "node-fetch";
 import { config } from "../Config";
 import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
-import { ord } from "../Services/Ord";
+import { ord as cli } from "../Services/Ord";
 
 export const getInfo = method({
   handler: async () => {
-    const block = await rpc.blockchain.getBlockchainInfo();
-    const indexed = await db.outputs.getHeighestBlock();
+    const info = await rpc.blockchain.getBlockchainInfo();
+
+    const utxos = await db.outputs.getHeighestBlock();
+    const ord = await cli.height();
     const worker = await getWorkerHealth();
+
     return {
-      chain: block.chain,
-      blocks: block.blocks,
-      headers: block.headers,
+      chain: info.chain,
+      blocks: info.blocks,
       worker: {
-        height: indexed,
-        active: worker !== false,
         network: getWorkerNetworkStatus(worker.redundancyCount),
-        utxos: config.parser.enabled,
-        ordinals: config.ord.enabled,
-        synced: `${((indexed / block.blocks) * 100).toFixed(2)}%`,
+        active: worker !== false,
       },
-      ord: {
-        version: await ord.version(),
-        status: await ord.status(),
+      indexes: {
+        synced: info.blocks === utxos && info.blocks === ord,
+        utxos,
+        ord,
       },
     };
   },

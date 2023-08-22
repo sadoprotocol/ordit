@@ -20,7 +20,7 @@ export async function parse() {
   log("processing %d items", blocks.length);
 
   for (const block of blocks) {
-    parseBlock(block);
+    await parseBlock(block);
   }
 }
 

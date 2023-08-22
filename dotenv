@@ -20,19 +20,19 @@ RPC_PORT=18443 # regtest:18443 testnet:18332 mainnet:8332
 RPC_USER="<user>"
 RPC_PASSWORD="<password>"
 
-# ORD
-
-ORD=/absolute/path/to/ord
-ORD_SNAPSHOT_LIMIT=3
-ORD_SNAPSHOT_INTERVAL=3  # in hours
-ORD_INDEXER_ENABLED=true
-
 # UTXO PARSER
 
 UTXO_PARSER_HOST="0.0.0.0"
 UTXO_PARSER_PORT=3031
 UTXO_PARSER_MAX_BLOCK=0  # 0 for no limit
 UTXO_PARSER_ENABLED=true
+
+# ORD
+
+ORD_HOST="localhost"
+ORD_PORT=3032
+ORD_PATH=/Users/christoffer/ord/target/release/ord
+ORD_INDEXER_ENABLED=true
 
 # SADO PARSER
 
@@ -65,10 +65,3 @@ NEO4J_PORT=7687
 NEO4J_DATABASE="neo4j"
 NEO4J_USER="neo4j"
 NEO4J_PASS="password"
-
-# SOCHAIN
-
-SOCHAIN_URL="https://chain.so/api/v3"
-SOCHAIN_NETWORK="BTCTEST"
-SOCHAIN_COIN="Bitcoin"
-SOCHAIN_TOKEN=""

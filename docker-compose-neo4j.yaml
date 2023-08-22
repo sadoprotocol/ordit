@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  neo:
+  neo4j:
     image: neo4j:latest
     ports:
       - 7474:7474
@@ -9,4 +9,4 @@ services:
     environment:
       - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASS}
     volumes:
-      - ./.neo:/data/
+      - ./.data/neo4j:/data/

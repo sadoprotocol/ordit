@@ -5,8 +5,6 @@ import { db } from "../../Database";
 import { noVinFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getMetaFromTxId } from "../../Utilities/Oip";
-import { getInscriptionsByOutpoint, getOrdinalsByOutpoint, getSafeToSpendState } from "../../Utilities/Transaction";
 
 const options = Schema({
   ord: boolean.optional(),
@@ -89,18 +87,10 @@ export const getUnspents = method({
       }
 
       if (options?.ord !== false) {
-        utxo.ordinals = await getOrdinalsByOutpoint(`${output.vout.txid}:${output.vout.n}`);
-        utxo.inscriptions = await getInscriptionsByOutpoint(
-          `${output.vout.txid}:${output.vout.n}`,
-          await getMetaFromTxId(output.vout.txid)
-        );
+        utxo.inscriptions = await db.inscriptions.getInscriptionsByOutpoint(`${output.vout.txid}:${output.vout.n}`);
       }
 
-      utxo.safeToSpend = getSafeToSpendState(
-        utxo.ordinals ?? [],
-        utxo.inscriptions ?? [],
-        options?.allowedrarity ?? ["common", "uncommon"]
-      );
+      utxo.safeToSpend = output.inscriptions === undefined;
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {

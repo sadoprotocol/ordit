@@ -1,11 +1,9 @@
-import { config } from "../Config";
-import { Inscription } from "../Database/Inscriptions";
-import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
-import { fileExists, readDir } from "../Utilities/Files";
-import { Queue } from "../Utilities/Queue";
-import { isError } from "../Utilities/Response";
-import { getStatus } from "../Workers/Ordinals/Status";
-import { cli } from "./Cli";
+import { config } from "../../Config";
+import { Inscription } from "../../Database/Inscriptions";
+import { ORD_DATA } from "../../Paths";
+import { isError } from "../../Utilities/Response";
+import { getStatus } from "../../Workers/Ordinals/Status";
+import { cli } from "../Cli";
 
 export const networkFlag = {
   regtest: "-r",
@@ -30,12 +28,14 @@ export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythi
  */
 
 export const ord = {
+  index,
+  height,
   list,
   traits,
+  getInscriptionsByBlock,
   latestInscriptionIds,
   inscription,
   inscriptions,
-  reorg,
   status,
   version,
 };
@@ -45,6 +45,28 @@ export const ord = {
  | Methods
  |--------------------------------------------------------------------------------
  */
+
+/**
+ * Run ord index command.
+ *
+ * @param dataDir - Data directory to run ord index command on.
+ */
+async function index(dataDir?: string): Promise<void> {
+  await run(["--index-sats", "index", "run"], dataDir);
+}
+
+/**
+ * Return the current height from ord.
+ *
+ * @returns current ord index height
+ */
+async function height(): Promise<number> {
+  const result = await run<number>(["trinity", "height"]);
+  if (isError(result)) {
+    throw new Error(result.error);
+  }
+  return result;
+}
 
 /**
  * List satoshis under a given location in the format of _(txid:vout)_.
@@ -75,8 +97,21 @@ async function traits(satoshi: number): Promise<Traits> {
   return result;
 }
 
+/**
+ * Get inscriptions for the given block height.
+ *
+ * @param blockHeight - Block height to get inscriptions for.
+ */
+async function getInscriptionsByBlock(blockHeight: number): Promise<any[]> {
+  const result = await run<any[]>(["trinity", "block", blockHeight.toString()]);
+  if (isError(result)) {
+    throw new Error(result.error);
+  }
+  return result;
+}
+
 async function latestInscriptionIds(limit?: number, from?: number): Promise<LatestInscriptionIds> {
-  const args = ["gli"];
+  const args = ["trinity", "latest"];
   if (limit) {
     args.push(limit.toString());
   }
@@ -91,7 +126,7 @@ async function latestInscriptionIds(limit?: number, from?: number): Promise<Late
 }
 
 async function inscription(id: string): Promise<Inscription> {
-  const result = await run<any>(["gie", id]);
+  const result = await run<any>(["trinity", "id", id]);
   if ("error" in result) {
     throw new Error(result.error);
   }
@@ -99,29 +134,15 @@ async function inscription(id: string): Promise<Inscription> {
 }
 
 async function inscriptions(location: string): Promise<string[]> {
-  const result = await run<{ inscriptions: string[] }>(["gioo", location]);
+  const result = await run<{ inscriptions: string[] }>(["trinity", "output", location]);
   if (isError(result)) {
     throw new Error(result.error);
   }
   return result.inscriptions;
 }
 
-async function reorg(data = ORD_DATA): Promise<boolean> {
-  const result = await run<{ is_reorged: boolean }>(["reorg"], data);
-  if (isError(result)) {
-    throw new Error(result.error);
-  }
-  return result.is_reorged;
-}
-
 async function status(): Promise<any> {
-  return {
-    indexer: await getStatus(),
-    snapshot: {
-      running: await fileExists(`${ORD_DATA_SNAPSHOT}/lock`),
-      backups: await readDir(ORD_DATA_SNAPSHOTS),
-    },
-  };
+  return getStatus();
 }
 
 async function version(): Promise<string> {
@@ -138,19 +159,13 @@ async function version(): Promise<string> {
  |--------------------------------------------------------------------------------
  */
 
-const queue = new Queue(async ({ args, dataDir }: { args: ReadonlyArray<string>; dataDir: string }) => {
+async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<Response<R>> {
   const data = await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${dataDir}`, ...args]);
   try {
-    return JSON.parse(data);
+    return JSON.parse(data) as R;
   } catch (_) {
     return { error: data } as const;
   }
-});
-
-async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<Response<R>> {
-  return new Promise<Response<R>>((resolve, reject) => {
-    queue.push({ args, dataDir }, resolve, reject);
-  });
 }
 
 /*
