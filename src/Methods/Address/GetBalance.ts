@@ -2,7 +2,7 @@ import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "../../Database";
-import { noVinFilter } from "../../Database/Output/Utilities";
+import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
 
 export const getBalance = method({
@@ -12,7 +12,7 @@ export const getBalance = method({
   handler: async ({ address }) => {
     let balance = 0;
 
-    const outputs = await db.outputs.find({ addresses: address, ...noVinFilter });
+    const outputs = await db.outputs.find({ addresses: address, ...noSpentsFilter });
     for (const output of outputs) {
       if (!output.value) {
         const tx = await rpc.transactions.getRawTransaction(output.vout.txid, true);

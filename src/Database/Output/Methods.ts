@@ -12,7 +12,7 @@ import {
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, OutputDocument, SpentOutput } from "./Collection";
-import { noVinFilter } from "./Utilities";
+import { noSpentsFilter } from "./Utilities";
 
 export const outputs = {
   collection,
@@ -138,7 +138,7 @@ async function getByAddress(
 }
 
 async function getUnspentByAddress(address: string, options?: FindOptions<OutputDocument>): Promise<OutputDocument[]> {
-  return collection.find({ addresses: address, ...noVinFilter }, options).toArray();
+  return collection.find({ addresses: address, ...noSpentsFilter }, options).toArray();
 }
 
 async function getCountByAddress(address: string): Promise<{

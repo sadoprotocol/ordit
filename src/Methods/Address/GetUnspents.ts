@@ -2,7 +2,7 @@ import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
 import { db } from "../../Database";
-import { noVinFilter } from "../../Database/Output/Utilities";
+import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
 
@@ -44,7 +44,7 @@ export const getUnspents = method({
     const cursor = db.outputs.collection.find(
       {
         addresses: address,
-        ...noVinFilter,
+        ...noSpentsFilter,
       },
       { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } }
     );
@@ -90,7 +90,7 @@ export const getUnspents = method({
         utxo.inscriptions = await db.inscriptions.getInscriptionsByOutpoint(`${output.vout.txid}:${output.vout.n}`);
       }
 
-      utxo.safeToSpend = output.inscriptions === undefined;
+      utxo.safeToSpend = utxo.inscriptions.length === 0;
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {
