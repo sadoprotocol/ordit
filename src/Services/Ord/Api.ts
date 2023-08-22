@@ -6,7 +6,55 @@ import { logger } from "../../Logger";
 
 const log = debug("ord-api");
 
-export async function api<R>(endpoint: string): Promise<R> {
+export const api = {
+  getHeight,
+  getBlockInscriptions,
+  waitForBlock,
+};
+
+/*
+ |--------------------------------------------------------------------------------
+ | Methods
+ |--------------------------------------------------------------------------------
+ */
+
+/**
+ * Get last block parsed.
+ */
+async function getHeight(): Promise<number> {
+  return call<number>("/blockheight");
+}
+
+/**
+ * Get inscriptions for a block.
+ *
+ * @param blockHeight - Block height to get inscriptions for.
+ */
+async function getBlockInscriptions(blockHeight: number): Promise<Inscription[]> {
+  return call<Inscription[]>(`/inscriptions/block/${blockHeight}`);
+}
+
+/**
+ * Ensure that ord has processed the block before continuing.
+ *
+ * @param blockHeight - Block height to wait for.
+ */
+async function waitForBlock(blockHeight: number): Promise<void> {
+  const ordHeight = await call<number>("/blockheight");
+  if (ordHeight <= blockHeight) {
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return waitForBlock(blockHeight);
+}
+
+/*
+ |--------------------------------------------------------------------------------
+ | Methods
+ |--------------------------------------------------------------------------------
+ */
+
+async function call<R>(endpoint: string): Promise<R> {
   const ts = performance.now();
   try {
     const response = await fetch(`${getRpcUri()}${endpoint}`, {
@@ -40,3 +88,28 @@ export async function api<R>(endpoint: string): Promise<R> {
 function getRpcUri(): string {
   return `http://${config.ord.host}:${config.ord.port}`;
 }
+
+/*
+ |--------------------------------------------------------------------------------
+ | Types
+ |--------------------------------------------------------------------------------
+ */
+
+type Inscription = {
+  id: string;
+  address: string;
+  sat: number;
+  media: InscriptionMedia;
+  timestamp: number;
+  height: number;
+  fee: number;
+  genesis: string;
+  number: number;
+  output: string;
+};
+
+type InscriptionMedia = {
+  kind: string;
+  size: number;
+  content: string;
+};

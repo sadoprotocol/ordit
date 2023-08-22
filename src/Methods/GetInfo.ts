@@ -4,14 +4,14 @@ import fetch from "node-fetch";
 import { config } from "../Config";
 import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
-import { ord as cli } from "../Services/Ord";
+import { api } from "../Services/Ord";
 
 export const getInfo = method({
   handler: async () => {
     const info = await rpc.blockchain.getBlockchainInfo();
 
     const utxos = await db.outputs.getHeighestBlock();
-    const ord = await cli.height();
+    const ord = await api.getHeight();
     const worker = await getWorkerHealth();
 
     return {

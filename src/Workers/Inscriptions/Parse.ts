@@ -17,7 +17,7 @@ export async function parse() {
 
   const blockHeight = await rpc.blockchain.getBlockCount();
 
-  await waitForBlock(blockHeight);
+  await api.waitForBlock(blockHeight);
 
   const promises: Promise<any>[] = [];
 
@@ -25,7 +25,7 @@ export async function parse() {
 
   let height = parseInt(parsedHeight);
   while (height <= blockHeight) {
-    const data = await getInscriptions(height);
+    const data = await api.getBlockInscriptions(height);
     for (const inscription of data) {
       const [media, format] = inscription.media.kind.split(";");
       const [type, subtype] = media.split("/");
@@ -54,22 +54,4 @@ export async function parse() {
   }
   await Promise.all(promises);
   await writeFile(`${DATA_DIR}/inscriptions_n`, height.toString());
-}
-
-async function getInscriptions(blockHeight: number): Promise<any> {
-  return api(`/inscriptions/block/${blockHeight}`);
-}
-
-/**
- * Ensure that ord has processed the block before continuing.
- *
- * @param blockHeight - Block height to wait for.
- */
-async function waitForBlock(blockHeight: number): Promise<void> {
-  const ordHeight = await api<number>("/blockheight");
-  if (ordHeight <= blockHeight) {
-    return;
-  }
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return waitForBlock(blockHeight);
 }
