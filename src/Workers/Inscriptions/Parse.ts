@@ -1,30 +1,30 @@
-import debug from "debug";
-
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 import { DATA_DIR } from "../../Paths";
-import { rpc } from "../../Services/Bitcoin";
 import { api } from "../../Services/Ord";
 import { readFile, writeFile } from "../../Utilities/Files";
+import { log, perf } from "../Log";
 
-const log = debug("ord-inscriptions");
-
-export async function parse() {
-  const parsedHeight = await readFile(`${DATA_DIR}/inscriptions_n`);
-  if (parsedHeight === undefined) {
+export async function parse(blockHeight: number) {
+  const inscriptionHeight = await getNextInscriptionHeight();
+  if (inscriptionHeight === 0) {
     return;
   }
 
-  const blockHeight = await rpc.blockchain.getBlockCount();
+  if (inscriptionHeight > blockHeight) {
+    return log("\n   💤 Indexer has latest inscriptions");
+  }
 
-  await api.waitForBlock(blockHeight);
+  log("\n   🕛 Waiting for block availability");
+  await api.waitForInscriptions(blockHeight);
 
   const promises: Promise<any>[] = [];
 
   let inscriptions: Inscription[] = [];
 
-  let height = parseInt(parsedHeight);
+  let height = inscriptionHeight;
   while (height <= blockHeight) {
+    const ts = perf();
     const data = await api.getBlockInscriptions(height);
     for (const inscription of data) {
       const [media, format] = inscription.media.kind.split(";");
@@ -48,10 +48,19 @@ export async function parse() {
       });
     }
     promises.push(db.inscriptions.insertMany(inscriptions));
-    log("resolved %d inscriptions from block %s", inscriptions.length, height);
+    log(`\n   📦 resolved ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
     inscriptions = [];
     height += 1;
   }
   await Promise.all(promises);
-  await writeFile(`${DATA_DIR}/inscriptions_n`, height.toString());
+  await writeFile(`${DATA_DIR}/inscriptions_n`, blockHeight.toString());
+  log("\n   💾 Updated inscription height");
+}
+
+async function getNextInscriptionHeight(): Promise<number> {
+  const parsedHeight = await readFile(`${DATA_DIR}/inscriptions_n`);
+  if (parsedHeight === undefined) {
+    return 0;
+  }
+  return parseInt(parsedHeight, 10) + 1;
 }

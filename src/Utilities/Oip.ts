@@ -1,3 +1,5 @@
+import validator from "validator";
+
 import { isCoinbase, rpc } from "../Services/Bitcoin";
 
 export async function getMetaFromTxId(txid: string): Promise<any> {
@@ -53,22 +55,7 @@ export async function getMetaFromWitness(txinwitness: string[]): Promise<object 
   // code removes this combination of characters and any additional non printable
   // characters.
 
-  let sanitized = "";
-
-  json.split("").forEach((char, i) => {
-    if (char === "M" && json[i + 1] === "\b" && json[i + 2] === "\x02") {
-      return;
-    }
-    if (char === "\b" && json[i + 1] === "\x02") {
-      return;
-    }
-    if (char === "\x02") {
-      return;
-    }
-    sanitized += char;
-  });
-
-  sanitized = sanitized.replace(/[^\x20-\x7E]/g, "");
+  const sanitized = validator.blacklist(validator.stripLow(json, true), "M�");
 
   // ### Parse JSON
   // Parse the sanitized json string into a javascript object.

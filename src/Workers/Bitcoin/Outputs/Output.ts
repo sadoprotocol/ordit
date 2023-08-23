@@ -1,29 +1,24 @@
-import debug from "debug";
-
 import { config } from "../../../Config";
 import { db } from "../../../Database";
 import { OutputDocument, SpentOutput } from "../../../Database/Output";
-import { logger } from "../../../Logger";
 import { SPENTS_DATA } from "../../../Paths";
 import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../../Utilities/Address";
 import { writeFile } from "../../../Utilities/Files";
-
-const log = debug("bitcoin-crawler");
+import { log } from "../../Log";
 
 const maxBlockHeight = config.parser.maxBlockHeight;
 
 export async function crawl(blockN: number, maxBlockN: number) {
   if (maxBlockHeight !== 0 && blockN > maxBlockHeight) {
-    log("max block height %d reached, terminating...", maxBlockHeight);
+    log(`\n   💤 Max block height ${maxBlockHeight} reached`);
     return process.exit(0);
   }
 
   if (blockN > maxBlockN) {
-    return log("indexer caught up with latest block %d, resting...", blockN);
+    log("\n   💤 Indexer has latest outputs");
+    return 0;
   }
-
-  logger.start();
 
   const blockHash = await rpc.blockchain.getBlockHash(blockN);
   const block = await rpc.blockchain.getBlock(blockHash, 2);
@@ -32,8 +27,6 @@ export async function crawl(blockN: number, maxBlockN: number) {
 
   const outputs: OutputDocument[] = [];
   const spents: SpentOutput[] = [];
-
-  let addressTime = 0;
 
   for (const tx of block.tx) {
     let n = 0;
@@ -58,9 +51,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
       n += 1;
     }
     for (const vout of tx.vout) {
-      const t = performance.now();
       const addresses = getAddressessFromVout(vout);
-      addressTime += performance.now() - t;
       if (addresses.length === 0) {
         continue;
       }
@@ -84,20 +75,5 @@ export async function crawl(blockN: number, maxBlockN: number) {
   await db.outputs.insertMany(outputs);
   await writeFile(`${SPENTS_DATA}/${block.height}`, JSON.stringify(spents));
 
-  // ### Debug
-
-  logger.stop();
-
-  if (logger.total > 1) {
-    log("crawled block %o", {
-      block: blockN,
-      txs: block.tx.length,
-      vins: spents.length,
-      vouts: outputs.length,
-      total: logger.total.toFixed(3),
-      address: (addressTime / 1000).toFixed(3),
-      rpc: [logger.calls.rpc, logger.rpc],
-      database: [logger.calls.database, logger.database],
-    });
-  }
+  return outputs.length;
 }

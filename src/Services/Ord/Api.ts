@@ -1,14 +1,11 @@
-import debug from "debug";
 import fetch from "node-fetch";
 
 import { config } from "../../Config";
-import { logger } from "../../Logger";
-
-const log = debug("ord-api");
 
 export const api = {
   getHeight,
   getBlockInscriptions,
+  waitForInscriptions,
   waitForBlock,
 };
 
@@ -35,17 +32,34 @@ async function getBlockInscriptions(blockHeight: number): Promise<Inscription[]>
 }
 
 /**
+ * Ensure that inscriptions at block is ready before processing subsequent
+ * operations.
+ *
+ * @param blockHeight - Block height to wait for.
+ * @param seconds     - How many seconds to wait between attempts.
+ */
+async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<void> {
+  const status = await call<number>(`/inscriptions/block/check/${blockHeight}`);
+  if (status === 1) {
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  return waitForInscriptions(blockHeight, seconds);
+}
+
+/**
  * Ensure that ord has processed the block before continuing.
  *
  * @param blockHeight - Block height to wait for.
+ * @param seconds     - How many seconds to wait between attempts.
  */
-async function waitForBlock(blockHeight: number): Promise<void> {
+async function waitForBlock(blockHeight: number, seconds = 1): Promise<void> {
   const ordHeight = await call<number>("/blockheight");
   if (ordHeight <= blockHeight) {
     return;
   }
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return waitForBlock(blockHeight);
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  return waitForBlock(blockHeight, seconds);
 }
 
 /*
@@ -55,7 +69,6 @@ async function waitForBlock(blockHeight: number): Promise<void> {
  */
 
 async function call<R>(endpoint: string): Promise<R> {
-  const ts = performance.now();
   try {
     const response = await fetch(`${getRpcUri()}${endpoint}`, {
       method: "GET",
@@ -70,12 +83,6 @@ async function call<R>(endpoint: string): Promise<R> {
   } catch (error) {
     console.log("Ord Api Error", { endpoint, error });
     throw error;
-  } finally {
-    const time = performance.now() - ts;
-    if (time / 1000 > 1) {
-      log("rpc call %s took %s seconds", endpoint, (time / 1000).toFixed(3));
-    }
-    logger.addRpc(endpoint, time);
   }
 }
 

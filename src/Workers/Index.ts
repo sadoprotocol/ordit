@@ -1,5 +1,3 @@
-import debug from "debug";
-
 import { config } from "../Config";
 import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
@@ -7,12 +5,11 @@ import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
 import { getReorgHeight } from "./Bitcoin/Reorg";
 import { parse as indexInscriptions } from "./Inscriptions/Parse";
+import { log, perf } from "./Log";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
 import { resolve } from "./Sado/Resolve";
 import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
-
-const log = debug("ordit-worker");
 
 let indexing = false;
 let outdated = false;
@@ -24,42 +21,46 @@ export async function index() {
   }
   indexing = true;
 
-  log("starting indexer");
+  const ts = perf();
 
   const blockHeight = await rpc.blockchain.getBlockCount();
+
+  log(`\n ---------- indexing to block ${blockHeight} ----------`);
 
   // ### Reorg
   // Check for potential reorg event on the blockchain.
 
-  log("reorg check");
+  log("\n\n 🏥 Performing reorg check\n");
 
   const reorgHeight = await getReorgHeight();
   if (reorgHeight !== -1) {
     if (blockHeight - reorgHeight > 100) {
-      return log("reorg at block %d is unexpectedly far behind, needs manual review", reorgHeight);
+      return log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
     }
-    log("reorg detected at block %d, starting rollback", reorgHeight);
+    log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
     await Promise.all([reorgUtxos(reorgHeight), reorgSado(reorgHeight)]);
   }
+
+  log("\n   💯 Chain is healthy");
 
   // ### Parse
 
   if (config.ord.enabled === true) {
-    log("indexing inscriptions");
-    await indexInscriptions();
+    log("\n\n 📰 Indexing inscriptions\n");
+    await indexInscriptions(blockHeight);
   }
 
   if (config.parser.enabled === true) {
-    log("indexing outputs");
+    log("\n\n 📖 Indexing outputs\n");
     await indexUtxos(blockHeight);
   }
 
   if (config.sado.enabled === true) {
-    log("indexing sado");
+    log("\n\n 🌎 Indexing sado\n");
     await indexSado(blockHeight);
   }
 
-  log("indexed to block %d", blockHeight);
+  log(`\n\n ✅ Completed [${ts.now}]\n\n`);
 
   indexing = false;
   if (outdated === true) {
@@ -84,8 +85,9 @@ async function indexUtxos(blockHeight: number): Promise<void> {
 
   let height = outputBlockHeight + 1;
   while (height <= blockHeight) {
-    await crawlBlock(height, blockHeight);
-    log("parsed output block %d", height);
+    const ts = perf();
+    const count = await crawlBlock(height, blockHeight);
+    log(`\n   📦 parsed ${count} outputs from block ${height} [${ts.now} seconds]`);
     height += 1;
   }
 
