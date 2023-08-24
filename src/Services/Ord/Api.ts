@@ -76,21 +76,16 @@ async function waitForBlock(blockHeight: number, seconds = 1): Promise<void> {
  */
 
 async function call<R>(endpoint: string): Promise<R> {
-  try {
-    const response = await fetch(`${getRpcUri()}${endpoint}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-    if (response.status !== 200) {
-      throw new Error("failed to resolve ord api call");
-    }
-    return await response.json();
-  } catch (error) {
-    console.log("Ord Api Error", { endpoint, error });
-    throw error;
+  const response = await fetch(`${getRpcUri()}${endpoint}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  if (response.status !== 200) {
+    throw new Error("failed to resolve ord api call");
   }
+  return response.json();
 }
 
 /*

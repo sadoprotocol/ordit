@@ -15,8 +15,11 @@ export async function parse(blockHeight: number) {
     return log("\n   💤 Indexer has latest inscriptions");
   }
 
+  const ts = perf();
+
   log("\n   🕛 Waiting for block availability");
   await api.waitForInscriptions(blockHeight);
+  log(`\n     👌 Block available [${ts.now} seconds]`);
 
   const promises: Promise<any>[] = [];
 
@@ -54,7 +57,7 @@ export async function parse(blockHeight: number) {
   }
   await Promise.all(promises);
   await writeFile(`${DATA_DIR}/inscriptions_n`, blockHeight.toString());
-  log("\n   💾 Updated inscription height");
+  log(`\n   💾 Updated inscription height ${blockHeight}`);
 }
 
 async function getNextInscriptionHeight(): Promise<number> {
