@@ -26,9 +26,13 @@ async function getHeight(): Promise<number> {
  * Get inscriptions for a block.
  *
  * @param blockHeight - Block height to get inscriptions for.
+ * @param seconds     - How many seconds to wait between attempts.
  */
-async function getBlockInscriptions(blockHeight: number): Promise<Inscription[]> {
-  return call<Inscription[]>(`/inscriptions/block/${blockHeight}`);
+async function getBlockInscriptions(blockHeight: number, seconds = 1): Promise<Inscription[]> {
+  return call<Inscription[]>(`/inscriptions/block/${blockHeight}`).catch((error) => {
+    console.log(error);
+    return sleep(seconds).then(() => getBlockInscriptions(blockHeight, seconds));
+  });
 }
 
 /**
@@ -39,12 +43,15 @@ async function getBlockInscriptions(blockHeight: number): Promise<Inscription[]>
  * @param seconds     - How many seconds to wait between attempts.
  */
 async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<void> {
-  const status = await call<number>(`/inscriptions/block/check/${blockHeight}`);
-  if (status === 1) {
-    return;
+  try {
+    const status = await call<number>(`/inscriptions/block/check/${blockHeight}`);
+    if (status === 1) {
+      return;
+    }
+  } catch (error) {
+    console.log(error);
   }
-  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-  return waitForInscriptions(blockHeight, seconds);
+  return sleep(seconds).then(() => waitForInscriptions(blockHeight, seconds));
 }
 
 /**
@@ -77,7 +84,7 @@ async function call<R>(endpoint: string): Promise<R> {
       },
     });
     if (response.status !== 200) {
-      throw new Error("failed to resolve inscriptions");
+      throw new Error("failed to resolve ord api call");
     }
     return await response.json();
   } catch (error) {
@@ -94,6 +101,10 @@ async function call<R>(endpoint: string): Promise<R> {
 
 function getRpcUri(): string {
   return `http://${config.ord.host}:${config.ord.port}`;
+}
+
+async function sleep(seconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 /*

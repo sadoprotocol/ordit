@@ -83,13 +83,20 @@ async function indexUtxos(blockHeight: number): Promise<void> {
   // ### Crawl
   // Crawl all blocks up until current block height.
 
+  const promises: Promise<any>[] = [];
+
   let height = outputBlockHeight + 1;
   while (height <= blockHeight) {
     const ts = perf();
-    const count = await crawlBlock(height, blockHeight);
-    log(`\n   📦 parsed ${count} outputs from block ${height} [${ts.now} seconds]`);
+    promises.push(
+      crawlBlock(height, blockHeight).then((count) => {
+        log(`\n   📦 parsed ${count} outputs from block ${height} [${ts.now} seconds]`);
+      })
+    );
     height += 1;
   }
+
+  await Promise.all(promises);
 
   await spend();
 }

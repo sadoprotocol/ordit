@@ -196,6 +196,9 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
   if (spents.length === 0) {
     return;
   }
+
+  const promises: Promise<any>[] = [];
+
   const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
   for (const { vout, vin } of spents) {
     bulkops.push({
@@ -207,13 +210,16 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
       },
     });
     if (bulkops.length === chunkSize) {
-      await collection.bulkWrite(bulkops);
+      promises.push(collection.bulkWrite(bulkops));
       bulkops.length = 0;
     }
   }
+
   if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
+    promises.push(collection.bulkWrite(bulkops));
   }
+
+  await Promise.all(promises);
 }
 
 async function addRelayed(txid: string, n: number) {
