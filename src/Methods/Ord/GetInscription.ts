@@ -1,4 +1,4 @@
-import { method } from "@valkyr/api";
+import { method, NotFoundError } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "../../Database";
@@ -8,6 +8,10 @@ export const getInscription = method({
     id: string,
   }),
   handler: async ({ id }) => {
-    return db.inscriptions.getInscriptionById(id);
+    const inscription = await db.inscriptions.getInscriptionById(id);
+    if (inscription === undefined) {
+      throw new NotFoundError("Inscription not found");
+    }
+    return inscription;
   },
 });

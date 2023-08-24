@@ -13,6 +13,6 @@ services:
       -testnet=1
       -rpcallowip=0.0.0.0/0
       -rpcbind=0.0.0.0
-      -rpcuser='bitcoin'
-      -rpcpassword='bitcoin'
+      -rpcuser=${RPC_USER}
+      -rpcpassword=${RPC_PASSWORD}
       -blocknotify='curl http://host.docker.internal:3031/hooks/bitcoin?block=%s'

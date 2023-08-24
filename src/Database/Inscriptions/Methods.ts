@@ -100,7 +100,10 @@ async function getInscriptionById(id: string) {
   if (inscription === null) {
     return undefined;
   }
-  inscription.meta = await getMetaFromTxId(inscription.genesis);
+  const meta = await getMetaFromTxId(inscription.genesis);
+  if (meta !== undefined) {
+    inscription.meta = meta;
+  }
   inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
   return inscription;
 }
@@ -108,7 +111,10 @@ async function getInscriptionById(id: string) {
 async function getInscriptionsByOutpoint(outpoint: string) {
   const inscriptions = await collection.find({ outpoint }).toArray();
   for (const inscription of inscriptions) {
-    inscription.meta = await getMetaFromTxId(inscription.genesis);
+    const meta = await getMetaFromTxId(inscription.genesis);
+    if (meta !== undefined) {
+      inscription.meta = meta;
+    }
     inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
   }
   return inscriptions;

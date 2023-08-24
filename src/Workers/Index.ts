@@ -1,5 +1,6 @@
 import { config } from "../Config";
 import { db } from "../Database";
+import { limiter } from "../Libraries/Limiter";
 import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
@@ -83,21 +84,18 @@ async function indexUtxos(blockHeight: number): Promise<void> {
   // ### Crawl
   // Crawl all blocks up until current block height.
 
-  const promises: Promise<any>[] = [];
+  const promises = limiter(10);
 
   let height = outputBlockHeight + 1;
   while (height <= blockHeight) {
     const ts = perf();
-    promises.push(
-      crawlBlock(height, blockHeight).then((count) => {
-        log(`\n   📦 parsed ${count} outputs from block ${height} [${ts.now} seconds]`);
-      })
-    );
+    await crawlBlock(height, blockHeight).then((count) => {
+      log(`\n   📦 parsed ${count} outputs from block ${height} [${ts.now} seconds]`);
+    });
     height += 1;
   }
 
-  await Promise.all(promises);
-
+  await promises.run();
   await spend();
 }
 

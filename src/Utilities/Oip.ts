@@ -1,4 +1,4 @@
-import validator from "validator";
+import { script } from "bitcoinjs-lib";
 
 import { isCoinbase, rpc } from "../Services/Bitcoin";
 
@@ -26,57 +26,43 @@ export async function getMetaFromTxId(txid: string): Promise<any> {
 export async function getMetaFromWitness(txinwitness: string[]): Promise<object | undefined> {
   const jsonHash = "6170706c69636174696f6e2f6a736f6e3b636861727365743d7574662d38";
 
-  let witness = txinwitness.find((witnessItem) => witnessItem.includes(jsonHash));
+  const witness = txinwitness.find((witnessItem) => witnessItem.includes(jsonHash));
   if (witness === undefined) {
     return undefined;
   }
 
-  const jsonIndex = witness.indexOf(jsonHash);
-  if (jsonIndex !== -1) {
-    witness = witness.slice(jsonIndex + jsonHash.length);
-  }
-
-  // ### Data
-  // Convert the witness buffer and convert it to a utf8 string.
-
-  const data = Buffer.from(witness, "hex").toString("utf8");
-
-  // ### JSON
-  // Extract the json string from the data. The json string is wrapped in a buffer
-
-  const json = extractJsonString(data);
-  if (json === undefined) {
+  const data = script.decompile(Buffer.from(witness, "hex"));
+  if (data === null) {
     return undefined;
   }
 
-  // ### Sanitize
-  // Write side chunking produces additional non printable characters. In this case
-  // a consistent pattern of "M\b\x02" is added to the json string. The following
-  // code removes this combination of characters and any additional non printable
-  // characters.
+  const chunks = data.map((chunk) => chunk.toString());
 
-  const sanitized = validator.blacklist(validator.stripLow(json, true), "M�");
+  let startIndex = -1;
+  let endIndex = -1;
 
-  // ### Parse JSON
-  // Parse the sanitized json string into a javascript object.
+  for (let i = 0; i < chunks.length; i++) {
+    if (chunks[i] === "application/json;charset=utf-8") {
+      startIndex = i + 2; // skip the OP pushes after metadata mime-type itself
+    } else if (chunks[i] === "104") {
+      endIndex = i;
+    }
+  }
+
+  if (startIndex === -1 || endIndex === -1) {
+    return undefined;
+  }
 
   try {
-    return JSON.parse(sanitized);
+    return JSON.parse(chunks.slice(startIndex, endIndex).join(""));
   } catch (error) {
-    console.log("Error parsing json from witness", { error });
+    console.log("Error parsing json from witness", {
+      error,
+      chunks,
+      startIndex,
+      endIndex,
+      meta: chunks.slice(startIndex, endIndex).join(""),
+    });
     return undefined;
-  }
-}
-
-/**
- * Extract JSON string from a string containing surrounding non JSON characters.
- *
- * @param str - String containing JSON string.
- */
-function extractJsonString(str: string): string | undefined {
-  const jsonObjectStart = str.indexOf("{");
-  const jsonObjectEnd = str.lastIndexOf("}");
-  if (jsonObjectStart !== -1 && jsonObjectEnd !== -1 && jsonObjectEnd > jsonObjectStart) {
-    return str.slice(jsonObjectStart, jsonObjectEnd + 1);
   }
 }
