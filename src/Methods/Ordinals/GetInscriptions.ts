@@ -1,11 +1,12 @@
 import { method } from "@valkyr/api";
-import Schema, { number, string } from "computed-types";
-import { Filter, ObjectId } from "mongodb";
+import Schema, { string } from "computed-types";
+import { Filter } from "mongodb";
 
 import { config } from "../../Config";
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 import { schema } from "../../Libraries/Schema";
+import { getPagination, pagination } from "../../Utilities/Pagination";
 
 export default method({
   params: Schema({
@@ -16,10 +17,7 @@ export default method({
     sort: Schema({
       number: schema.sort,
     }).optional(),
-    pagination: Schema({
-      limit: number.max(100).optional(),
-      from: string.optional(),
-    }).optional(),
+    pagination: pagination.optional(),
   }),
   handler: async ({ owner, type, subtype, outpoint, sort, pagination }) => {
     const filter: Filter<Inscription> = {};
@@ -41,18 +39,10 @@ export default method({
       filter.outpoint = outpoint;
     }
 
-    if (pagination?.from !== undefined) {
-      filter._id = {
-        $lt: new ObjectId(pagination.from),
-      };
-    }
-
     const inscriptions = await db.inscriptions.find(filter ?? {}, {
       sort: { number: sort?.number === "asc" ? 1 : -1 },
-      limit,
+      ...getPagination(pagination),
     });
-
-    const next = inscriptions.length > limit ? inscriptions[inscriptions.length - 1]._id : null;
 
     return {
       inscriptions: inscriptions.map((inscription) => {
@@ -63,8 +53,9 @@ export default method({
         };
       }),
       pagination: {
+        page: pagination?.page ?? 1,
         limit,
-        next,
+        total: await db.inscriptions.count(filter ?? {}),
       },
     };
   },
