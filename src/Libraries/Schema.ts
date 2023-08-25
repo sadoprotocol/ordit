@@ -3,7 +3,7 @@ import Schema, { string } from "computed-types";
 export const schema = {
   location: string.regexp(/^[a-f0-9]{64}:[0-9]+$/, "Expected value to be a valid utxo location in format of txid:vout"),
   signature: {
-    format: Schema.either("psbt" as const, "ordit" as const, "sliced" as const, "core" as const).error(
+    format: Schema.either("psbt" as const, "ordit" as const, "core" as const).error(
       "Expected value to be 'psbt', 'ordit', or 'core'"
     ),
   },

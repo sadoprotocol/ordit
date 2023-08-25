@@ -24,32 +24,39 @@ export default method({
     // ### Validate Signature
     // Make sure that the order is verifiable by the API when it is received.
 
+    let hasValidSignature = false;
+
     switch (params.signature.format) {
       case "psbt": {
-        validatePSBTSignature(params.signature.value, params.order.location);
+        hasValidSignature = validatePSBTSignature(params.signature.value, params.order.location);
         break;
       }
       case "ordit": {
         if (params.signature.pubkey === undefined) {
           throw new BadRequestError("Signature format 'ordit' requires a public key");
         }
-        validateOrditSignature(sado.order.toHex(params.order), params.signature.pubkey, params.signature.value);
-        break;
-      }
-      case "sliced": {
-        if (params.signature.pubkey === undefined) {
-          throw new BadRequestError("Signature format 'sliced' requires a public key");
-        }
-        validateOrditSignature(sado.order.toHex(params.order), `03${params.signature.pubkey}`, params.signature.value);
+        hasValidSignature = validateOrditSignature(
+          sado.order.toHex(params.order),
+          params.signature.pubkey,
+          params.signature.value
+        );
         break;
       }
       case "core": {
-        validateCoreSignature(sado.order.toHex(params.order), params.order.maker, params.signature.value);
+        hasValidSignature = validateCoreSignature(
+          sado.order.toHex(params.order),
+          params.order.maker,
+          params.signature.value
+        );
         break;
       }
       default: {
         throw new BadRequestError(`Signature format ${params.signature.format} is not supported`);
       }
+    }
+
+    if (hasValidSignature === false) {
+      throw new BadRequestError("Failed to validate signature");
     }
 
     // ### Store Order
