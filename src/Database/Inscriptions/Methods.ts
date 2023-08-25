@@ -1,7 +1,6 @@
 import { AnyBulkWriteOperation, Filter, FindOptions } from "mongodb";
 
 import { config } from "../../Config";
-import { getMetaFromTxId } from "../../Utilities/Oip";
 import { collection, Inscription } from "./Collection";
 
 export const inscriptions = {
@@ -100,10 +99,6 @@ async function getInscriptionById(id: string) {
   if (inscription === null) {
     return undefined;
   }
-  const meta = await getMetaFromTxId(inscription.genesis);
-  if (meta !== undefined) {
-    inscription.meta = meta;
-  }
   inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
   return inscription;
 }
@@ -111,10 +106,6 @@ async function getInscriptionById(id: string) {
 async function getInscriptionsByOutpoint(outpoint: string) {
   const inscriptions = await collection.find({ outpoint }).toArray();
   for (const inscription of inscriptions) {
-    const meta = await getMetaFromTxId(inscription.genesis);
-    if (meta !== undefined) {
-      inscription.meta = meta;
-    }
     inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
   }
   return inscriptions;

@@ -6,7 +6,6 @@ import { config } from "../../Config";
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 import { schema } from "../../Libraries/Schema";
-import { getMetaFromTxId } from "../../Utilities/Oip";
 import { getPagination, pagination } from "../../Utilities/Pagination";
 
 export default method({
@@ -44,15 +43,6 @@ export default method({
       sort: { number: sort?.number === "asc" ? 1 : -1 },
       ...getPagination(pagination),
     });
-
-    for (const inscription of inscriptions) {
-      delete (inscription as any)._id;
-      inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
-      const meta = await getMetaFromTxId(inscription.genesis);
-      if (meta !== undefined) {
-        inscription.meta = meta;
-      }
-    }
 
     return {
       inscriptions: inscriptions.map((inscription) => {
