@@ -1,8 +1,8 @@
 import { method } from "@valkyr/api";
 
-import { resolve } from "../../Workers/Sado/Resolve";
+import { resolve } from "../../../Workers/Sado/Resolve";
 
-export const parseSadoOrders = method({
+export default method({
   handler: async () => {
     return resolve();
   },

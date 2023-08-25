@@ -1,8 +1,8 @@
 import { method } from "@valkyr/api";
 
-import { currency } from "../../Utilities/Currency";
+import { currency } from "../Utilities/Currency";
 
-export const getCurrency = method({
+export default method({
   handler: async () => {
     return currency;
   },

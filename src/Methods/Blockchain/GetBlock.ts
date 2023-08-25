@@ -3,7 +3,7 @@ import Schema, { boolean, number, string } from "computed-types";
 
 import { RawTransaction, rpc } from "../../Services/Bitcoin";
 
-export const getBlock = method({
+export default method({
   params: Schema({
     height: number.optional(),
     hash: string.optional(),

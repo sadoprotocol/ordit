@@ -19,7 +19,7 @@ const pagination = Schema({
   next: string.optional(),
 });
 
-export const getTransactions = method({
+export default method({
   params: Schema({
     address: string,
     options: options.optional(),

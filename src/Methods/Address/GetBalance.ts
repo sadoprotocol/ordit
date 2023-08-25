@@ -5,7 +5,7 @@ import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
 
-export const getBalance = method({
+export default method({
   params: Schema({
     address: string,
   }),

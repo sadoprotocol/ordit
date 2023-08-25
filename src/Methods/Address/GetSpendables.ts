@@ -8,7 +8,7 @@ import { btcToSat } from "../../Utilities/Bitcoin";
 
 const MAX_SPENDABLES = 200;
 
-export const getSpendables = method({
+export default method({
   params: Schema({
     address: string,
     value: number,

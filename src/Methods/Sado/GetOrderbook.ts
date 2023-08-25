@@ -6,7 +6,7 @@ import { parseLocation } from "../../Database/SadoOrders/Utilities/ParseLocation
 import { satToUsd } from "../../Utilities/Bitcoin";
 import { getPagination, pagination } from "../../Utilities/Pagination";
 
-export const getSadoOrderbook = method({
+export default method({
   params: Schema({
     address: string,
     sort: Schema({

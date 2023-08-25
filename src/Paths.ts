@@ -5,6 +5,9 @@ import { getNetworkPath } from "./Workers/Ordinals/Utilities";
 
 export const DIR_ROOT = resolve(__dirname, "..");
 export const DATA_DIR = resolve(DIR_ROOT, ".data");
+export const SRC_DIR = resolve(DIR_ROOT, "src");
+
+export const METHODS_DIR = resolve(SRC_DIR, "Methods");
 
 export const SPENTS_DATA = resolve(DATA_DIR, "spents");
 export const SADO_DATA = resolve(DATA_DIR, "sado");

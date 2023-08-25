@@ -3,7 +3,7 @@ import Schema, { number } from "computed-types";
 
 import { ord } from "../../Services/Ord";
 
-export const getOrdinalTraits = method({
+export default method({
   params: Schema({
     satoshi: number,
   }),

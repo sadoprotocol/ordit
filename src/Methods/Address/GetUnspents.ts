@@ -22,7 +22,7 @@ const pagination = Schema({
   next: string.optional(),
 });
 
-export const getUnspents = method({
+export default method({
   params: Schema({
     address: string,
     format: Schema.either("legacy" as const, "next" as const).optional(),

@@ -10,7 +10,7 @@ const options = Schema({
   witness: boolean.optional(),
 });
 
-export const getTransaction = method({
+export default method({
   params: Schema({
     txid: string,
     options: options.optional(),

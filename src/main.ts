@@ -1,8 +1,8 @@
-import "./Methods";
 import "./Routes";
 
 import debug from "debug";
 
+import { registerMethods } from "./Api";
 import { bootstrap } from "./Bootstrap";
 import { config } from "./Config";
 import { fastify } from "./Fastify";
@@ -12,6 +12,7 @@ const log = debug("ordit-fastify");
 
 const start = async () => {
   await bootstrap();
+  await registerMethods();
   await startCurrencyTracker();
   await fastify
     .listen({ host: "0.0.0.0", port: config.api.port })

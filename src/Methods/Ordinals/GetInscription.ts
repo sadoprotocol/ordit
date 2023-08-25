@@ -3,7 +3,7 @@ import Schema, { string } from "computed-types";
 
 import { db } from "../../Database";
 
-export const getInscription = method({
+export default method({
   params: Schema({
     id: string,
   }),

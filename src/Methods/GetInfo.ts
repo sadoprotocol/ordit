@@ -6,7 +6,7 @@ import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
 import { api } from "../Services/Ord";
 
-export const getInfo = method({
+export default method({
   handler: async () => {
     const info = await rpc.blockchain.getBlockchainInfo();
 

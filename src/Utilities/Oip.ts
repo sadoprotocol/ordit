@@ -54,7 +54,12 @@ export async function getMetaFromWitness(txinwitness: string[]): Promise<object 
   }
 
   try {
-    return JSON.parse(chunks.slice(startIndex, endIndex).join(""));
+    return JSON.parse(
+      chunks
+        .slice(startIndex, endIndex)
+        .filter((chunk) => chunk !== "\x00")
+        .join("")
+    );
   } catch (error) {
     console.log("Error parsing json from witness", {
       error,

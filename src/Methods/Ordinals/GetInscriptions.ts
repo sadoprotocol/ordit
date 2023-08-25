@@ -6,16 +6,17 @@ import { config } from "../../Config";
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 
-export const findInscriptions = method({
+export default method({
   params: Schema({
     type: string.optional(),
     subtype: string.optional(),
+    outpoint: string.optional(),
     pagination: Schema({
       limit: number.max(100).optional(),
       from: string.optional(),
     }).optional(),
   }),
-  handler: async ({ type, subtype, pagination }) => {
+  handler: async ({ type, subtype, outpoint, pagination }) => {
     const filter: Filter<Inscription> = {};
 
     if (number !== undefined) {
@@ -28,6 +29,10 @@ export const findInscriptions = method({
 
     if (subtype !== undefined) {
       filter.mimeSubtype = subtype;
+    }
+
+    if (outpoint !== undefined) {
+      filter.outpoint = outpoint;
     }
 
     if (pagination?.from !== undefined) {

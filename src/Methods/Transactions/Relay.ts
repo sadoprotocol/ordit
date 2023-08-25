@@ -4,7 +4,7 @@ import Schema, { boolean, number, string } from "computed-types";
 import { db } from "../../Database";
 import { DecodedTransaction, rpc } from "../../Services/Bitcoin";
 
-export const sendRawTransaction = method({
+export default method({
   params: Schema({
     hex: string,
     maxFeeRate: number.optional(),

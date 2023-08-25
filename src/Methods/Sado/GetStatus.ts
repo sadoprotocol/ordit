@@ -4,7 +4,7 @@ import Schema, { string } from "computed-types";
 import { db } from "../../Database";
 import { getOfferStatus, getOrderStatus } from "../../Database/SadoOrders";
 
-export const getSadoStatus = method({
+export default method({
   params: Schema({
     cid: string,
   }),

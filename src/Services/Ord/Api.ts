@@ -4,9 +4,10 @@ import { config } from "../../Config";
 
 export const api = {
   getHeight,
+  getOutput,
   getBlockInscriptions,
-  waitForInscriptions,
   waitForBlock,
+  waitForInscriptions,
 };
 
 /*
@@ -22,6 +23,10 @@ async function getHeight(): Promise<number> {
   return call<number>("/blockheight");
 }
 
+async function getOutput(output: string): Promise<any> {
+  return call<any>(`/output/${output}`);
+}
+
 /**
  * Get inscriptions for a block.
  *
@@ -33,6 +38,21 @@ async function getBlockInscriptions(blockHeight: number, seconds = 1): Promise<I
     console.log(error);
     return sleep(seconds).then(() => getBlockInscriptions(blockHeight, seconds));
   });
+}
+
+/**
+ * Ensure that ord has processed the block before continuing.
+ *
+ * @param blockHeight - Block height to wait for.
+ * @param seconds     - How many seconds to wait between attempts.
+ */
+async function waitForBlock(blockHeight: number, seconds = 1): Promise<void> {
+  const ordHeight = await call<number>("/blockheight");
+  if (ordHeight <= blockHeight) {
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  return waitForBlock(blockHeight, seconds);
 }
 
 /**
@@ -52,21 +72,6 @@ async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<vo
     console.log(error);
   }
   return sleep(seconds).then(() => waitForInscriptions(blockHeight, seconds));
-}
-
-/**
- * Ensure that ord has processed the block before continuing.
- *
- * @param blockHeight - Block height to wait for.
- * @param seconds     - How many seconds to wait between attempts.
- */
-async function waitForBlock(blockHeight: number, seconds = 1): Promise<void> {
-  const ordHeight = await call<number>("/blockheight");
-  if (ordHeight <= blockHeight) {
-    return;
-  }
-  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-  return waitForBlock(blockHeight, seconds);
 }
 
 /*
