@@ -56,7 +56,7 @@ export async function parse(blockHeight: number) {
 
       if (inscription.genesis === current) {
         const meta = await getMetaFromTxId(inscription.genesis);
-        if (meta !== undefined) {
+        if (meta) {
           inscription.meta = meta;
         }
       }
