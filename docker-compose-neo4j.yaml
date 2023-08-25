@@ -3,6 +3,8 @@ version: "3.8"
 services:
   neo4j:
     image: neo4j:latest
+    container_name: ordit-neo4j
+    restart: always
     ports:
       - 7474:7474
       - ${NEO4J_PORT}:7687
