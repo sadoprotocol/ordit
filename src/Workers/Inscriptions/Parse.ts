@@ -3,6 +3,8 @@ import { Inscription } from "../../Database/Inscriptions";
 import { DATA_DIR } from "../../Paths";
 import { ord } from "../../Services/Ord";
 import { readFile, writeFile } from "../../Utilities/Files";
+import { getMetaFromTxId } from "../../Utilities/Oip";
+import { parseLocation } from "../../Utilities/Transaction";
 import { log, perf } from "../Log";
 
 export async function parse(blockHeight: number) {
@@ -28,27 +30,38 @@ export async function parse(blockHeight: number) {
   let height = inscriptionHeight;
   while (height <= blockHeight) {
     const ts = perf();
-    const data = await ord.getBlockInscriptions(height);
-    for (const inscription of data) {
-      const [media, format] = inscription.media.kind.split(";");
+    const list = await ord.getBlockInscriptions(height);
+    for (const data of list) {
+      const [current] = parseLocation(data.output);
+      const [media, format] = data.media.kind.split(";");
       const [type, subtype] = media.split("/");
-      inscriptions.push({
-        id: inscription.id,
-        owner: inscription.address,
-        sat: inscription.sat,
+
+      const inscription: Inscription = {
+        id: data.id,
+        owner: data.address,
+        sat: data.sat,
         mimeType: type,
         mimeSubtype: subtype,
         mediaType: media,
         mediaCharset: format?.split("=")[1],
-        mediaSize: inscription.media.size,
-        mediaContent: inscription.media.content,
-        timestamp: inscription.timestamp,
-        height: inscription.height,
-        fee: inscription.fee,
-        genesis: inscription.genesis,
-        number: inscription.number,
-        outpoint: inscription.output,
-      });
+        mediaSize: data.media.size,
+        mediaContent: data.media.content,
+        timestamp: data.timestamp,
+        height: data.height,
+        fee: data.fee,
+        genesis: data.genesis,
+        number: data.number,
+        outpoint: data.output,
+      };
+
+      if (inscription.genesis === current) {
+        const meta = await getMetaFromTxId(inscription.genesis);
+        if (meta !== undefined) {
+          inscription.meta = meta;
+        }
+      }
+
+      inscriptions.push(inscription);
     }
     promises.push(db.inscriptions.insertMany(inscriptions));
     log(`\n   📦 resolved ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
