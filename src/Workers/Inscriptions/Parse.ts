@@ -1,7 +1,7 @@
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 import { DATA_DIR } from "../../Paths";
-import { api } from "../../Services/Ord";
+import { ord } from "../../Services/Ord";
 import { readFile, writeFile } from "../../Utilities/Files";
 import { log, perf } from "../Log";
 
@@ -18,7 +18,7 @@ export async function parse(blockHeight: number) {
   const ts = perf();
 
   log("\n   🕛 Waiting for block availability");
-  await api.waitForInscriptions(blockHeight);
+  await ord.waitForInscriptions(blockHeight);
   log(`\n     👌 Block available [${ts.now} seconds]`);
 
   const promises: Promise<any>[] = [];
@@ -28,7 +28,7 @@ export async function parse(blockHeight: number) {
   let height = inscriptionHeight;
   while (height <= blockHeight) {
     const ts = perf();
-    const data = await api.getBlockInscriptions(height);
+    const data = await ord.getBlockInscriptions(height);
     for (const inscription of data) {
       const [media, format] = inscription.media.kind.split(";");
       const [type, subtype] = media.split("/");
