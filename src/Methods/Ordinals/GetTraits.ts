@@ -8,6 +8,6 @@ export default method({
     satoshi: number,
   }),
   handler: async ({ satoshi }) => {
-    return ord.traits(satoshi);
+    return []; // ord.traits(satoshi);
   },
 });

@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import { config } from "../Config";
 import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
-import { api } from "../Services/Ord";
+import { ord as api } from "../Services/Ord";
 
 export default method({
   handler: async () => {

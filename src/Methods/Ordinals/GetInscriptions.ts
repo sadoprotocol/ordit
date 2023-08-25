@@ -5,22 +5,28 @@ import { Filter, ObjectId } from "mongodb";
 import { config } from "../../Config";
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
+import { schema } from "../../Libraries/Schema";
 
 export default method({
   params: Schema({
+    owner: string.optional(),
     type: string.optional(),
     subtype: string.optional(),
     outpoint: string.optional(),
+    sort: Schema({
+      number: schema.sort,
+    }).optional(),
     pagination: Schema({
       limit: number.max(100).optional(),
       from: string.optional(),
     }).optional(),
   }),
-  handler: async ({ type, subtype, outpoint, pagination }) => {
+  handler: async ({ owner, type, subtype, outpoint, sort, pagination }) => {
     const filter: Filter<Inscription> = {};
+    const limit = pagination?.limit ?? 10;
 
-    if (number !== undefined) {
-      filter.number = number;
+    if (owner !== undefined) {
+      filter.owner = owner;
     }
 
     if (type !== undefined) {
@@ -42,11 +48,11 @@ export default method({
     }
 
     const inscriptions = await db.inscriptions.find(filter ?? {}, {
-      sort: { number: -1 },
-      limit: pagination?.limit ?? 10,
+      sort: { number: sort?.number === "asc" ? 1 : -1 },
+      limit,
     });
 
-    const next = inscriptions.length > 0 ? inscriptions[inscriptions.length - 1]._id : null;
+    const next = inscriptions.length > limit ? inscriptions[inscriptions.length - 1]._id : null;
 
     return {
       inscriptions: inscriptions.map((inscription) => {
@@ -56,7 +62,10 @@ export default method({
           mediaContent: `${config.api.domain}/content/${inscription.id}`,
         };
       }),
-      next,
+      pagination: {
+        limit,
+        next,
+      },
     };
   },
 });

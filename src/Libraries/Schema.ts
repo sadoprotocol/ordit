@@ -7,6 +7,7 @@ export const schema = {
       "Expected value to be 'psbt', 'ordit', or 'core'"
     ),
   },
+  sort: Schema.either("asc" as const, "desc" as const).error("Expected value to be 'asc' or 'desc'"),
   sado: {
     type: Schema.either("sell" as const, "buy" as const).error("Expected value to be 'sell' or 'buy'"),
   },

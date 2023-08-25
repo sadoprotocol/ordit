@@ -1,8 +1,8 @@
 import fetch from "node-fetch";
 
-import { config } from "../../Config";
+import { config } from "../Config";
 
-export const api = {
+export const ord = {
   getHeight,
   getOutput,
   getBlockInscriptions,
