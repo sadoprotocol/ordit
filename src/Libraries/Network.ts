@@ -18,7 +18,7 @@ export function isValidNetwork(value: unknown): value is Network {
 }
 
 export function getBitcoinNetwork(): networks.Network {
-  switch (config.chain.network) {
+  switch (config.network) {
     case "mainnet": {
       return networks.bitcoin;
     }

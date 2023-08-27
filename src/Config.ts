@@ -2,18 +2,10 @@ import { envToBoolean, envToNumber, getEnvironmentVariable } from "./Libraries/E
 import { envToNetwork } from "./Libraries/Network";
 
 export const config = {
+  network: getEnvironmentVariable("NETWORK", envToNetwork),
   api: {
     domain: getEnvironmentVariable("DOMAIN"),
     port: getEnvironmentVariable("PORT", envToNumber),
-    token: getEnvironmentVariable("TOKEN"),
-  },
-  chain: {
-    network: getEnvironmentVariable("CHAIN_NETWORK", envToNetwork),
-    currency: getEnvironmentVariable("CHAIN_CURRENCY"),
-    symbol: getEnvironmentVariable("CHAIN_SYMBOL"),
-    decimals: getEnvironmentVariable("CHAIN_DECIMALS", envToNumber),
-    reorgMin: getEnvironmentVariable("CHAIN_REORGMIN", envToNumber),
-    path: getEnvironmentVariable("CHAIN_PATH"),
   },
   rpc: {
     host: getEnvironmentVariable("RPC_HOST"),
@@ -24,13 +16,11 @@ export const config = {
   parser: {
     host: getEnvironmentVariable("UTXO_PARSER_HOST"),
     port: getEnvironmentVariable("UTXO_PARSER_PORT", envToNumber),
-    maxBlockHeight: getEnvironmentVariable("UTXO_PARSER_MAX_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
   ord: {
     host: getEnvironmentVariable("ORD_HOST"),
     port: getEnvironmentVariable("ORD_PORT", envToNumber),
-    bin: getEnvironmentVariable("ORD_PATH"),
     enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
   sado: {
@@ -52,12 +42,5 @@ export const config = {
     database: getEnvironmentVariable("MONGO_DATABASE"),
     username: getEnvironmentVariable("MONGO_USERNAME"),
     password: getEnvironmentVariable("MONGO_PASSWORD"),
-  },
-  neo: {
-    hostname: getEnvironmentVariable("NEO4J_HOSTNAME"),
-    port: getEnvironmentVariable("NEO4J_PORT", envToNumber),
-    database: getEnvironmentVariable("NEO4J_DATABASE"),
-    user: getEnvironmentVariable("NEO4J_USER"),
-    pass: getEnvironmentVariable("NEO4J_PASS"),
   },
 };

@@ -3,7 +3,7 @@ import { networks, payments } from "bitcoinjs-lib";
 import { config } from "../Config";
 import { Vout } from "../Services/Bitcoin";
 
-const network = config.chain.network === "mainnet" ? networks.bitcoin : networks[config.chain.network];
+const network = config.network === "mainnet" ? networks.bitcoin : networks[config.network];
 if (network === undefined) {
   throw new Error("invalid network", network);
 }
