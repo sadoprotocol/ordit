@@ -1,4 +1,3 @@
-import { config } from "../../../Config";
 import { db } from "../../../Database";
 import { OutputDocument, SpentOutput } from "../../../Database/Output";
 import { SPENTS_DATA } from "../../../Paths";
@@ -7,14 +6,7 @@ import { getAddressessFromVout } from "../../../Utilities/Address";
 import { writeFile } from "../../../Utilities/Files";
 import { log } from "../../Log";
 
-const maxBlockHeight = config.parser.maxBlockHeight;
-
 export async function crawl(blockN: number, maxBlockN: number) {
-  if (maxBlockHeight !== 0 && blockN > maxBlockHeight) {
-    log(`\n   💤 Max block height ${maxBlockHeight} reached`);
-    return process.exit(0);
-  }
-
   if (blockN > maxBlockN) {
     log("\n   💤 Indexer has latest outputs");
     return 0;
