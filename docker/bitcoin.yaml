@@ -3,7 +3,6 @@ version: "3.8"
 services:
   bitcoin:
     image: ruimarinho/bitcoin-core
-    container_name: bitcoin-regtest
     restart: always
     ports:
       - 18443:18443 # regtest:18443 testnet:18332 mainnet:8332

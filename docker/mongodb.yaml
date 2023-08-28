@@ -3,7 +3,6 @@ version: "3.8"
 services:
   mongodb:
     image: mongo:latest
-    container_name: ordit-mongo
     restart: always
     ports:
       - 27017:27017
