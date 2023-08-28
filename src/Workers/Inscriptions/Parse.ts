@@ -25,7 +25,7 @@ export async function parse(blockHeight: number) {
 
   const promises: Promise<any>[] = [];
 
-  let inscriptions: Inscription[] = [];
+  let inscriptions: any[] = [];
 
   let height = inscriptionHeight;
   while (height <= blockHeight) {
@@ -35,8 +35,9 @@ export async function parse(blockHeight: number) {
       const [current] = parseLocation(data.output);
       const [media, format] = data.media.kind.split(";");
       const [type, subtype] = media.split("/");
+      const [txid] = parseLocation(data.output);
 
-      const inscription: Inscription = {
+      const inscription: Partial<Inscription> = {
         id: data.id,
         owner: data.address,
         sat: data.sat,
@@ -53,6 +54,10 @@ export async function parse(blockHeight: number) {
         number: data.number,
         outpoint: data.output,
       };
+
+      if (txid === data.genesis) {
+        inscription.creator = data.address;
+      }
 
       if (inscription.genesis === current) {
         const meta = await getMetaFromTxId(inscription.genesis);
