@@ -1,6 +1,6 @@
 import { bootstrap } from "../Bootstrap";
 import { db } from "../Database";
-import { getMetaFromTxId } from "../Utilities/Oip";
+import { getOutpointFromId } from "../Database/Media";
 
 index().finally(() => {
   process.exit(0);
@@ -9,23 +9,22 @@ index().finally(() => {
 async function index() {
   await bootstrap();
 
-  const count = await db.inscriptions.count({ meta: { $exists: false } });
-  const cursor = db.inscriptions.collection.find({ meta: { $exists: false } });
+  const promises: Promise<any>[] = [];
 
-  let i = 1;
+  const cursor = db.inscriptions.collection.find({ creator: { $exists: false } });
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();
     if (inscription === null) {
       continue;
     }
-    process.stdout.write(`🔎 checking ${inscription.id} | ${i} / ${count}\n`);
-    if (inscription.meta === undefined) {
-      const meta = await getMetaFromTxId(inscription.genesis);
-      if (meta !== undefined) {
-        await db.inscriptions.collection.updateOne({ id: inscription.id }, { $set: { meta } });
-        process.stdout.write(`  📝 added meta to ${inscription.id}\n`);
-      }
+    process.stdout.write(`🪪 resolving owner for ${inscription.id}\n`);
+    const [txid, vout] = getOutpointFromId(inscription.id).split(":");
+    const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": parseInt(vout, 10) });
+    if (output === undefined || output.addresses.length === 0) {
+      continue;
     }
-    i += 1;
+    promises.push(db.inscriptions.updateOne({ id: inscription.id }, { $set: { creator: output.addresses[0] } }));
   }
+
+  await Promise.all(promises);
 }

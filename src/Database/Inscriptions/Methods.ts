@@ -1,4 +1,4 @@
-import { AnyBulkWriteOperation, Filter, FindOptions } from "mongodb";
+import { AnyBulkWriteOperation, Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { config } from "../../Config";
 import { collection, Inscription } from "./Collection";
@@ -12,6 +12,7 @@ export const inscriptions = {
   insertOne,
   find,
   findOne,
+  updateOne,
   count,
 
   // ### Helper Methods
@@ -73,6 +74,10 @@ async function findOne(
     return undefined;
   }
   return output;
+}
+
+async function updateOne(filter: Filter<Inscription>, update: UpdateFilter<Inscription> | Partial<Inscription>) {
+  return collection.updateOne(filter, update);
 }
 
 async function count(filter: Filter<Inscription>) {
