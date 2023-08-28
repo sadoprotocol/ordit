@@ -43,4 +43,7 @@ export const config = {
     username: getEnvironmentVariable("MONGO_USERNAME"),
     password: getEnvironmentVariable("MONGO_PASSWORD"),
   },
+  faucet: {
+    seed: getEnvironmentVariable("FAUCET_SEED"),
+  },
 };

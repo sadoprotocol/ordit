@@ -1,3 +1,6 @@
+import { config } from "../../Config";
+import { Wallet } from "../../Libraries/Wallet";
+import { generating } from "./Generating";
 import { rpc } from "./Rpc";
 
 const TRANSACTION_NOT_FOUND = -5;
@@ -70,7 +73,11 @@ async function sendRawTransaction(hex: string, maxFeeRate?: number): Promise<str
   if (maxFeeRate !== undefined) {
     args.push(maxFeeRate);
   }
-  return rpc<string>("sendrawtransaction", args);
+  const txid = await rpc<string>("sendrawtransaction", args);
+  if (config.network === "regtest") {
+    await generating.generateToAddress(1, Wallet.fromSeed(config.faucet.seed).faucet().address);
+  }
+  return txid;
 }
 
 /**
