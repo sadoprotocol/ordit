@@ -52,4 +52,5 @@ MONGO_PASSWORD=""
 
 # FAUCET
 
-FAUCET_SEED="" # seed value
+FAUCET_SEED=""
+FAUCET_AUTH=""

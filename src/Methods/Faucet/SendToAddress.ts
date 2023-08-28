@@ -6,6 +6,7 @@ import { config } from "../../Config";
 import { db } from "../../Database";
 import { getBitcoinNetwork } from "../../Libraries/Network";
 import { Wallet } from "../../Libraries/Wallet";
+import { hasFaucetBearer } from "../../Middleware/HasFaucetBearer";
 import { rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
 
@@ -14,6 +15,7 @@ export default method({
     address: string,
     value: number.gte(1000).lte(100_000_000), // min 1000 sats, max 1 BTC
   }),
+  actions: [hasFaucetBearer],
   handler: async ({ address, value }) => {
     const psbt = new Psbt({ network: getBitcoinNetwork() });
     const wallet = Wallet.fromSeed(config.faucet.seed).faucet();

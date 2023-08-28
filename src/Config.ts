@@ -45,5 +45,6 @@ export const config = {
   },
   faucet: {
     seed: getEnvironmentVariable("FAUCET_SEED"),
+    auth: getEnvironmentVariable("FAUCET_AUTH"),
   },
 };
