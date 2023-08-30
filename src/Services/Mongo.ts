@@ -66,6 +66,13 @@ function collection<T extends Document>(name: string) {
  |--------------------------------------------------------------------------------
  */
 
+export function stripMongoIdFromMany<T>(documents: any[]): Omit<T, "_id">[] {
+  for (const document of documents) {
+    delete document._id;
+  }
+  return documents;
+}
+
 export function stripMongoId<T>(doc: any): Omit<T, "_id"> {
   delete (doc as any)._id;
   return doc;

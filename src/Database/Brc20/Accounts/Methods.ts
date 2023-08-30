@@ -2,11 +2,20 @@ import { collection } from "./Collection";
 
 export const accounts = {
   collection,
+  getAccount,
   getTokenBalance,
   addAvailableBalance,
   addTransferableBalance,
   sendTransferableBalance,
 };
+
+export async function getAccount(address: string) {
+  const account = await collection.findOne({ address });
+  if (account === null) {
+    return { address, tokens: {} };
+  }
+  return account;
+}
 
 /**
  * Get token balance under a given address.
