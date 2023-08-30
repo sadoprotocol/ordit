@@ -14,9 +14,7 @@ export default method({
     type: string.optional(),
     subtype: string.optional(),
     outpoint: string.optional(),
-    sort: Schema({
-      number: schema.sort,
-    }).optional(),
+    sort: schema.sort.optional(),
     pagination: pagination.optional(),
   }),
   handler: async ({ owner, type, subtype, outpoint, sort, pagination }) => {
