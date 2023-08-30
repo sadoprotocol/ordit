@@ -1,17 +1,16 @@
+import Big from "big.js";
 import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
-import { log } from "../../../Workers/Log";
 import { Inscription } from "../../Inscriptions";
+import { accounts } from "../Accounts/Methods";
 import { tokens } from "../Tokens/Methods";
 import { TokenMintedEvent } from "../Utilities";
 import { collection, Mint } from "./Collection";
 
 export const mints = {
+  collection,
   findOne,
   updateOne,
-
-  // ### Indexer Methods
-
   mint,
 };
 
@@ -27,38 +26,42 @@ async function updateOne(filter: Filter<Mint>, update: UpdateFilter<Mint> | Part
   return collection.updateOne(filter, update);
 }
 
+/**
+ * Handle mint event for a token.
+ *
+ * @param event       - Mint event.
+ * @param inscription - Inscription the mint was created under.
+ */
 async function mint(event: TokenMintedEvent, inscription: Inscription) {
   const token = await tokens.findOne({ tick: event.tick });
   if (token === undefined) {
-    return log(`  🚫 token with ${event.tick} does not exist\n`);
+    return;
   }
 
-  if (token.lim !== undefined && token.lim < event.amt) {
-    return log(`  🚫 mint amount exceeds limit\n`);
+  if (token.lim !== undefined && event.amt > token.lim) {
+    return;
   }
 
-  const available = token.max - token.balance;
-  if (event.amt < available) {
-    return log(`  🚫 not enough available balance\n`);
+  const available = new Big(token.max).minus(token.minted).toNumber();
+  if (event.amt > available) {
+    return;
   }
 
-  await collection.updateOne(
-    {
-      address: inscription.creator,
-    },
-    {
-      $set: {
-        address: inscription.creator,
-        tick: event.tick,
-      },
-      $inc: {
-        balance: event.amt,
-      },
-    },
-    {
-      upsert: true,
-    }
-  );
+  const mint = await collection.findOne({ inscription: inscription.id });
+  if (mint !== null) {
+    return; // a mint can only occur once
+  }
 
-  await tokens.updateOne({ tick: event.tick }, { $inc: { balance: event.amt } });
+  await collection.insertOne({
+    inscription: inscription.id,
+    address: inscription.creator,
+    token: event.tick,
+    amount: event.amt,
+    ts: inscription.timestamp,
+  });
+
+  // ### Update Balances
+
+  await tokens.addTokenBalance(event.tick, event.amt);
+  await accounts.addAvailableBalance(inscription.creator, event.tick, event.amt);
 }

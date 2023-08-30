@@ -4,12 +4,13 @@ export const collection = mongo.db.collection<TokenTransfer>("brc20_transfers");
 
 export const registrar: CollectionRegistrar = {
   name: "brc20_transfers",
-  indexes: [[{ tick: 1 }], [{ address: 1 }], [{ inscription: 1 }]],
+  indexes: [[{ token: 1 }], [{ sender: 1 }], [{ inscription: 1 }]],
 };
 
 export type TokenTransfer = {
-  tick: string;
-  address: string;
+  token: string;
+  sender: string;
+  receiver?: string;
   inscription: string;
   amount: number;
 };

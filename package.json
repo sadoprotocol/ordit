@@ -10,7 +10,7 @@
     "worker": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Watcher.ts",
     "indexer": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Indexer.ts",
     "reorg": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Reorg.ts",
-    "brc": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Inscriptions/Brc20.ts",
+    "brc": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Brc20/Import.ts",
     "patch": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Patch.ts",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --max-warnings 0 --report-unused-disable-directives --fix"

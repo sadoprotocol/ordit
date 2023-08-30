@@ -4,11 +4,13 @@ export const collection = mongo.db.collection<Mint>("brc20_mints");
 
 export const registrar: CollectionRegistrar = {
   name: "brc20_mints",
-  indexes: [[{ address: 1 }], [{ tick: 1 }]],
+  indexes: [[{ inscription: 1 }, { unique: true }], [{ address: 1 }], [{ token: 1 }]],
 };
 
 export type Mint = {
+  inscription: string;
   address: string;
-  tick: string;
-  balance: number;
+  token: string;
+  amount: number;
+  ts: number;
 };

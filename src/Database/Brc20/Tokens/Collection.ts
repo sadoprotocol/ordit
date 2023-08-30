@@ -8,10 +8,10 @@ export const registrar: CollectionRegistrar = {
 };
 
 export type Token = {
-  id: string;
+  inscription: string;
   address: string;
   tick: string;
   max: number;
-  balance: number;
+  minted: number;
   lim?: number;
 };

@@ -40,6 +40,7 @@ async function register(registrars: CollectionRegistrar[]) {
  * Establishes a connection to the mongodb server and keeps it alive.
  */
 async function connect() {
+  log(`connecting to mongodb server ${getMongoUri()}`);
   await client
     .connect()
     .then(() => {

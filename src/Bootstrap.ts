@@ -1,5 +1,4 @@
-import "./Utilities/Currency";
-
+import { registrar as brc20Accounts } from "./Database/Brc20/Accounts/Collection";
 import { registrar as brc20Mints } from "./Database/Brc20/Mints/Collection";
 import { registrar as brc20Tokens } from "./Database/Brc20/Tokens/Collection";
 import { registrar as brc20Transfers } from "./Database/Brc20/Transfers/Collection";
@@ -17,5 +16,16 @@ export async function bootstrap() {
 
 async function database() {
   await mongo.connect();
-  await mongo.register([brc20Mints, brc20Tokens, brc20Transfers, inscriptions, ipfs, media, output, sado, orders]);
+  await mongo.register([
+    brc20Accounts,
+    brc20Mints,
+    brc20Tokens,
+    brc20Transfers,
+    inscriptions,
+    ipfs,
+    media,
+    output,
+    sado,
+    orders,
+  ]);
 }

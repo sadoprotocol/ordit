@@ -43,9 +43,7 @@ export function getTransferEvent(data: any): TokenTransferedEvent | undefined {
   };
 }
 
-type Brc20Token = {
-  p: "brc-20";
-};
+export type Brc20Event = TokenDeployedEvent | TokenMintedEvent | TokenTransferedEvent;
 
 export type TokenDeployedEvent = Brc20Token & {
   op: "deploy";
@@ -65,4 +63,8 @@ export type TokenTransferedEvent = Brc20Token & {
   op: "transfer";
   tick: string;
   amt: number;
+};
+
+type Brc20Token = {
+  p: "brc-20";
 };

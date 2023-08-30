@@ -31,6 +31,7 @@ export const outputs = {
   // ### Helper Methods
 
   getByAddress,
+  getByLocation,
   getUnspentByAddress,
   getVinLocation,
   getHeighestBlock,
@@ -135,6 +136,14 @@ async function getByAddress(
   options?: FindOptions<OutputDocument>
 ): Promise<OutputDocument[]> {
   return collection.find({ addresses: address, ...filter }, options).toArray();
+}
+
+async function getByLocation(txid: string, n: number) {
+  const output = await collection.findOne({ "vout.txid": txid, "vout.n": n });
+  if (output === null) {
+    return undefined;
+  }
+  return output;
 }
 
 async function getUnspentByAddress(address: string, options?: FindOptions<OutputDocument>): Promise<OutputDocument[]> {
