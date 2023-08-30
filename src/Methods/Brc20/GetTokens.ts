@@ -9,7 +9,7 @@ export default method({
     sort: schema.sort.optional(),
     pagination: schema.pagination.optional(),
   }),
-  handler: async ({ sort = {}, pagination = { first: 10 } }) => {
+  handler: async ({ sort = {}, pagination = {} }) => {
     return db.brc20.tokens.findPaginated({
       ...pagination,
       sort,

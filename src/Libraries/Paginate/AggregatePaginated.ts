@@ -45,6 +45,7 @@ export const aggregatePaginated = async <TDocument extends BaseDocument>(
 
   for (const document of documents) {
     document.$cursor = encodeCursor(buildCursor(document, sort));
+    delete document._id;
   }
 
   const hasPreviousPage = reverse ? hasMore : Boolean(next);

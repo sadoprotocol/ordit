@@ -1,13 +1,15 @@
+import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
 import { getLocationFromId } from "../../../Utilities/Inscriptions";
 import { Inscription } from "../../Inscriptions";
 import { OutputDocument, outputs } from "../../Output";
 import { accounts } from "../Accounts/Methods";
 import { TokenTransferedEvent } from "../Utilities";
-import { collection } from "./Collection";
+import { collection, TokenTransfer } from "./Collection";
 
 export const transfers = {
   collection,
   transfer,
+  findPaginated,
 };
 
 /**
@@ -65,4 +67,8 @@ async function sendTransfer(sender: OutputDocument, event: TokenTransferedEvent,
     await collection.updateOne({ inscription: inscription.id }, { $set: { receiver: recipient.addresses[0] } });
     await accounts.sendTransferableBalance(sender.addresses[0], recipient.addresses[0], event.tick, event.amt);
   }
+}
+
+async function findPaginated(params: FindPaginatedParams<TokenTransfer> = {}) {
+  return paginate.findPaginated(collection, params);
 }

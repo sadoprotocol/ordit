@@ -5,7 +5,7 @@ import { buildCursor, buildQueryFromCursor, encodeCursor, normalizeDirectionPara
 
 export const findPaginated = async <T extends Document>(
   collection: Collection<T>,
-  { limit, prev, next, skip, filter = {}, sort: originalSort = {}, projection = {} }: FindPaginatedParams<T>
+  { limit, prev, next, skip, filter = {}, sort: originalSort = {}, projection = {}, transform }: FindPaginatedParams<T>
 ): Promise<FindPaginatedResult<T>> => {
   const {
     limit: lmt,
@@ -39,6 +39,8 @@ export const findPaginated = async <T extends Document>(
 
   for (const document of documents) {
     document.$cursor = encodeCursor(buildCursor(document, sort));
+    delete document._id;
+    transform?.(document);
   }
 
   const hasPreviousPage = reverse ? hasMore : Boolean(next);
@@ -62,6 +64,7 @@ export type FindPaginatedParams<T> = {
   filter?: Filter<T>;
   sort?: Sort;
   projection?: Projection;
+  transform?: (document: T) => void;
 };
 
 export type FindPaginatedResult<T> = {

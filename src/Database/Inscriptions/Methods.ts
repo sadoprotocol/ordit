@@ -1,6 +1,7 @@
 import { AnyBulkWriteOperation, Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { config } from "../../Config";
+import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
 import { collection, Inscription } from "./Collection";
 
 export const inscriptions = {
@@ -11,6 +12,7 @@ export const inscriptions = {
   insertMany,
   insertOne,
   find,
+  findPaginated,
   findOne,
   updateOne,
   count,
@@ -63,6 +65,10 @@ async function insertOne(inscription: Inscription) {
 
 async function find(filter: Filter<Inscription>, options?: FindOptions<Inscription>) {
   return collection.find(filter, options).toArray();
+}
+
+async function findPaginated(params: FindPaginatedParams<Inscription> = {}) {
+  return paginate.findPaginated(collection, params);
 }
 
 async function findOne(
