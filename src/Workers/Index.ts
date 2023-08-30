@@ -35,7 +35,7 @@ export async function index() {
 
   const reorgHeight = await getReorgHeight();
   if (reorgHeight !== -1) {
-    if (blockHeight - reorgHeight > 100) {
+    if (blockHeight - reorgHeight > config.reorg.treshold) {
       return log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
     }
     log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
