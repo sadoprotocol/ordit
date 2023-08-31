@@ -6,9 +6,9 @@ import { stripMongoId } from "../../Services/Mongo";
 
 export default method({
   params: Schema({
-    token: string,
+    tick: string,
   }),
-  handler: async ({ token }) => {
-    return db.brc20.tokens.findOne({ tick: token }).then(stripMongoId);
+  handler: async ({ tick }) => {
+    return db.brc20.tokens.findOne({ tick }).then(stripMongoId);
   },
 });

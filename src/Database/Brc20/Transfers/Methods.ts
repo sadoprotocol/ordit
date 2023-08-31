@@ -20,8 +20,8 @@ export const transfers = {
  */
 async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
   const [txid, n] = getLocationFromId(inscription.id);
-  const sender = await outputs.getByLocation(txid, n);
-  if (sender === undefined) {
+  const from = await outputs.getByLocation(txid, n);
+  if (from === undefined) {
     return; // somehow we could not find the inscriptions output
   }
 
@@ -31,41 +31,43 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
 
   const transfer = await collection.findOne({ inscription: inscription.id });
   if (transfer !== null) {
-    if (transfer.receiver !== undefined) {
+    if (transfer.to !== undefined) {
       return; // transfer has already been handled
     }
-    return sendTransfer(sender, event, inscription);
+    return sendTransfer(from, event, inscription);
   }
 
-  const account = await accounts.getTokenBalance(sender.addresses[0], event.tick);
+  const account = await accounts.getTokenBalance(from.addresses[0], event.tick);
   if (event.amt > account.available) {
     return; // not enough available balance for transfer event
   }
 
-  await accounts.addTransferableBalance(sender.addresses[0], event.tick, event.amt);
+  await accounts.addTransferableBalance(from.addresses[0], event.tick, event.amt);
 
   await collection.insertOne({
-    token: event.tick,
     inscription: inscription.id,
+    tick: event.tick,
     amount: event.amt,
-    sender: sender.addresses[0],
+    from: from.addresses[0],
+    to: null,
+    timestamp: inscription.timestamp,
   });
 
   // ### Spent Check
   // If the inscription genesis transaction output has been spent, we transfer
   // the funds to the output recipient.
 
-  await sendTransfer(sender, event, inscription);
+  await sendTransfer(from, event, inscription);
 }
 
-async function sendTransfer(sender: OutputDocument, event: TokenTransferedEvent, inscription: Inscription) {
-  if (sender.vin !== undefined) {
-    const recipient = await outputs.getByLocation(sender.vin.txid, sender.vin.n);
-    if (recipient === undefined) {
+async function sendTransfer(from: OutputDocument, event: TokenTransferedEvent, inscription: Inscription) {
+  if (from.vin !== undefined) {
+    const to = await outputs.getByLocation(from.vin.txid, from.vin.n);
+    if (to === undefined) {
       return; // somehow we could not find the inscriptions recipient
     }
-    await collection.updateOne({ inscription: inscription.id }, { $set: { receiver: recipient.addresses[0] } });
-    await accounts.sendTransferableBalance(sender.addresses[0], recipient.addresses[0], event.tick, event.amt);
+    await collection.updateOne({ inscription: inscription.id }, { $set: { to: to.addresses[0] } });
+    await accounts.sendTransferableBalance(from.addresses[0], to.addresses[0], event.tick, event.amt);
   }
 }
 

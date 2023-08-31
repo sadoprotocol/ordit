@@ -26,17 +26,18 @@ export const tokens = {
  * @param inscription - Inscription the token was created under.
  */
 async function deploy(event: TokenDeployedEvent, inscription: Inscription) {
-  const token: Token = {
-    inscription: inscription.id,
-    address: inscription.owner,
-    tick: event.tick,
-    max: event.max,
-    minted: 0,
-  };
-  if (event.lim !== undefined) {
-    token.lim = event.lim;
-  }
-  return collection.insertOne(token).catch(ignoreDuplicateErrors);
+  return collection
+    .insertOne({
+      inscription: inscription.id,
+      tick: event.tick,
+      max: event.max,
+      amount: 0,
+      limit: event.lim ?? null,
+      decimal: event.dec,
+      creator: inscription.creator,
+      timestamp: inscription.timestamp,
+    })
+    .catch(ignoreDuplicateErrors);
 }
 
 /**
@@ -89,5 +90,5 @@ async function count(filter: Filter<Token>, options?: CountDocumentsOptions) {
  * @param amount - Amount to adjust the balance by, can be negative.
  */
 async function addTokenBalance(tick: string, amount: number) {
-  return collection.updateOne({ tick }, { $inc: { minted: amount } });
+  return collection.updateOne({ tick }, { $inc: { amount } });
 }

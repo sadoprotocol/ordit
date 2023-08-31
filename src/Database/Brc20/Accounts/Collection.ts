@@ -13,11 +13,11 @@ export type Account = {
 };
 
 export type AccountTokens = {
-  [token: string]: AccountBalance;
+  [tick: string]: AccountBalance;
 };
 
 export type AccountBalance = {
-  overall: number;
+  balance: number;
   available: number;
   transferable: number;
 };

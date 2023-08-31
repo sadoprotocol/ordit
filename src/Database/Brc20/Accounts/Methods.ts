@@ -30,7 +30,7 @@ export async function getAccount(address: string) {
 async function getTokenBalance(address: string, token: string) {
   const account = await collection.findOne({ address });
   if (account === null) {
-    return { overall: 0, available: 0, transferable: 0 };
+    return { balance: 0, available: 0, transferable: 0 };
   }
   return account.tokens[token] ?? 0;
 }
@@ -49,7 +49,7 @@ async function addAvailableBalance(address: string, token: string, amount: numbe
     },
     {
       $inc: {
-        [`tokens.${token}.overall`]: amount,
+        [`tokens.${token}.balance`]: amount,
         [`tokens.${token}.available`]: amount,
       },
       $setOnInsert: {
@@ -106,11 +106,11 @@ async function addTransferableBalance(address: string, token: string, amount: nu
  * @param token    - Token to send transferable balance for.
  * @param amount   - Amount to transfer between the parties.
  */
-async function sendTransferableBalance(sender: string, receiver: string, token: string, amount: number) {
-  if (sender === receiver) {
+async function sendTransferableBalance(from: string, to: string, token: string, amount: number) {
+  if (from === to) {
     return collection.updateOne(
       {
-        address: sender,
+        address: from,
       },
       {
         $inc: {
@@ -122,26 +122,26 @@ async function sendTransferableBalance(sender: string, receiver: string, token: 
   }
   await collection.updateOne(
     {
-      address: sender,
+      address: from,
     },
     {
       $inc: {
-        [`tokens.${token}.overall`]: -amount,
+        [`tokens.${token}.balance`]: -amount,
         [`tokens.${token}.transferable`]: -amount,
       },
     }
   );
   await collection.updateOne(
     {
-      address: receiver,
+      address: to,
     },
     {
       $inc: {
-        [`tokens.${token}.overall`]: amount,
+        [`tokens.${token}.balance`]: amount,
         [`tokens.${token}.available`]: amount,
       },
       $setOnInsert: {
-        address: receiver,
+        address: to,
         [`tokens.${token}.transferable`]: 0,
       },
     },

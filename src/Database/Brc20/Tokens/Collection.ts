@@ -4,14 +4,16 @@ export const collection = mongo.db.collection<Token>("brc20_tokens");
 
 export const registrar: CollectionRegistrar = {
   name: "brc20_tokens",
-  indexes: [[{ address: 1 }], [{ tick: 1 }, { unique: true }]],
+  indexes: [[{ tick: 1 }, { unique: true }], [{ creator: 1 }]],
 };
 
 export type Token = {
   inscription: string;
-  address: string;
   tick: string;
   max: number;
-  minted: number;
-  lim?: number;
+  amount: number;
+  limit: number | null;
+  decimal: number;
+  creator: string;
+  timestamp: number;
 };

@@ -38,11 +38,11 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
     return;
   }
 
-  if (token.lim !== undefined && event.amt > token.lim) {
+  if (token.limit !== null && event.amt > token.limit) {
     return;
   }
 
-  const available = new Big(token.max).minus(token.minted).toNumber();
+  const available = new Big(token.max).minus(token.amount).toNumber();
   if (event.amt > available) {
     return;
   }
@@ -54,10 +54,10 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
 
   await collection.insertOne({
     inscription: inscription.id,
-    address: inscription.creator,
-    token: event.tick,
+    tick: event.tick,
     amount: event.amt,
-    ts: inscription.timestamp,
+    minter: inscription.creator,
+    timestamp: inscription.timestamp,
   });
 
   // ### Update Balances
