@@ -3,7 +3,7 @@ import { Brc20Event } from "../../Database/Brc20/Utilities";
 import { Inscription } from "../../Database/Inscriptions";
 import { DATA_DIR } from "../../Paths";
 import { ord } from "../../Services/Ord";
-import { readFile, writeFile } from "../../Utilities/Files";
+import { writeFile } from "../../Utilities/Files";
 import { getMetaFromTxId } from "../../Utilities/Oip";
 import { parseLocation } from "../../Utilities/Transaction";
 import { getBrc20Event, parse as parceBrc20 } from "../Brc20/Parse";
@@ -32,6 +32,7 @@ export async function parse(blockHeight: number) {
 
   let height = inscriptionHeight;
   while (height <= blockHeight) {
+    log(`\n   📦 unboxing inscriptions from block ${height}`);
     const ts = perf();
     const list = await ord.getBlockInscriptions(height);
     for (const data of list) {
@@ -80,7 +81,7 @@ export async function parse(blockHeight: number) {
       inscriptions.push(inscription as Inscription);
     }
     promises.push(db.inscriptions.insertMany(inscriptions));
-    log(`\n   📦 resolved ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
+    log(`\n     📭 resolved ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
     inscriptions = [];
     height += 1;
   }
@@ -88,14 +89,12 @@ export async function parse(blockHeight: number) {
   if (brc20Events.length > 0) {
     await parceBrc20(brc20Events);
   }
-  await writeFile(`${DATA_DIR}/inscriptions_n`, blockHeight.toString());
-  log(`\n   💾 Updated inscription height ${blockHeight}`);
 }
 
 async function getNextInscriptionHeight(): Promise<number> {
-  const parsedHeight = await readFile(`${DATA_DIR}/inscriptions_n`);
-  if (parsedHeight === undefined) {
+  const inscription = await db.inscriptions.findOne({}, { sort: { height: -1 } });
+  if (inscription === undefined) {
     return 0;
   }
-  return parseInt(parsedHeight, 10) + 1;
+  return inscription.height + 1;
 }
