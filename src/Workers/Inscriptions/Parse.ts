@@ -4,7 +4,7 @@ import { Inscription } from "../../Database/Inscriptions";
 import { ord } from "../../Services/Ord";
 import { getMetaFromTxId, isOIP2Meta, validateOIP2Meta } from "../../Utilities/Oip";
 import { parseLocation } from "../../Utilities/Transaction";
-import { getBrc20Event, parse as parceBrc20 } from "../Brc20/Parse";
+import { getBrc20Event, parse as parseBrc20 } from "../Brc20/Parse";
 import { log, perf } from "../Log";
 
 export async function parse(blockHeight: number) {
@@ -88,7 +88,7 @@ export async function parse(blockHeight: number) {
   }
   await Promise.all(promises);
   if (brc20Events.length > 0) {
-    await parceBrc20(brc20Events);
+    await parseBrc20(brc20Events);
   }
 }
 

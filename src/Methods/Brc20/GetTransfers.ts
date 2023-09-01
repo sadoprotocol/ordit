@@ -31,6 +31,10 @@ export default method({
     if (data.to) {
       filter["to.address"] = data.to;
     }
-    return db.brc20.transfers.findPaginated({ ...pagination, filter, sort });
+    const result = await db.brc20.transfers.findPaginated({ ...pagination, filter, sort });
+    return {
+      transfers: result.documents,
+      pagination: result.pagination,
+    };
   },
 });

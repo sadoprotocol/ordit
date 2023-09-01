@@ -18,7 +18,7 @@ export default method({
     pagination: schema.pagination.optional(),
   }),
   handler: async ({ filter = {}, sort = {}, pagination = {} }) => {
-    return db.inscriptions.findPaginated({
+    const result = await db.inscriptions.findPaginated({
       ...pagination,
       filter,
       sort,
@@ -26,5 +26,9 @@ export default method({
         inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
       },
     });
+    return {
+      inscriptions: result.documents,
+      pagination: result.pagination,
+    };
   },
 });

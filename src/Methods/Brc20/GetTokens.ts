@@ -10,9 +10,13 @@ export default method({
     pagination: schema.pagination.optional(),
   }),
   handler: async ({ sort = {}, pagination = {} }) => {
-    return db.brc20.tokens.findPaginated({
+    const result = await db.brc20.tokens.findPaginated({
       ...pagination,
       sort,
     });
+    return {
+      tokens: result.documents,
+      pagination: result.pagination,
+    };
   },
 });
