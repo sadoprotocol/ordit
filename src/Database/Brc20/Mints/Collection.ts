@@ -9,6 +9,7 @@ export const registrar: CollectionRegistrar = {
 
 export type Mint = {
   inscription: string;
+  token: string;
   tick: string;
   amount: number;
   minter: string;

@@ -29,7 +29,7 @@ export function getBrc20Event(inscription: Inscription) {
   if (raw.includes("brc-20")) {
     try {
       const data = JSON.parse(raw.trim());
-      if (data.p !== "brc-20" || data.op === undefined || data.tick === undefined) {
+      if (isValidBrc20BaseData(data) === false) {
         return;
       }
       switch (data.op) {
@@ -59,4 +59,17 @@ export function getBrc20Event(inscription: Inscription) {
       // ignore malformed events
     }
   }
+}
+
+function isValidBrc20BaseData(data: any) {
+  if (data.p !== "brc-20") {
+    return false;
+  }
+  if (data.p === undefined || data.p === "") {
+    return false;
+  }
+  if (data.tick === undefined || data.tick.length !== 4) {
+    return false;
+  }
+  return true;
 }

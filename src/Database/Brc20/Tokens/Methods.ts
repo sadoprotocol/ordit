@@ -29,6 +29,7 @@ async function deploy(event: TokenDeployedEvent, inscription: Inscription) {
   return collection
     .insertOne({
       inscription: inscription.id,
+      token: event.token,
       tick: event.tick,
       max: event.max,
       amount: 0,

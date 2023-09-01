@@ -38,13 +38,17 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
     return;
   }
 
+  if (token.max === token.amount) {
+    return; // token has been fully minted
+  }
+
   if (token.limit !== null && event.amt > token.limit) {
-    return;
+    return; // requested amount exceeds the defined limit
   }
 
   const available = new Big(token.max).minus(token.amount).toNumber();
   if (event.amt > available) {
-    return;
+    event.amt = available; // if amount is larger than requested, deliver the remainder
   }
 
   const mint = await collection.findOne({ inscription: inscription.id });
@@ -54,6 +58,7 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
 
   await collection.insertOne({
     inscription: inscription.id,
+    token: event.token,
     tick: event.tick,
     amount: event.amt,
     minter: inscription.creator,

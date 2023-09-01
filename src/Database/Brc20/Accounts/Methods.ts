@@ -27,34 +27,34 @@ export async function getAccount(address: string) {
  * @param address - Address of the account.
  * @param token   - Tick of the token to get the balance of.
  */
-async function getTokenBalance(address: string, token: string) {
+async function getTokenBalance(address: string, tick: string) {
   const account = await collection.findOne({ address });
   if (account === null) {
     return { balance: 0, available: 0, transferable: 0 };
   }
-  return account.tokens[token] ?? 0;
+  return account.tokens[tick] ?? 0;
 }
 
 /**
  * Add available balance to the account address for the given token and amount.
  *
  * @param address - Account address to add available balance to.
- * @param token   - Token to add available balance for.
+ * @param tick    - Token to add available balance for.
  * @param amount  - Amount to add to the available balance.
  */
-async function addAvailableBalance(address: string, token: string, amount: number) {
+async function addAvailableBalance(address: string, tick: string, amount: number) {
   return collection.updateOne(
     {
       address,
     },
     {
       $inc: {
-        [`tokens.${token}.balance`]: amount,
-        [`tokens.${token}.available`]: amount,
+        [`tokens.${tick}.balance`]: amount,
+        [`tokens.${tick}.available`]: amount,
       },
       $setOnInsert: {
         address,
-        [`tokens.${token}.transferable`]: 0,
+        [`tokens.${tick}.transferable`]: 0,
       },
     },
     {
@@ -73,18 +73,18 @@ async function addAvailableBalance(address: string, token: string, amount: numbe
  * the overall balance until the transferable balance has been sent to another address.
  *
  * @param address - Account address to add transferable balance to.
- * @param token   - Token to add transferable balance for.
+ * @param tick    - Token to add transferable balance for.
  * @param amount  - Amount to add to the transferable balance.
  */
-async function addTransferableBalance(address: string, token: string, amount: number) {
+async function addTransferableBalance(address: string, tick: string, amount: number) {
   return collection.updateOne(
     {
       address,
     },
     {
       $inc: {
-        [`tokens.${token}.available`]: -amount,
-        [`tokens.${token}.transferable`]: amount,
+        [`tokens.${tick}.available`]: -amount,
+        [`tokens.${tick}.transferable`]: amount,
       },
     }
   );
@@ -103,10 +103,10 @@ async function addTransferableBalance(address: string, token: string, amount: nu
  *
  * @param sender   - Account address to send transferable balance from.
  * @param receiver - Account address to send transferable balance to.
- * @param token    - Token to send transferable balance for.
+ * @param tick     - Token to send transferable balance for.
  * @param amount   - Amount to transfer between the parties.
  */
-async function sendTransferableBalance(from: string, to: string, token: string, amount: number) {
+async function sendTransferableBalance(from: string, to: string, tick: string, amount: number) {
   if (from === to) {
     return collection.updateOne(
       {
@@ -114,8 +114,8 @@ async function sendTransferableBalance(from: string, to: string, token: string, 
       },
       {
         $inc: {
-          [`tokens.${token}.available`]: amount,
-          [`tokens.${token}.transferable`]: -amount,
+          [`tokens.${tick}.available`]: amount,
+          [`tokens.${tick}.transferable`]: -amount,
         },
       }
     );
@@ -126,8 +126,8 @@ async function sendTransferableBalance(from: string, to: string, token: string, 
     },
     {
       $inc: {
-        [`tokens.${token}.balance`]: -amount,
-        [`tokens.${token}.transferable`]: -amount,
+        [`tokens.${tick}.balance`]: -amount,
+        [`tokens.${tick}.transferable`]: -amount,
       },
     }
   );
@@ -137,12 +137,12 @@ async function sendTransferableBalance(from: string, to: string, token: string, 
     },
     {
       $inc: {
-        [`tokens.${token}.balance`]: amount,
-        [`tokens.${token}.available`]: amount,
+        [`tokens.${tick}.balance`]: amount,
+        [`tokens.${tick}.available`]: amount,
       },
       $setOnInsert: {
         address: to,
-        [`tokens.${token}.transferable`]: 0,
+        [`tokens.${tick}.transferable`]: 0,
       },
     },
     {

@@ -9,6 +9,7 @@ export const registrar: CollectionRegistrar = {
 
 export type Token = {
   inscription: string;
+  token: string;
   tick: string;
   max: number;
   amount: number;

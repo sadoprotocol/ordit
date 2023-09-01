@@ -1,4 +1,5 @@
 import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
+import { rpc } from "../../../Services/Bitcoin";
 import { getLocationFromId } from "../../../Utilities/Inscriptions";
 import { Inscription } from "../../Inscriptions";
 import { OutputDocument, outputs } from "../../Output";
@@ -31,7 +32,8 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
 
   const transfer = await collection.findOne({ inscription: inscription.id });
   if (transfer !== null) {
-    if (transfer.to !== undefined) {
+    if (transfer.to) {
+      console.log("transfer done");
       return; // transfer has already been handled
     }
     return sendTransfer(from, event, inscription);
@@ -46,11 +48,15 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
 
   await collection.insertOne({
     inscription: inscription.id,
+    token: event.token,
     tick: event.tick,
     amount: event.amt,
-    from: from.addresses[0],
+    from: {
+      address: from.addresses[0],
+      block: from.vout.block.height,
+      timestamp: (await rpc.blockchain.getBlockStats(from.vout.block.height, ["time"])).time,
+    },
     to: null,
-    timestamp: inscription.timestamp,
   });
 
   // ### Spent Check
@@ -66,7 +72,18 @@ async function sendTransfer(from: OutputDocument, event: TokenTransferedEvent, i
     if (to === undefined) {
       return; // somehow we could not find the inscriptions recipient
     }
-    await collection.updateOne({ inscription: inscription.id }, { $set: { to: to.addresses[0] } });
+    await collection.updateOne(
+      { inscription: inscription.id },
+      {
+        $set: {
+          to: {
+            address: to.addresses[0],
+            block: to.vout.block.height,
+            timestamp: (await rpc.blockchain.getBlockStats(to.vout.block.height, ["time"])).time,
+          },
+        },
+      }
+    );
     await accounts.sendTransferableBalance(from.addresses[0], to.addresses[0], event.tick, event.amt);
   }
 }

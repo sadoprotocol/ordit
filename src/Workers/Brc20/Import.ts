@@ -12,6 +12,13 @@ async function main() {
 
   log("starting BRC-20 importer\n");
 
+  await Promise.all([
+    db.brc20.accounts.collection.deleteMany(),
+    db.brc20.mints.collection.deleteMany(),
+    db.brc20.tokens.collection.deleteMany(),
+    db.brc20.transfers.collection.deleteMany(),
+  ]);
+
   const ts = perf();
   let events = 0;
 
@@ -42,8 +49,9 @@ async function main() {
       }
       events += 1;
       log(`\r📖 parsed ${events.toLocaleString()} events`);
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      console.log({ event, inscription });
+      throw error;
     }
   }
 
