@@ -1,0 +1,21 @@
+import { Inscription } from "../../Inscriptions";
+import { collection } from "./Collection";
+import { TokenEvent } from "./Events";
+
+export const events = {
+  collection,
+  addEvent,
+};
+
+async function addEvent(event: TokenEvent, inscription: Inscription) {
+  return collection.insertOne({
+    ...event,
+    meta: {
+      slug: event.tick.toLowerCase(),
+      inscription: inscription.id,
+      block: inscription.height,
+      number: inscription.number,
+      timestamp: inscription.timestamp,
+    },
+  });
+}

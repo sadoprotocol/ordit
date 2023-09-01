@@ -3,8 +3,8 @@ import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { Inscription } from "../../Inscriptions";
 import { accounts } from "../Accounts/Methods";
+import { TokenMintedEvent } from "../Events/Events";
 import { tokens } from "../Tokens/Methods";
-import { TokenMintedEvent } from "../Utilities";
 import { collection, Mint } from "./Collection";
 
 export const mints = {
@@ -58,8 +58,8 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
 
   await collection.insertOne({
     inscription: inscription.id,
-    token: event.token,
     tick: event.tick,
+    slug: event.tick.toLocaleLowerCase(),
     amount: event.amt,
     minter: inscription.creator,
     timestamp: inscription.timestamp,

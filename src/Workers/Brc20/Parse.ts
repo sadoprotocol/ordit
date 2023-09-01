@@ -1,9 +1,9 @@
 import { db } from "../../Database";
-import { Brc20Event, getDeployEvent, getMintEvent, getTransferEvent } from "../../Database/Brc20/Utilities";
+import { getDeployEvent, getMintEvent, getTransferEvent, TokenEvent } from "../../Database/Brc20/Events/Events";
 import { Inscription } from "../../Database/Inscriptions";
 import { log } from "../Log";
 
-export async function parse(events: { event: Brc20Event; inscription: Inscription }[]) {
+export async function parse(events: { event: TokenEvent; inscription: Inscription }[]) {
   log(`\n   🗃️ Parsing ${events.length} BRC-20 events`);
   for (const { event, inscription } of events) {
     switch (event.op) {

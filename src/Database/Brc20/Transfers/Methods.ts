@@ -4,7 +4,7 @@ import { getLocationFromId } from "../../../Utilities/Inscriptions";
 import { Inscription } from "../../Inscriptions";
 import { OutputDocument, outputs } from "../../Output";
 import { accounts } from "../Accounts/Methods";
-import { TokenTransferedEvent } from "../Utilities";
+import { TokenTransferedEvent } from "../Events/Events";
 import { collection, TokenTransfer } from "./Collection";
 
 export const transfers = {
@@ -48,8 +48,8 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
 
   await collection.insertOne({
     inscription: inscription.id,
-    token: event.token,
     tick: event.tick,
+    slug: event.tick.toLocaleLowerCase(),
     amount: event.amt,
     from: {
       address: from.addresses[0],

@@ -10,19 +10,16 @@ main()
 async function main() {
   await bootstrap();
 
-  log("starting BRC-20 importer\n");
+  log("starting BRC-20 event importer\n");
 
-  await Promise.all([
-    db.brc20.accounts.collection.deleteMany(),
-    db.brc20.mints.collection.deleteMany(),
-    db.brc20.tokens.collection.deleteMany(),
-    db.brc20.transfers.collection.deleteMany(),
-  ]);
+  await Promise.all([db.brc20.events.collection.deleteMany()]);
 
   const ts = perf();
   let events = 0;
 
-  const cursor = db.inscriptions.collection.find({ mediaType: "text/plain" }, { sort: { height: 1 } });
+  let promises: Promise<any>[] = [];
+
+  const cursor = db.inscriptions.collection.find({ mediaType: "text/plain" }, { sort: { height: 1, number: 1 } });
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();
     if (inscription === null) {
@@ -32,28 +29,18 @@ async function main() {
     if (event === undefined) {
       continue;
     }
-    try {
-      switch (event.op) {
-        case "deploy": {
-          await db.brc20.tokens.deploy(event, inscription);
-          break;
-        }
-        case "mint": {
-          await db.brc20.mints.mint(event, inscription);
-          break;
-        }
-        case "transfer": {
-          await db.brc20.transfers.transfer(event, inscription);
-          break;
-        }
-      }
-      events += 1;
-      log(`\r📖 parsed ${events.toLocaleString()} events`);
-    } catch (error) {
-      console.log({ event, inscription });
-      throw error;
+    promises.push(db.brc20.events.addEvent(event, inscription));
+    events += 1;
+    if (events % 10_000 === 0) {
+      await Promise.all(promises);
+      promises = [];
     }
+    log(`\r📖 importing ${events.toLocaleString()} events`);
   }
 
-  log(`\n🏁 brc-20 parser completed [${ts.now}]\n`);
+  if (promises.length > 0) {
+    await Promise.all(promises);
+  }
+
+  log(`\n🏁 imported ${events} events [${ts.now.toLocaleString()} seconds]\n`);
 }

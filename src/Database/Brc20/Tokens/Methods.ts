@@ -3,7 +3,7 @@ import { CountDocumentsOptions, Filter, FindOptions } from "mongodb";
 import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
 import { ignoreDuplicateErrors } from "../../../Utilities/Database";
 import { Inscription } from "../../Inscriptions";
-import { TokenDeployedEvent } from "../Utilities";
+import { TokenDeployedEvent } from "../Events/Events";
 import { collection, Token } from "./Collection";
 
 export const tokens = {
@@ -29,8 +29,8 @@ async function deploy(event: TokenDeployedEvent, inscription: Inscription) {
   return collection
     .insertOne({
       inscription: inscription.id,
-      token: event.token,
       tick: event.tick,
+      slug: event.tick.toLowerCase(),
       max: event.max,
       amount: 0,
       limit: event.lim ?? null,

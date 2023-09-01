@@ -20,8 +20,7 @@ export function getDeployEvent(data: any): TokenDeployedEvent | undefined {
   const event: TokenDeployedEvent = {
     p: "brc-20",
     op: "deploy",
-    token: data.tick,
-    tick: encodeTick(data.tick),
+    tick: data.tick,
     max,
     dec,
   };
@@ -46,8 +45,7 @@ export function getMintEvent(data: any): TokenMintedEvent | undefined {
   return {
     p: "brc-20",
     op: "mint",
-    token: data.tick,
-    tick: encodeTick(data.tick),
+    tick: data.tick,
     amt,
   };
 }
@@ -63,45 +61,32 @@ export function getTransferEvent(data: any): TokenTransferedEvent | undefined {
   return {
     p: "brc-20",
     op: "transfer",
-    token: data.tick,
-    tick: encodeTick(data.tick),
+    tick: data.tick,
     amt,
   };
 }
 
-export function encodeTick(tick: string) {
-  return tick.replace(/\./g, "[dot]").replace(/\$/g, "[dollar]").toLocaleLowerCase();
-}
+export type TokenEvent = TokenDeployedEvent | TokenMintedEvent | TokenTransferedEvent;
 
-export function decodeTick(tick: string) {
-  return tick.replace(/\[dollar\]/g, "$").replace(/\[dot\]/g, ".");
-}
-
-export type Brc20Event = TokenDeployedEvent | TokenMintedEvent | TokenTransferedEvent;
-
-export type TokenDeployedEvent = Brc20Token & {
+export type TokenDeployedEvent = {
+  p: "brc-20";
   op: "deploy";
-  token: string;
   tick: string;
   max: number;
   lim?: number;
   dec: number;
 };
 
-export type TokenMintedEvent = Brc20Token & {
-  op: "mint";
-  token: string;
-  tick: string;
-  amt: number;
-};
-
-export type TokenTransferedEvent = Brc20Token & {
-  op: "transfer";
-  token: string;
-  tick: string;
-  amt: number;
-};
-
-type Brc20Token = {
+export type TokenMintedEvent = {
   p: "brc-20";
+  op: "mint";
+  tick: string;
+  amt: number;
+};
+
+export type TokenTransferedEvent = {
+  p: "brc-20";
+  op: "transfer";
+  tick: string;
+  amt: number;
 };
