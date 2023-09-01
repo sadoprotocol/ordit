@@ -12,7 +12,7 @@ export const accounts = {
 export async function getAccount(address: string) {
   const account = await collection.findOne({ address });
   if (account === null) {
-    return { address, tokens: {} };
+    return undefined;
   }
   return account;
 }
