@@ -1,6 +1,6 @@
 import { bootstrap } from "../Bootstrap";
 import { db } from "../Database";
-import { validateOip2Meta } from "../Utilities/Oip";
+import { validateOIP2Meta } from "../Utilities/Oip";
 
 index().finally(() => {
   process.exit(0);
@@ -18,7 +18,7 @@ async function index() {
     promises.push(
       db.inscriptions.updateOne(
         { id: inscription.id },
-        { $set: { verified: await validateOip2Meta(inscription.meta) } }
+        { $set: { verified: await validateOIP2Meta(inscription.meta) } }
       )
     );
   }

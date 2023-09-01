@@ -1,10 +1,8 @@
 import { db } from "../../Database";
 import { Brc20Event } from "../../Database/Brc20/Utilities";
 import { Inscription } from "../../Database/Inscriptions";
-import { DATA_DIR } from "../../Paths";
 import { ord } from "../../Services/Ord";
-import { writeFile } from "../../Utilities/Files";
-import { getMetaFromTxId } from "../../Utilities/Oip";
+import { getMetaFromTxId, isOIP2Meta, validateOIP2Meta } from "../../Utilities/Oip";
 import { parseLocation } from "../../Utilities/Transaction";
 import { getBrc20Event, parse as parceBrc20 } from "../Brc20/Parse";
 import { log, perf } from "../Log";
@@ -67,6 +65,9 @@ export async function parse(blockHeight: number) {
         const meta = await getMetaFromTxId(inscription.genesis);
         if (meta) {
           inscription.meta = meta;
+          if (isOIP2Meta(meta)) {
+            inscription.verified = await validateOIP2Meta(meta);
+          }
         }
       }
 

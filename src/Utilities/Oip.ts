@@ -77,7 +77,7 @@ export async function getMetaFromWitness(txinwitness: string[]): Promise<object 
   }
 }
 
-export async function validateOip2Meta(meta?: any): Promise<boolean> {
+export async function validateOIP2Meta(meta?: any): Promise<boolean> {
   if (meta === undefined || !isOIP2Meta(meta)) {
     return false;
   }
@@ -111,7 +111,7 @@ export async function validateOip2Meta(meta?: any): Promise<boolean> {
   return false;
 }
 
-function isOIP2Meta(meta: any): meta is OIP2Meta {
+export function isOIP2Meta(meta: any): meta is OIP2Meta {
   const hasKeys = hasValidOip2Keys(meta);
   if (hasKeys === false || meta.p !== "vord" || meta.v !== 1 || meta.ty !== "insc") {
     return false;
