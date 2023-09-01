@@ -64,4 +64,5 @@ export type Inscription = {
   number: number;
   outpoint: string;
   meta?: any;
+  verified?: boolean;
 };

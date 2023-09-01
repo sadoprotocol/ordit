@@ -65,7 +65,7 @@ function isValidBrc20BaseData(data: any) {
   if (data.p !== "brc-20") {
     return false;
   }
-  if (data.p === undefined || data.p === "") {
+  if (data.op === undefined || data.op === "") {
     return false;
   }
   if (data.tick === undefined || data.tick.length !== 4) {
