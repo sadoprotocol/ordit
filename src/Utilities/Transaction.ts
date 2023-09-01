@@ -1,10 +1,12 @@
-import { Transaction } from "bitcoinjs-lib";
+import bitcoin, { Transaction } from "bitcoinjs-lib";
 import Schema, { boolean, Type } from "computed-types";
+import * as ecc from "tiny-secp256k1";
 
 import { db } from "../Database";
+import { getBitcoinNetwork, Network } from "../Libraries/Network";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
 import { ord as ordService } from "../Services/Ord";
-import { getAddressessFromVout } from "./Address";
+import { AddressTypes, getAddressessFromVout } from "./Address";
 
 /*
  |--------------------------------------------------------------------------------
@@ -166,3 +168,26 @@ export type ExpandedTransaction = RawTransaction & {
   fee: number;
   blockheight: number;
 };
+
+export function createTransaction(
+  key: Buffer,
+  type: AddressTypes,
+  network: Network | bitcoin.Network,
+  paymentOptions?: bitcoin.Payment
+) {
+  bitcoin.initEccLib(ecc);
+  const networkObj = typeof network === "string" ? getBitcoinNetwork() : network;
+
+  if (type === "p2tr") {
+    return bitcoin.payments.p2tr({ internalPubkey: key, network: networkObj, ...paymentOptions });
+  }
+
+  if (type === "p2sh") {
+    return bitcoin.payments.p2sh({
+      redeem: bitcoin.payments.p2wpkh({ pubkey: key, network: networkObj }),
+      network: networkObj,
+    });
+  }
+
+  return bitcoin.payments[type]({ pubkey: key, network: networkObj });
+}

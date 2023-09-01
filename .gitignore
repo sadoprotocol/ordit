@@ -32,3 +32,6 @@ dist
 # Logs
 
 npm-debug.log*
+
+# personal
+NOTES.md

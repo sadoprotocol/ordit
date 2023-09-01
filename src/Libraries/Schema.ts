@@ -28,6 +28,7 @@ export const schema = {
     next: string.optional(),
     skip: number.optional(),
   }),
+  addressTypes: Schema.either("legacy" as const, "nested-segwit" as const, "segwit" as const, "taproot" as const),
 };
 
 export type Sort = Type<typeof schema.sort>;
