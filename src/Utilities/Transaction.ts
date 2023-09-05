@@ -3,6 +3,7 @@ import Schema, { boolean, Type } from "computed-types";
 
 import { db } from "../Database";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
+import { ord as ordService } from "../Services/Ord";
 import { getAddressessFromVout } from "./Address";
 
 /*
@@ -61,6 +62,7 @@ export async function getExpandedTransaction(
     const outpoint = `${tx.txid}:${vout.n}`;
 
     if (ord === true) {
+      (vout as any).ordinals = await ordService.getOrdinals(outpoint);
       (vout as any).inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
     }
 

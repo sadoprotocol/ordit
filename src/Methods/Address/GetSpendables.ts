@@ -4,6 +4,7 @@ import Schema, { array, boolean, number, string } from "computed-types";
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
+import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
 
 const MAX_SPENDABLES = 200;
@@ -41,7 +42,10 @@ export default method({
       // configured treshold is not safe to spend.
 
       if (safetospend === true) {
-        if (await db.inscriptions.hasInscriptions(output.vout.txid, output.vout.n)) {
+        const outpoint = `${output.vout.txid}:${output.vout.n}`;
+        const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
+        const ordinals = await ord.getOrdinals(`${output.vout.txid}:${output.vout.n}`);
+        if (getSafeToSpendState(ordinals, inscriptions) === false) {
           continue;
         }
         safeToSpend += 1;

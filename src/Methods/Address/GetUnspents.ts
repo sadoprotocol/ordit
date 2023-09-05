@@ -4,10 +4,10 @@ import Schema, { array, boolean, number, string } from "computed-types";
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
+import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
 
 const options = Schema({
-  ord: boolean.optional(),
   safetospend: boolean.optional(),
   allowedrarity: array.of(string).optional(),
 });
@@ -25,12 +25,11 @@ const pagination = Schema({
 export default method({
   params: Schema({
     address: string,
-    format: Schema.either("legacy" as const, "next" as const).optional(),
     options: options.optional(),
     sort: sort.optional(),
     pagination: pagination.optional(),
   }),
-  handler: async ({ format = "legacy", address, options, sort, pagination }) => {
+  handler: async ({ address, options, sort, pagination }) => {
     let result: any[] = [];
     let cursors: string[] = [];
 
@@ -86,11 +85,11 @@ export default method({
         utxo.txhex = tx.hex;
       }
 
-      if (options?.ord !== false) {
-        utxo.inscriptions = await db.inscriptions.getInscriptionsByOutpoint(`${output.vout.txid}:${output.vout.n}`);
-      }
+      const outpoint = `${output.vout.txid}:${output.vout.n}`;
 
-      utxo.safeToSpend = utxo.inscriptions.length === 0;
+      utxo.ordinals = await ord.getOrdinals(outpoint);
+      utxo.inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
+      utxo.safeToSpend = getSafeToSpendState(utxo.ordinals, utxo.inscriptions, options?.allowedrarity);
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {
@@ -103,10 +102,6 @@ export default method({
       if (result.length === limit) {
         break;
       }
-    }
-
-    if (format === "legacy") {
-      return result;
     }
 
     result = reverse ? result.reverse() : result;

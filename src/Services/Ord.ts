@@ -2,9 +2,11 @@ import fetch from "node-fetch";
 
 import { config } from "../Config";
 
+export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+
 export const ord = {
   getHeight,
-  getOutput,
+  getOrdinals,
   getBlockInscriptions,
   waitForBlock,
   waitForInscriptions,
@@ -23,8 +25,13 @@ async function getHeight(): Promise<number> {
   return call<number>("/blockheight");
 }
 
-async function getOutput(output: string): Promise<any> {
-  return call<any>(`/output/${output}`);
+/**
+ * Get all ordinals listed for the given outpoint.
+ *
+ * @param outpoint - Outpoint to get ordinals for.
+ */
+async function getOrdinals(outpoint: string): Promise<Ordinal[]> {
+  return call<Ordinal[]>(`/ordinals/${outpoint}`);
 }
 
 /**
@@ -95,6 +102,28 @@ async function call<R>(endpoint: string): Promise<R> {
 
 /*
  |--------------------------------------------------------------------------------
+ | Utilities
+ |--------------------------------------------------------------------------------
+ */
+
+export function getSafeToSpendState(
+  ordinals: any[],
+  inscriptions: any[],
+  allowedRarity: Rarity[] = ["common", "uncommon"]
+): boolean {
+  if (inscriptions.length > 0 || ordinals.length === 0) {
+    return false;
+  }
+  for (const ordinal of ordinals) {
+    if (allowedRarity.includes(ordinal.rarity) === false) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*
+ |--------------------------------------------------------------------------------
  | Helpers
  |--------------------------------------------------------------------------------
  */
@@ -126,8 +155,27 @@ type Inscription = {
   output: string;
 };
 
+export type Ordinal = {
+  number: number;
+  decimal: string;
+  degree: string;
+  name: string;
+  height: number;
+  cycle: number;
+  epoch: number;
+  period: number;
+  offset: number;
+  rarity: Rarity;
+  output: string;
+  start: number;
+  end: number;
+  size: number;
+};
+
 type InscriptionMedia = {
   kind: string;
   size: number;
   content: string;
 };
+
+export type Rarity = (typeof rarity)[number];
