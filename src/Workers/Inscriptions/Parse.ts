@@ -18,7 +18,7 @@ export async function parse(blockHeight: number) {
   const ts = perf();
   log("\n   🕛 Waiting for block availability");
   await ord.waitForInscriptions(blockHeight);
-  log(`\n     👌 Block available [${ts.now} seconds]`);
+  log(` [${ts.now} seconds]`);
 
   let inscriptions: Inscription[] = [];
 
@@ -69,9 +69,9 @@ export async function parse(blockHeight: number) {
       inscriptions.push(inscription as Inscription);
     }
     ts = perf();
-    log(`\n     📬 inserting ${inscriptions.length}`);
+    log(`\n     📬 inserting ${inscriptions.length} inscriptions`);
     await db.inscriptions.insertMany(inscriptions);
-    log(`\n     📭 inserted ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
+    log(`\r     📭 inserted ${inscriptions.length} inscriptions [${ts.now} seconds]`);
     inscriptions = [];
     height += 1;
   }
