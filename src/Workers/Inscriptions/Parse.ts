@@ -1,6 +1,8 @@
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
+import { DATA_DIR } from "../../Paths";
 import { ord } from "../../Services/Ord";
+import { readFile, writeFile } from "../../Utilities/Files";
 import { getMetaFromTxId, isOIP2Meta, validateOIP2Meta } from "../../Utilities/Oip";
 import { parseLocation } from "../../Utilities/Transaction";
 import { log, perf } from "../Log";
@@ -75,12 +77,13 @@ export async function parse(blockHeight: number) {
     inscriptions = [];
     height += 1;
   }
+  await writeFile(`${DATA_DIR}/inscriptions_n`, blockHeight.toString());
 }
 
 async function getNextInscriptionHeight(): Promise<number> {
-  const inscription = await db.inscriptions.findOne({}, { sort: { height: -1 } });
-  if (inscription === undefined) {
-    return 0;
+  const parsedHeight = await readFile(`${DATA_DIR}/inscriptions_n`);
+  if (parsedHeight === undefined) {
+    throw new Error("Could not read inscriptions_n file");
   }
-  return inscription.height + 1;
+  return parseInt(parsedHeight, 10) + 1;
 }

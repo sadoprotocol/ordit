@@ -1,5 +1,7 @@
 import { index } from "./Index";
 
-index().finally(() => {
-  process.exit(0);
-});
+index()
+  .catch(console.log)
+  .finally(() => {
+    process.exit(0);
+  });
