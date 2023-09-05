@@ -13,6 +13,7 @@ async function addEvent(event: TokenEvent, inscription: Inscription) {
     meta: {
       slug: event.tick.toLowerCase(),
       inscription: inscription.id,
+      address: inscription.creator,
       block: inscription.height,
       number: inscription.number,
       timestamp: inscription.timestamp,

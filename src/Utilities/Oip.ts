@@ -62,7 +62,7 @@ export async function getMetaFromWitness(txinwitness: string[]): Promise<object 
     return JSON.parse(
       chunks
         .slice(startIndex, endIndex)
-        .filter((chunk) => chunk !== "\x00")
+        .filter((chunk) => chunk.includes("\x00") === false)
         .join("")
     );
   } catch (error) {

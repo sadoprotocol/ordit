@@ -23,6 +23,9 @@ export const config = {
     port: getEnvironmentVariable("ORD_PORT", envToNumber),
     enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
+  brc20: {
+    enabled: getEnvironmentVariable("BRC20_ENABLED", envToBoolean),
+  },
   sado: {
     startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("SADO_PARSER_ENABLED", envToBoolean),

@@ -15,11 +15,11 @@ async function main() {
   await Promise.all([db.brc20.events.collection.deleteMany()]);
 
   const ts = perf();
-  let events = 0;
 
   let promises: Promise<any>[] = [];
+  let events = 0;
 
-  const cursor = db.inscriptions.collection.find({ mediaType: "text/plain" }, { sort: { height: 1, number: 1 } });
+  const cursor = db.inscriptions.collection.find({ mediaType: "text/plain" });
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();
     if (inscription === null) {

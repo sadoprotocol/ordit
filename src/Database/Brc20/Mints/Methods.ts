@@ -2,8 +2,8 @@ import Big from "big.js";
 import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { Inscription } from "../../Inscriptions";
-import { accounts } from "../Accounts/Methods";
 import { TokenMintedEvent } from "../Events/Events";
+import { holders } from "../Holders/Methods";
 import { tokens } from "../Tokens/Methods";
 import { collection, Mint } from "./Collection";
 
@@ -68,5 +68,5 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
   // ### Update Balances
 
   await tokens.addTokenBalance(event.tick, event.amt);
-  await accounts.addAvailableBalance(inscription.creator, event.tick, event.amt);
+  await holders.addAvailableBalance(inscription.creator, event.tick, event.amt);
 }

@@ -3,25 +3,27 @@ import { getDeployEvent, getMintEvent, getTransferEvent, TokenEvent } from "../.
 import { Inscription } from "../../Database/Inscriptions";
 import { log } from "../Log";
 
-export async function parse(events: { event: TokenEvent; inscription: Inscription }[]) {
-  log(`\n   🗃️ Parsing ${events.length} BRC-20 events`);
-  for (const { event, inscription } of events) {
-    switch (event.op) {
-      case "deploy": {
-        await db.brc20.tokens.deploy(event, inscription);
-        break;
-      }
-      case "mint": {
-        await db.brc20.mints.mint(event, inscription);
-        break;
-      }
-      case "transfer": {
-        await db.brc20.transfers.transfer(event, inscription);
-        break;
-      }
-    }
-  }
-  log(" 👌");
+export async function parse() {
+  log(`\n   🗃️ Parsing BRC-20 events`);
+
+  const events: { event: TokenEvent; inscription: Inscription }[] = [];
+
+  // for (const { event, inscription } of events) {
+  //   switch (event.op) {
+  //     case "deploy": {
+  //       await db.brc20.tokens.deploy(event, inscription);
+  //       break;
+  //     }
+  //     case "mint": {
+  //       await db.brc20.mints.mint(event, inscription);
+  //       break;
+  //     }
+  //     case "transfer": {
+  //       await db.brc20.transfers.transfer(event, inscription);
+  //       break;
+  //     }
+  //   }
+  // }
 }
 
 export function getBrc20Event(inscription: Inscription) {

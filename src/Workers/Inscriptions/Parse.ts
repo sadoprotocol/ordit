@@ -1,10 +1,8 @@
 import { db } from "../../Database";
-import { Brc20Event } from "../../Database/Brc20/Utilities";
 import { Inscription } from "../../Database/Inscriptions";
 import { ord } from "../../Services/Ord";
 import { getMetaFromTxId, isOIP2Meta, validateOIP2Meta } from "../../Utilities/Oip";
 import { parseLocation } from "../../Utilities/Transaction";
-import { getBrc20Event, parse as parseBrc20 } from "../Brc20/Parse";
 import { log, perf } from "../Log";
 
 export async function parse(blockHeight: number) {
@@ -24,7 +22,6 @@ export async function parse(blockHeight: number) {
   log(`\n     👌 Block available [${ts.now} seconds]`);
 
   const promises: Promise<any>[] = [];
-  const brc20Events: { event: Brc20Event; inscription: Inscription }[] = [];
 
   let inscriptions: Inscription[] = [];
 
@@ -71,14 +68,6 @@ export async function parse(blockHeight: number) {
         }
       }
 
-      const brc20Event = getBrc20Event(inscription as Inscription);
-      if (brc20Event !== undefined) {
-        brc20Events.push({
-          event: brc20Event,
-          inscription: inscription as Inscription,
-        });
-      }
-
       inscriptions.push(inscription as Inscription);
     }
     promises.push(db.inscriptions.insertMany(inscriptions));
@@ -87,9 +76,6 @@ export async function parse(blockHeight: number) {
     height += 1;
   }
   await Promise.all(promises);
-  if (brc20Events.length > 0) {
-    await parseBrc20(brc20Events);
-  }
 }
 
 async function getNextInscriptionHeight(): Promise<number> {

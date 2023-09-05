@@ -5,6 +5,7 @@ import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
 import { spend } from "./Bitcoin/Outputs/Spend";
 import { getReorgHeight } from "./Bitcoin/Reorg";
+import { parse as indexBrc20 } from "./Brc20/Parse";
 import { parse as indexInscriptions } from "./Inscriptions/Parse";
 import { log, perf } from "./Log";
 import { addBlock } from "./Sado/AddBlock";
@@ -49,6 +50,11 @@ export async function index() {
   if (config.ord.enabled === true) {
     log("\n\n 📰 Indexing inscriptions\n");
     await indexInscriptions(blockHeight);
+  }
+
+  if (config.brc20.enabled === true) {
+    log("\n\n 🪙 Indexing BRC-20\n");
+    await indexBrc20();
   }
 
   if (config.parser.enabled === true) {

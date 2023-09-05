@@ -1,4 +1,4 @@
-import { registrar as brc20Accounts } from "./Database/Brc20/Accounts/Collection";
+import { registrar as brc20Accounts } from "./Database/Brc20/Holders/Collection";
 import { registrar as brc20Events } from "./Database/Brc20/Events/Collection";
 import { registrar as brc20Mints } from "./Database/Brc20/Mints/Collection";
 import { registrar as brc20Tokens } from "./Database/Brc20/Tokens/Collection";

@@ -4,7 +4,6 @@ import { Filter } from "mongodb";
 
 import { db } from "../../Database";
 import { TokenTransfer } from "../../Database/Brc20/Transfers/Collection";
-import { decodeTick, encodeTick } from "../../Database/Brc20/Utilities";
 import { schema } from "../../Libraries/Schema";
 
 export default method({
@@ -24,7 +23,7 @@ export default method({
       filter.inscription = data.inscription;
     }
     if (data.tick) {
-      filter.tick = encodeTick(data.tick);
+      filter.tick = data.tick;
     }
     if (data.from) {
       filter["from.address"] = data.from;
@@ -32,14 +31,7 @@ export default method({
     if (data.to) {
       filter["to.address"] = data.to;
     }
-    const result = await db.brc20.transfers.findPaginated({
-      ...pagination,
-      filter,
-      sort,
-      transform: (document) => {
-        document.tick = decodeTick(document.tick);
-      },
-    });
+    const result = await db.brc20.transfers.findPaginated({ ...pagination, filter, sort });
     return {
       transfers: result.documents,
       pagination: result.pagination,

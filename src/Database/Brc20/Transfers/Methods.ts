@@ -3,8 +3,8 @@ import { rpc } from "../../../Services/Bitcoin";
 import { getLocationFromId } from "../../../Utilities/Inscriptions";
 import { Inscription } from "../../Inscriptions";
 import { OutputDocument, outputs } from "../../Output";
-import { accounts } from "../Accounts/Methods";
 import { TokenTransferedEvent } from "../Events/Events";
+import { holders } from "../Holders/Methods";
 import { collection, TokenTransfer } from "./Collection";
 
 export const transfers = {
@@ -39,12 +39,12 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
     return sendTransfer(from, event, inscription);
   }
 
-  const account = await accounts.getTokenBalance(from.addresses[0], event.tick);
-  if (event.amt > account.available) {
+  const balance = await holders.getTokenBalance(from.addresses[0], event.tick);
+  if (event.amt > balance.available) {
     return; // not enough available balance for transfer event
   }
 
-  await accounts.addTransferableBalance(from.addresses[0], event.tick, event.amt);
+  await holders.addTransferableBalance(from.addresses[0], event.tick, event.amt);
 
   await collection.insertOne({
     inscription: inscription.id,
@@ -84,7 +84,7 @@ async function sendTransfer(from: OutputDocument, event: TokenTransferedEvent, i
         },
       }
     );
-    await accounts.sendTransferableBalance(from.addresses[0], to.addresses[0], event.tick, event.amt);
+    await holders.sendTransferableBalance(from.addresses[0], to.addresses[0], event.tick, event.amt);
   }
 }
 
