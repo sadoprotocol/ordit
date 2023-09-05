@@ -16,20 +16,18 @@ export async function parse(blockHeight: number) {
   }
 
   const ts = perf();
-
   log("\n   🕛 Waiting for block availability");
   await ord.waitForInscriptions(blockHeight);
   log(`\n     👌 Block available [${ts.now} seconds]`);
-
-  const promises: Promise<any>[] = [];
 
   let inscriptions: Inscription[] = [];
 
   let height = inscriptionHeight;
   while (height <= blockHeight) {
-    log(`\n   📦 unboxing inscriptions from block ${height}`);
-    const ts = perf();
+    let ts = perf();
+    log(`\n   📦 resolving inscriptions from block ${height}`);
     const list = await ord.getBlockInscriptions(height);
+    log(` [${ts.now} seconds]`);
     for (const data of list) {
       const [current] = parseLocation(data.output);
       const [media, format] = data.media.kind.split(";");
@@ -70,12 +68,13 @@ export async function parse(blockHeight: number) {
 
       inscriptions.push(inscription as Inscription);
     }
-    promises.push(db.inscriptions.insertMany(inscriptions));
-    log(`\n     📭 resolved ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
+    ts = perf();
+    log(`\n     📬 inserting ${inscriptions.length}`);
+    await db.inscriptions.insertMany(inscriptions);
+    log(`\n     📭 inserted ${inscriptions.length} inscriptions from block ${height} [${ts.now} seconds]`);
     inscriptions = [];
     height += 1;
   }
-  await Promise.all(promises);
 }
 
 async function getNextInscriptionHeight(): Promise<number> {
