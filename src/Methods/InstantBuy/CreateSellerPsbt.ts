@@ -29,19 +29,19 @@ export default method({
     // const tx = await rpc.transactions.getRawTransaction(txid, true);
     // return getExpandedTransaction(tx, options);
 
-    const { inputs, outputs } = await getSellerInputsOutputs({
-      inscriptionOutPoint,
-      price,
-      receiveAddress,
-      publicKey,
-      pubKeyType,
-    });
+    // const { inputs, outputs } = await getSellerInputsOutputs({
+    //   inscriptionOutPoint,
+    //   price,
+    //   receiveAddress,
+    //   publicKey,
+    //   pubKeyType,
+    // });
 
     const networkObj = getBitcoinNetwork();
     const psbt = new Psbt({ network: networkObj });
 
-    psbt.addInput(inputs[0]);
-    psbt.addOutput(outputs[0]);
+    // psbt.addInput(inputs[0]);
+    // psbt.addOutput(outputs[0]);
 
     return {
       hex: psbt.toHex(),
@@ -50,100 +50,100 @@ export default method({
   },
 });
 
-export async function getSellerInputsOutputs({
-  inscriptionOutPoint,
-  price,
-  receiveAddress,
-  publicKey,
-  pubKeyType = "taproot",
-}: GenerateSellerInstantBuyPsbtOptionsType) {
-  const network = config.network;
+// export async function getSellerInputsOutputs({
+//   inscriptionOutPoint,
+//   price,
+//   receiveAddress,
+//   publicKey,
+//   pubKeyType = "taproot",
+// }: GenerateSellerInstantBuyPsbtOptionsType) {
+//   const network = config.network;
 
-  const format = addressNameToType[pubKeyType];
-  const address = getAddressesFromPublicKey(publicKey, network, format)[0];
-  const inputs: InputType[] = [];
-  const outputs: { address: string; value: number }[] = [];
+//   const format = addressNameToType[pubKeyType];
+//   const address = getAddressesFromPublicKey(publicKey, network, format)[0];
+//   const inputs: InputType[] = [];
+//   const outputs: { address: string; value: number }[] = [];
 
-  const { totalUTXOs, unspendableUTXOs } = await fetchUnspentUTXOs({
-    address: address.address!,
-    // network,
-    type: "all",
-  });
-  if (!totalUTXOs) {
-    throw new Error("No UTXOs found");
-  }
+//   const { totalUTXOs, unspendableUTXOs } = await fetchUnspentUTXOs({
+//     address: address.address!,
+//     // network,
+//     type: "all",
+//   });
+//   if (!totalUTXOs) {
+//     throw new Error("No UTXOs found");
+//   }
 
-  const utxo = unspendableUTXOs.find((utxo) => utxo.inscriptions?.find((i) => i.outpoint === inscriptionOutPoint));
-  if (!utxo) {
-    throw new Error("Inscription not found");
-  }
+//   const utxo = unspendableUTXOs.find((utxo) => utxo.inscriptions?.find((i) => i.outpoint === inscriptionOutPoint));
+//   if (!utxo) {
+//     throw new Error("Inscription not found");
+//   }
 
-  const input = await processInput({
-    utxo,
-    pubKey: publicKey,
-    network,
-    sighashType: bitcoin.Transaction.SIGHASH_SINGLE | bitcoin.Transaction.SIGHASH_ANYONECANPAY,
-  });
+//   const input = await processInput({
+//     utxo,
+//     pubKey: publicKey,
+//     network,
+//     sighashType: bitcoin.Transaction.SIGHASH_SINGLE | bitcoin.Transaction.SIGHASH_ANYONECANPAY,
+//   });
 
-  inputs.push(input);
-  outputs.push({ address: receiveAddress, value: price + utxo.sats });
+//   inputs.push(input);
+//   outputs.push({ address: receiveAddress, value: price + utxo.sats });
 
-  return { inputs, outputs };
-}
+//   return { inputs, outputs };
+// }
 
-async function fetchUnspentUTXOs({
-  address,
-  type,
-  decodeMetadata,
-}: {
-  address?: string;
-  type: string;
-  decodeMetadata?: true;
-}) {
-  if (!address) {
-    throw new Error("Invalid address");
-  }
+// async function fetchUnspentUTXOs({
+//   address,
+//   type,
+//   decodeMetadata,
+// }: {
+//   address?: string;
+//   type: string;
+//   decodeMetadata?: true;
+// }) {
+//   if (!address) {
+//     throw new Error("Invalid address");
+//   }
 
-  const utxos = await rpc[network].call<UTXO[]>(
-    "GetUnspents",
-    {
-      address,
-      options: {
-        allowedrarity: rarity,
-        safetospend: type === "spendable",
-      },
-      pagination: {
-        limit: 50,
-      },
-      sort: { value: sort },
-    },
-    rpc.id
-  );
+//   const utxos = await rpc[network].call<UTXO[]>(
+//     "GetUnspents",
+//     {
+//       address,
+//       options: {
+//         allowedrarity: rarity,
+//         safetospend: type === "spendable",
+//       },
+//       pagination: {
+//         limit: 50,
+//       },
+//       sort: { value: sort },
+//     },
+//     rpc.id
+//   );
 
-  const { spendableUTXOs, unspendableUTXOs } = utxos.reduce(
-    (acc, utxo) => {
-      if (utxo.inscriptions?.length && !utxo.safeToSpend) {
-        utxo.inscriptions = decodeMetadata ? transformInscriptions(utxo.inscriptions) : utxo.inscriptions;
+//   const { spendableUTXOs, unspendableUTXOs } = utxos.reduce(
+//     (acc, utxo) => {
+//       if (utxo.inscriptions?.length && !utxo.safeToSpend) {
+//         utxo.inscriptions = decodeMetadata ? transformInscriptions(utxo.inscriptions) : utxo.inscriptions;
 
-        acc.unspendableUTXOs.push(utxo);
-      } else {
-        acc.spendableUTXOs.push(utxo);
-      }
+//         acc.unspendableUTXOs.push(utxo);
+//       } else {
+//         acc.spendableUTXOs.push(utxo);
+//       }
 
-      return acc;
-    },
-    {
-      spendableUTXOs: [],
-      unspendableUTXOs: [],
-    } as Record<string, UTXO[]>
-  );
+//       return acc;
+//     },
+//     {
+//       spendableUTXOs: [],
+//       unspendableUTXOs: [],
+//     } as Record<string, UTXO[]>
+//   );
 
-  return {
-    totalUTXOs: utxos.length,
-    spendableUTXOs,
-    unspendableUTXOs,
-  };
-}
+//   return {
+//     totalUTXOs: utxos.length,
+//     spendableUTXOs,
+//     unspendableUTXOs,
+//   };
+// }
 
 function transformInscriptions(inscriptions: Inscription[] | undefined) {
   if (!inscriptions) return [];
