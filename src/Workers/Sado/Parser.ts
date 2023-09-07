@@ -9,7 +9,7 @@ const log = debug("sado-parser");
 main().finally(() => process.exit(0));
 
 async function main() {
-  log("network: %s", config.chain.network);
+  log("network: %s", config.network);
   await bootstrap();
   await parse();
 }

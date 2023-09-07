@@ -31,10 +31,9 @@ export async function parse(blockHeight: number) {
     const list = await ord.getBlockInscriptions(height);
     log(` [${ts.now} seconds]`);
     for (const data of list) {
-      const [current] = parseLocation(data.output);
+      const [txid] = parseLocation(data.output);
       const [media, format] = data.media.kind.split(";");
       const [type, subtype] = media.split("/");
-      const [txid] = parseLocation(data.output);
 
       const inscription: Partial<Inscription> = {
         id: data.id,
@@ -58,7 +57,7 @@ export async function parse(blockHeight: number) {
         inscription.creator = data.address;
       }
 
-      if (inscription.genesis === current) {
+      if (inscription.genesis === txid) {
         const meta = await getMetaFromTxId(inscription.genesis);
         if (meta) {
           inscription.meta = meta;
