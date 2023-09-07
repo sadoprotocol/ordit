@@ -43,12 +43,8 @@ export async function crawl(blockN: number, maxBlockN: number) {
       n += 1;
     }
     for (const vout of tx.vout) {
-      const addresses = getAddressessFromVout(vout);
-      if (addresses.length === 0) {
-        continue;
-      }
       outputs.push({
-        addresses,
+        addresses: getAddressessFromVout(vout),
         value: vout.value,
         vout: {
           block: {

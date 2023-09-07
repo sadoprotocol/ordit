@@ -106,7 +106,7 @@ async function indexUtxos(blockHeight: number): Promise<void> {
 }
 
 async function reorgUtxos(blockHeight: number) {
-  await db.outputs.deleteMany({ "vout.block.height": { $gt: blockHeight } });
+  await db.outputs.deleteMany({ "vout.block.height": { $gte: blockHeight } });
 }
 
 async function indexSado(blockHeight: number): Promise<void> {
