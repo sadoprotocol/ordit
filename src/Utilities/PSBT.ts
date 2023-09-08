@@ -302,7 +302,7 @@ export type PsbtInput = Psbt["data"]["inputs"][number] & {
 };
 
 type ProcessInputOptions = {
-  utxo: UTXO;
+  utxo: UTXORefined;
   pubKey: string;
   network: Network;
   sighashType?: number;
@@ -322,6 +322,8 @@ export type UTXO = {
   safeToSpend: boolean;
   confirmation: number;
 };
+
+export type UTXORefined = Omit<UTXO, "txHash" | "safeToSpend" | "confirmation">;
 
 type Ordinal = {
   number: number;

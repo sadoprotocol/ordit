@@ -1,5 +1,6 @@
 import { BIP32Factory } from "bip32";
-import bitcoin, { networks, payments } from "bitcoinjs-lib";
+// import bitcoin, { networks, payments } from "bitcoinjs-lib";
+import * as bitcoin from "bitcoinjs-lib";
 // import Schema, { Type } from "computed-types";
 import * as ecc from "tiny-secp256k1";
 
@@ -7,8 +8,9 @@ import { config } from "../Config";
 import { Network } from "../Libraries/Network";
 import { getBitcoinNetwork } from "../Libraries/Network";
 import { Vout } from "../Services/Bitcoin";
+import { createTransaction } from "./Transaction";
 
-const network = config.network === "mainnet" ? networks.bitcoin : networks[config.network];
+const network = config.network === "mainnet" ? bitcoin.networks.bitcoin : bitcoin.networks[config.network];
 if (network === undefined) {
   throw new Error("invalid network", network);
 }
@@ -31,7 +33,7 @@ function extractAddress(scriptPubKeyHex: string) {
   const scriptPubKey = Buffer.from(scriptPubKeyHex, "hex");
 
   try {
-    const address = payments.p2pkh({ output: scriptPubKey, network }).address;
+    const address = bitcoin.payments.p2pkh({ output: scriptPubKey, network }).address;
     if (address) {
       return address;
     }
@@ -40,7 +42,7 @@ function extractAddress(scriptPubKeyHex: string) {
   }
 
   try {
-    const address = payments.p2sh({ output: scriptPubKey, network }).address;
+    const address = bitcoin.payments.p2sh({ output: scriptPubKey, network }).address;
     if (address) {
       return address;
     }
@@ -49,7 +51,7 @@ function extractAddress(scriptPubKeyHex: string) {
   }
 
   try {
-    const address = payments.p2wpkh({ output: scriptPubKey, network }).address;
+    const address = bitcoin.payments.p2wpkh({ output: scriptPubKey, network }).address;
     if (address) {
       return address;
     }
@@ -58,7 +60,7 @@ function extractAddress(scriptPubKeyHex: string) {
   }
 
   try {
-    const address = payments.p2wsh({ output: scriptPubKey, network }).address;
+    const address = bitcoin.payments.p2wsh({ output: scriptPubKey, network }).address;
     if (address) {
       return address;
     }
@@ -115,7 +117,6 @@ export function getAddressesFromPublicKey(
   } else {
     const key = format === "p2tr" ? childNodeXOnlyPubkey : keys.publicKey;
     const paymentObj = createTransaction(key, format, network);
-
     addresses.push({
       address: paymentObj.address,
       format: addressTypeToName[format],
@@ -127,49 +128,51 @@ export function getAddressesFromPublicKey(
   return addresses;
 }
 
-export function createTransaction(
-  key: Buffer,
-  type: AddressTypes,
-  network: Network | bitcoin.Network,
-  paymentOptions?: bitcoin.Payment
-) {
-  bitcoin.initEccLib(ecc);
-  const networkObj = typeof network === "string" ? getBitcoinNetwork() : network;
+export function getAddressFormat(address: string) {
+  let format = {
+    address,
+    format: "unknown",
+  };
 
-  if (type === "p2tr") {
-    return bitcoin.payments.p2tr({ internalPubkey: key, network: networkObj, ...paymentOptions });
+  const addressTypes = addressFormats[config.network];
+  const addressTypesList = Object.keys(addressTypes);
+
+  for (let i = 0; i < addressTypesList.length; i++) {
+    const addressType = addressTypesList[i] as AddressTypes;
+    const addressTypeReg = addressTypes[addressType];
+    const addressName = addressTypeToName[addressType];
+
+    if (addressTypeReg.test(address)) {
+      format = {
+        address,
+        format: addressName,
+      };
+    }
   }
 
-  if (type === "p2sh") {
-    return bitcoin.payments.p2sh({
-      redeem: bitcoin.payments.p2wpkh({ pubkey: key, network: networkObj }),
-      network: networkObj,
-    });
-  }
-
-  return bitcoin.payments[type]({ pubkey: key, network: networkObj });
+  return format;
 }
 
-// export const addressFormats = {
-//   mainnet: {
-//     p2pkh: /^[1][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-//     p2sh: /^[3][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-//     p2wpkh: /^(bc1[qp])[a-zA-HJ-NP-Z0-9]{14,74}$/,
-//     p2tr: /^(bc1p)[a-zA-HJ-NP-Z0-9]{14,74}$/,
-//   },
-//   testnet: {
-//     p2pkh: /^[mn][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-//     p2sh: /^[2][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-//     p2wpkh: /^(tb1[qp]|bcrt1[qp])[a-zA-HJ-NP-Z0-9]{14,74}$/,
-//     p2tr: /^(tb1p|bcrt1p)[a-zA-HJ-NP-Z0-9]{14,74}$/,
-//   },
-//   regtest: {
-//     p2pkh: /^[mn][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-//     p2sh: /^[2][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-//     p2wpkh: /^(tb1[qp]|bcrt1[qp])[a-zA-HJ-NP-Z0-9]{14,74}$/,
-//     p2tr: /^(tb1p|bcrt1p)[a-zA-HJ-NP-Z0-9]{14,74}$/,
-//   },
-// } as const;
+export const addressFormats = {
+  mainnet: {
+    p2pkh: /^[1][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    p2sh: /^[3][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    p2wpkh: /^(bc1[qp])[a-zA-HJ-NP-Z0-9]{14,74}$/,
+    p2tr: /^(bc1p)[a-zA-HJ-NP-Z0-9]{14,74}$/,
+  },
+  testnet: {
+    p2pkh: /^[mn][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    p2sh: /^[2][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    p2wpkh: /^(tb1[qp]|bcrt1[qp])[a-zA-HJ-NP-Z0-9]{14,74}$/,
+    p2tr: /^(tb1p|bcrt1p)[a-zA-HJ-NP-Z0-9]{14,74}$/,
+  },
+  regtest: {
+    p2pkh: /^[mn][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    p2sh: /^[2][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    p2wpkh: /^(tb1[qp]|bcrt1[qp])[a-zA-HJ-NP-Z0-9]{14,74}$/,
+    p2tr: /^(tb1p|bcrt1p)[a-zA-HJ-NP-Z0-9]{14,74}$/,
+  },
+} as const;
 
 export const addressTypeToName = {
   p2pkh: "legacy",
@@ -186,10 +189,10 @@ export const addressNameToType = {
 } as const;
 
 export type AddressTypes = keyof typeof addressTypeToName;
-// export type AddressFormats = (typeof addressTypeToName)[AddressTypes];
+export type AddressFormats = (typeof addressTypeToName)[AddressTypes];
 // export type AddressFormatSchema = Schema.either()
 
-type Address = {
+export type Address = {
   address: string | undefined;
   xkey?: string;
   format: string;

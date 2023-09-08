@@ -10,6 +10,7 @@ import {
 } from "mongodb";
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
+import { log } from "../../Workers/Log";
 import { collection, OutputDocument, SpentOutput } from "./Collection";
 import { noSpentsFilter } from "./Utilities";
 
