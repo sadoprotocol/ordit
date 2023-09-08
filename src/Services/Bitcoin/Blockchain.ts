@@ -290,7 +290,7 @@ type TxOut = {
 export type ScriptPubKey = {
   asm: string;
   hex: string;
-  reqSigs: number;
+  reqSigs?: number;
   type: string;
   addresses: string[];
 };
