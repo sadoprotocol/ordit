@@ -53,6 +53,11 @@ export const registrar: CollectionRegistrar = {
         spent: 1,
       },
     ],
+    [
+      {
+        sats: 1,
+      },
+    ],
   ],
 };
 
@@ -61,6 +66,7 @@ export type OutputDocument = {
   value: number;
   vout: OutputTransaction;
   vin?: OutputTransaction;
+  sats: [number, number][];
   spent?: true;
 };
 

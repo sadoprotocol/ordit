@@ -10,6 +10,7 @@
     "worker": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Watcher.ts",
     "indexer": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Indexer.ts",
     "reorg": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Reorg.ts",
+    "ordinals": "ts-node ./src/Workers/Ordinals/Indexer.ts",
     "brc": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Brc20/Import.ts",
     "patch": "DEBUG=ordit-*,bitcoin-*,sado-*,ord-* ts-node ./src/Workers/Patch.ts",
     "clean": "rm -rf dist",
