@@ -8,9 +8,17 @@ export const ord = {
   getHeight,
   getOrdinals,
   getBlockInscriptions,
+  getInscription,
+  getInscriptionsForIds,
   waitForBlock,
   waitForInscriptions,
 };
+
+class OrdError extends Error {
+  constructor(readonly status: number, readonly statusText: string, readonly url: string) {
+    super("failed to resolve ord api call");
+  }
+}
 
 /*
  |--------------------------------------------------------------------------------
@@ -45,6 +53,31 @@ async function getBlockInscriptions(blockHeight: number, seconds = 1): Promise<I
     console.log(error);
     return sleep(seconds).then(() => getBlockInscriptions(blockHeight, seconds));
   });
+}
+
+async function getInscription(id: string) {
+  try {
+    return await call<InscriptionData>(`/inscription/${id}`);
+  } catch (error) {
+    if (error instanceof OrdError && error.status === 404) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function getInscriptionsForIds(ids: string[]) {
+  return await call<
+    {
+      inscription_id: string;
+      number: number;
+      genesis_height: number;
+      genesis_fee: number;
+      sat: number;
+      satpoint: string;
+      timestamp: number;
+    }[]
+  >(`/inscriptions`, { ids });
 }
 
 /**
@@ -87,15 +120,23 @@ async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<vo
  |--------------------------------------------------------------------------------
  */
 
-async function call<R>(endpoint: string): Promise<R> {
-  const response = await fetch(`${getRpcUri()}${endpoint}`, {
+async function call<R>(endpoint: string, data?: any): Promise<R> {
+  const options: any = {
     method: "GET",
     headers: {
       Accept: "application/json",
     },
-  });
+  };
+
+  if (data !== undefined) {
+    options.method = "POST";
+    options.body = JSON.stringify(data);
+    options.headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(`${getRpcUri()}${endpoint}`, options);
   if (response.status !== 200) {
-    throw new Error("failed to resolve ord api call");
+    throw new OrdError(response.status, response.statusText, response.url);
   }
   return response.json();
 }
@@ -153,6 +194,20 @@ type Inscription = {
   genesis: string;
   number: number;
   output: string;
+};
+
+type InscriptionData = {
+  inscription_id: string;
+  number: number;
+  genesis_fee: number;
+  genesis_height: number;
+  output_value: number;
+  address: string;
+  sat: number;
+  satpoint: string;
+  content_type: string;
+  content_length: number;
+  timestamp: number;
 };
 
 export type Ordinal = {

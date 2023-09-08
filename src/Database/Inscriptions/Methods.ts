@@ -1,4 +1,4 @@
-import { AnyBulkWriteOperation, Filter, FindOptions, UpdateFilter } from "mongodb";
+import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
@@ -22,6 +22,10 @@ export const inscriptions = {
   hasInscriptions,
   getInscriptionById,
   getInscriptionsByOutpoint,
+
+  // ### Indexer Methods
+
+  addTransfers,
 };
 
 /*
@@ -34,29 +38,8 @@ export const inscriptions = {
  |
  */
 
-async function insertMany(inscriptions: Inscription[], chunkSize = 1000) {
-  if (inscriptions.length === 0) {
-    return;
-  }
-  const bulkops: AnyBulkWriteOperation<Inscription>[] = [];
-  for (const inscription of inscriptions) {
-    bulkops.push({
-      updateOne: {
-        filter: { id: inscription.id },
-        update: {
-          $set: inscription,
-        },
-        upsert: true,
-      },
-    });
-    if (bulkops.length === chunkSize) {
-      await collection.bulkWrite(bulkops);
-      bulkops.length = 0;
-    }
-  }
-  if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
-  }
+async function insertMany(inscriptions: Inscription[]) {
+  return collection.insertMany(inscriptions);
 }
 
 async function insertOne(inscription: Inscription) {
@@ -120,4 +103,38 @@ async function getInscriptionsByOutpoint(outpoint: string) {
     inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
   }
   return inscriptions;
+}
+
+/*
+ |--------------------------------------------------------------------------------
+ | Indexer Methods
+ |--------------------------------------------------------------------------------
+ |
+ | Methods used by indexing operations to update collection states.
+ |
+ */
+
+async function addTransfers(spents: { id: string; owner: string; outpoint: string }[], chunkSize = 1000) {
+  if (spents.length === 0) {
+    return;
+  }
+
+  const bulkops: any[][] = new Array(Math.ceil(spents.length / chunkSize)).fill(0).map(() => []);
+
+  let i = 0;
+  for (const { id, owner, outpoint } of spents) {
+    bulkops[i].push({
+      updateOne: {
+        filter: { id },
+        update: {
+          $set: { owner, outpoint },
+        },
+      },
+    });
+    if (bulkops[i].length % chunkSize === 0) {
+      i += 1;
+    }
+  }
+
+  await Promise.all(bulkops.map((ops) => collection.bulkWrite(ops)));
 }

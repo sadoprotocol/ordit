@@ -47,6 +47,11 @@ export async function index() {
 
   // ### Parse
 
+  if (config.parser.enabled === true) {
+    log("\n\n 📖 Indexing outputs\n");
+    await indexUtxos(blockHeight);
+  }
+
   if (config.ord.enabled === true) {
     log("\n\n 📰 Indexing inscriptions\n");
     await indexInscriptions(blockHeight);
@@ -54,12 +59,7 @@ export async function index() {
 
   if (config.brc20.enabled === true) {
     log("\n\n 🪙 Indexing BRC-20\n");
-    await indexBrc20();
-  }
-
-  if (config.parser.enabled === true) {
-    log("\n\n 📖 Indexing outputs\n");
-    await indexUtxos(blockHeight);
+    await indexBrc20(blockHeight);
   }
 
   if (config.sado.enabled === true) {
@@ -129,7 +129,7 @@ async function indexSado(blockHeight: number): Promise<void> {
 
 async function reorgSado(blockHeight: number) {
   await Promise.all([
-    db.sado.deleteMany({ height: { $gt: blockHeight } }),
-    db.orders.deleteMany({ "block.height": { $gt: blockHeight } }),
+    db.sado.deleteMany({ height: { $gte: blockHeight } }),
+    db.orders.deleteMany({ "block.height": { $gte: blockHeight } }),
   ]);
 }

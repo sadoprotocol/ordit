@@ -7,7 +7,7 @@ export const registrar: CollectionRegistrar = {
   name: "brc20_events",
   indexes: [
     [{ "meta.slug": 1 }],
-    [{ "meta.inscription": 1 }],
+    [{ "meta.inscription": 1 }, { unique: true }],
     [{ "meta.address": 1 }],
     [{ "meta.block": 1, "meta.number": 1 }],
   ],

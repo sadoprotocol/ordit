@@ -206,11 +206,11 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
     return;
   }
 
-  const promises: Promise<any>[] = [];
+  const bulkops: any[][] = new Array(Math.ceil(spents.length / chunkSize)).fill(0).map(() => []);
 
-  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
+  let i = 0;
   for (const { vout, vin } of spents) {
-    bulkops.push({
+    bulkops[i].push({
       updateOne: {
         filter: { "vout.txid": vout.txid, "vout.n": vout.n },
         update: {
@@ -218,17 +218,12 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
         },
       },
     });
-    if (bulkops.length === chunkSize) {
-      promises.push(collection.bulkWrite(bulkops));
-      bulkops.length = 0;
+    if (bulkops[i].length % chunkSize === 0) {
+      i += 1;
     }
   }
 
-  if (bulkops.length > 0) {
-    promises.push(collection.bulkWrite(bulkops));
-  }
-
-  await Promise.all(promises);
+  await Promise.all(bulkops.map((ops) => collection.bulkWrite(ops)));
 }
 
 async function addRelayed(txid: string, n: number) {
