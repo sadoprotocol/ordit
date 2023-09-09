@@ -76,6 +76,10 @@ async function handleInscriptionsInBlock(block: Block<2>) {
 
   log(`\n       🔍 found ${Object.keys(map).length.toLocaleString()} inscriptions [${ts.now} seconds]`);
 
+  if (Object.keys(map).length === 0) {
+    return;
+  }
+
   // ### Resolve Data
   // Resolve additional inscription data from the ord api and local
   // outputs collection.
@@ -134,9 +138,9 @@ async function handleInscriptionsInBlock(block: Block<2>) {
 
   if (inscriptions.length > 0) {
     ts = perf();
-    log(`\n       📬 inserting ${inscriptions.length} inscriptions`);
+    log(`\n       📬 inserting ${inscriptions.length.toLocaleString()} inscriptions`);
     await db.inscriptions.insertMany(inscriptions);
-    log(`\r       📭 inserted ${inscriptions.length} inscriptions [${ts.now} seconds]`);
+    log(`\r       📭 inserted ${inscriptions.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
   }
 }
 
@@ -202,6 +206,8 @@ async function handleInscriptionTransfers(block: Block<2>) {
  */
 
 async function getInscriptionData(inscriptions: InscriptionMap) {
+  const ts = perf();
+
   const ids = Object.keys(inscriptions);
 
   const data = await ord.getInscriptionsForIds(ids);
@@ -221,9 +227,13 @@ async function getInscriptionData(inscriptions: InscriptionMap) {
       delete inscriptions[id];
     }
   }
+
+  log(`\n         📗 resolved inscription data [${ts.now} seconds]`);
 }
 
 async function getInscriptionCreator(inscriptions: InscriptionMap) {
+  const ts = perf();
+
   const values = Object.values(inscriptions).map((item) => item.genesis);
   if (values.length === 0) {
     return;
@@ -232,23 +242,33 @@ async function getInscriptionCreator(inscriptions: InscriptionMap) {
   for (const item of data) {
     inscriptions[`${item.vout.txid}i0`].creator = item.addresses[0];
   }
+
+  log(`\n         📘 resolved inscription creator [${ts.now} seconds]`);
 }
 
 async function getInscriptionOwner(inscriptions: InscriptionMap) {
+  const ts = perf();
+
   const outpoints: any = {};
+  const ts2 = perf();
   const values = Object.values(inscriptions).map((item) => {
     outpoints[item.outpoint] = item.id;
     return item.outpoint.split(":");
   });
+  log(`\n           🔖 produced ${values.length.toLocaleString()} vout outpoints [${ts2.now} seconds]`);
   if (values.length === 0) {
     return;
   }
+  const ts3 = perf();
   const data = await db.outputs.find({
     $or: values.map((item) => ({ "vout.txid": item[0], "vout.n": parseInt(item[1]) })),
   });
+  log(`\n           🔖 queried ${data.length.toLocaleString()} outputs [${ts3.now} seconds]`);
   for (const item of data) {
     inscriptions[outpoints[`${item.vout.txid}:${item.vout.n}`]].owner = item.addresses[0];
   }
+
+  log(`\n         📙 resolved inscription owner [${ts.now} seconds]`);
 }
 
 /*
