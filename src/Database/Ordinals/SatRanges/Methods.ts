@@ -4,6 +4,7 @@ import { collection, SatRange } from "./Collection";
 export const sats = {
   collection,
   insertMany,
+  findByLocations,
 };
 
 async function insertMany(sats: SatRange[], chunkSize = 500) {
@@ -13,4 +14,8 @@ async function insertMany(sats: SatRange[], chunkSize = 500) {
     promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
   }
   await Promise.all(promises);
+}
+
+async function findByLocations(locations: string[]) {
+  return collection.find({ location: { $in: locations } }).toArray();
 }

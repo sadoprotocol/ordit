@@ -1,4 +1,5 @@
 import { db } from "../../Database";
+import { SatRange } from "../../Database/Ordinals";
 import { COIN_VALUE, SUBSIDY_HALVING_INTERVAL } from "../../Libraries/Ordinals/Constants";
 import { Range } from "../../Libraries/Ordinals/Range";
 import { Block, rpc, TxVin } from "../../Services/Bitcoin";
@@ -25,35 +26,41 @@ async function assignOrdinals(block: Block<2>) {
 
   for (const tx of block.tx) {
     const ranges: Range[] = [];
-    const outputs: { txid: string; n: number; sats: [number, number][] }[] = [];
+    const outputs: SatRange[] = [];
 
-    const inputs = await db.outputs.find({
-      $or: tx.vin.map((vin) => ({ "vout.txid": (vin as TxVin).txid, "vout.n": (vin as TxVin).vout })),
-    });
-    for (const input of inputs) {
-      ranges.push(...input.sats.map(([first, last]) => new Range(first, last)));
+    const inputs = await db.ordinals.sats.findByLocations(
+      tx.vin.map((vin) => `${(vin as TxVin).txid}:${(vin as TxVin).vout}`)
+    );
+    for (const { first, last } of inputs) {
+      ranges.push(new Range(first, last));
     }
 
     for (const vout of tx.vout) {
-      outputs.push({
-        txid: tx.txid,
-        n: vout.n,
-        sats: getSats(btcToSat(vout.value), ranges),
+      getSats(btcToSat(vout.value), ranges).forEach(([first, last]) => {
+        outputs.push({
+          block: block.height,
+          location: `${tx.txid}:${vout.n}`,
+          first,
+          last,
+        });
       });
     }
 
-    await db.outputs.addSats(outputs);
+    await db.ordinals.sats.insertMany(outputs);
   }
 
-  const outputs: { txid: string; n: number; sats: [number, number][] }[] = [];
+  const outputs: SatRange[] = [];
   for (const output of coinbaseTransaction.vout) {
-    outputs.push({
-      txid: coinbaseTransaction.txid,
-      n: output.n,
-      sats: getSats(btcToSat(output.value), [coinbase]),
+    getSats(btcToSat(output.value), [coinbase]).forEach(([first, last]) => {
+      outputs.push({
+        block: block.height,
+        location: `${coinbaseTransaction.txid}:${output.n}`,
+        first,
+        last,
+      });
     });
   }
-  await db.outputs.addSats(outputs);
+  await db.ordinals.sats.insertMany(outputs);
 }
 
 function getSats(value: number, ranges: Range[]): [number, number][] {
