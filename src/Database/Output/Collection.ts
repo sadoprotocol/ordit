@@ -12,12 +12,6 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        addresses: 1,
-        value: 1,
-      },
-    ],
-    [
-      {
         "vout.txid": 1,
         "vout.n": 1,
       },
@@ -27,35 +21,12 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        "vin.txid": 1,
-        "vin.n": 1,
-      },
-      {
-        unique: true,
-        sparse: true,
-      },
-    ],
-    [
-      {
         "vout.block.height": 1,
       },
     ],
     [
       {
-        "vin.block.height": 1,
-      },
-      {
-        sparse: true,
-      },
-    ],
-    [
-      {
         spent: 1,
-      },
-    ],
-    [
-      {
-        sats: 1,
       },
     ],
   ],
@@ -66,7 +37,6 @@ export type OutputDocument = {
   value: number;
   vout: OutputTransaction;
   vin?: OutputTransaction;
-  sats: [number, number][];
   spent?: true;
 };
 

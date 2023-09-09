@@ -170,7 +170,7 @@ async function handleInscriptionTransfers(block: Block<2>) {
   log(`\n       🔍 found ${transfers.length.toLocaleString()} transfers [${ts.now} seconds]`);
 
   if (transfers.length > 0) {
-    log(`\n       📬 transfering ${transfers.length} inscriptions [${ts.now} seconds]`);
+    log(`\n       📬 transfering ${transfers.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
 
     const ops: { id: string; owner: string; outpoint: string }[] = [];
 

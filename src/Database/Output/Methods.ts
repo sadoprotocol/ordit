@@ -1,7 +1,6 @@
 import {
   AggregateOptions,
   AggregationCursor,
-  AnyBulkWriteOperation,
   DeleteOptions,
   Document,
   Filter,
@@ -40,7 +39,6 @@ export const outputs = {
   // ### Indexer Methods
 
   addSpents,
-  addSats,
   addRelayed,
 };
 
@@ -224,26 +222,6 @@ async function addSpents(spents: SpentOutput[], chunkSize = 500) {
   }
 
   await Promise.all(bulkops.map((ops) => collection.bulkWrite(ops)));
-}
-
-async function addSats(outputs: { txid: string; n: number; sats: [number, number][] }[]) {
-  if (outputs.length === 0) {
-    return;
-  }
-  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
-  for (const { txid, n, sats } of outputs) {
-    bulkops.push({
-      updateOne: {
-        filter: { "vout.txid": txid, "vout.n": n },
-        update: {
-          $set: {
-            sats,
-          },
-        },
-      },
-    });
-  }
-  await collection.bulkWrite(bulkops);
 }
 
 async function addRelayed(txid: string, n: number) {

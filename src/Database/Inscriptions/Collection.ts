@@ -25,6 +25,11 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
+        outpoint: 1,
+      },
+    ],
+    [
+      {
         sat: 1,
       },
     ],
