@@ -58,7 +58,6 @@ export async function crawl(blockN: number, maxBlockN: number) {
           txid: tx.txid,
           n: vout.n,
         },
-        sats: [],
       });
     }
   }
