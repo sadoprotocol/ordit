@@ -3,7 +3,12 @@ import { ipfs } from "../../Services/IPFS";
 import { OrderParams } from "./CreateOrderPsbt";
 
 export async function uploadOrder(params: OrderParams): Promise<string> {
-  const { cid } = await ipfs.uploadJson<Omit<IPFSOrder, "cid">>({
+  const { cid } = await ipfs.uploadJson<Omit<IPFSOrder, "cid">>(getOrderIPFS(params));
+  return cid;
+}
+
+export function getOrderIPFS(params: OrderParams): Omit<IPFSOrder, "cid"> {
+  return {
     ts: params.order.ts,
     type: params.order.type,
     location: params.order.location,
@@ -18,6 +23,5 @@ export async function uploadOrder(params: OrderParams): Promise<string> {
     signature_format: params.signature.format,
     desc: params.signature.desc,
     pubkey: params.signature.pubkey,
-  });
-  return cid;
+  };
 }

@@ -1,11 +1,10 @@
 import { BadRequestError, method, NotFoundError } from "@valkyr/api";
 
-import { sado } from "../../Libraries/Sado";
+import { validateOrderSignature } from "../../Database/SadoOrders";
 import { createOrderPsbt, params } from "../../Libraries/Sado/CreateOrderPsbt";
-import { uploadOrder } from "../../Libraries/Sado/UploadOrder";
+import { getOrderIPFS, uploadOrder } from "../../Libraries/Sado/UploadOrder";
 import { rpc } from "../../Services/Bitcoin";
 import { getAddressType } from "../../Utilities/Bitcoin";
-import { validateCoreSignature, validateOrditSignature, validatePSBTSignature } from "../../Utilities/Signatures";
 import { parseLocation } from "../../Utilities/Transaction";
 
 export default method({
@@ -16,48 +15,12 @@ export default method({
       throw new BadRequestError("Provided maker address does not match supported address types");
     }
 
-    // ### Validate Location
-    // Ensure that the UTXO being spent exists and is confirmed.
+    // ### Validate Order
+    // Ensure that the order can be successfully validated by sado compliant
+    // marketplace services.
 
     await validateLocation(params.order.location);
-
-    // ### Validate Signature
-    // Make sure that the order is verifiable by the API when it is received.
-
-    let hasValidSignature = false;
-
-    switch (params.signature.format) {
-      case "psbt": {
-        hasValidSignature = validatePSBTSignature(params.signature.value, params.order.location);
-        break;
-      }
-      case "ordit": {
-        if (params.signature.pubkey === undefined) {
-          throw new BadRequestError("Signature format 'ordit' requires a public key");
-        }
-        hasValidSignature = validateOrditSignature(
-          sado.order.toHex(params.order),
-          params.signature.pubkey,
-          params.signature.value
-        );
-        break;
-      }
-      case "core": {
-        hasValidSignature = validateCoreSignature(
-          sado.order.toHex(params.order),
-          params.order.maker,
-          params.signature.value
-        );
-        break;
-      }
-      default: {
-        throw new BadRequestError(`Signature format ${params.signature.format} is not supported`);
-      }
-    }
-
-    if (hasValidSignature === false) {
-      throw new BadRequestError("Failed to validate signature");
-    }
+    validateOrderSignature(getOrderIPFS(params));
 
     // ### Store Order
 

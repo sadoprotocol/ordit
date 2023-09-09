@@ -2,7 +2,7 @@ import { validateCoreSignature, validateOrditSignature, validatePSBTSignature } 
 import { IPFSOrder } from "../../IPFS";
 import { toMessageString } from "./OrderMessage";
 
-export function validateOrderSignature(order: IPFSOrder) {
+export function validateOrderSignature(order: Omit<IPFSOrder, "cid">) {
   switch (order.signature_format) {
     case "psbt": {
       if (validatePSBTSignature(order.signature, order.location) === false) {
