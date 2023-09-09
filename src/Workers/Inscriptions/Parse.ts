@@ -25,9 +25,10 @@ export async function parse(blockHeight: number) {
 
   let height = inscriptionHeight;
   while (height <= blockHeight) {
+    const ts = perf();
     log(`\n   📦 resolving inscriptions in block ${height}`);
     const block = await rpc.blockchain.getBlock(height, 2);
-    log(` [${ts.now} seconds]`);
+    log(`\n     🕛 resolved block [${ts.now} seconds]`);
 
     await handleInscriptionsInBlock(block);
     await handleInscriptionTransfers(block);
@@ -55,6 +56,8 @@ async function getNextInscriptionHeight(): Promise<number> {
 async function handleInscriptionsInBlock(block: Block<2>) {
   let ts = perf();
 
+  log(`\n     🔬 scanning for inscriptions`);
+
   // ### Map Inscriptions
   // Look through all block transactions and identify ord inscriptions
   // present in the txinwitness scripts.
@@ -71,9 +74,13 @@ async function handleInscriptionsInBlock(block: Block<2>) {
     }
   }
 
+  log(`\n       🔍 found ${Object.keys(map).length.toLocaleString()} inscriptions [${ts.now} seconds]`);
+
   // ### Resolve Data
   // Resolve additional inscription data from the ord api and local
   // outputs collection.
+
+  ts = perf();
 
   await getInscriptionData(map);
   await getInscriptionCreator(map);
@@ -123,16 +130,20 @@ async function handleInscriptionsInBlock(block: Block<2>) {
     inscriptions.push(entry as Inscription);
   }
 
+  log(`\n       🛠️ prepared ${inscriptions.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
+
   if (inscriptions.length > 0) {
     ts = perf();
-    log(`\n     📬 inserting ${inscriptions.length} inscriptions`);
+    log(`\n       📬 inserting ${inscriptions.length} inscriptions`);
     await db.inscriptions.insertMany(inscriptions);
-    log(`\r     📭 inserted ${inscriptions.length} inscriptions [${ts.now} seconds]`);
+    log(`\r       📭 inserted ${inscriptions.length} inscriptions [${ts.now} seconds]`);
   }
 }
 
 async function handleInscriptionTransfers(block: Block<2>) {
-  const ts = perf();
+  let ts = perf();
+
+  log(`\n     🔬 scanning for transfers`);
 
   // ### Get Spents
   // Go through each transaction inputs and map their outpoints.
@@ -147,14 +158,19 @@ async function handleInscriptionTransfers(block: Block<2>) {
     }
   }
 
+  log(`\n       💿 processed ${outputs.length.toLocaleString()} vins [${ts.now} seconds]`);
+
   // ### Transfer
   // Find any inscription where the spent outpoints match the inscription.
   // When we find matching inscriptions it means they have been moved to
   // a new location.
 
+  ts = perf();
   const transfers = await db.inscriptions.find({ outpoint: { $in: outputs } });
+  log(`\n       🔍 found ${transfers.length.toLocaleString()} transfers [${ts.now} seconds]`);
+
   if (transfers.length > 0) {
-    log(`\n     📬 transfering ${transfers.length} inscriptions [${ts.now} seconds]`);
+    log(`\n       📬 transfering ${transfers.length} inscriptions [${ts.now} seconds]`);
 
     const ops: { id: string; owner: string; outpoint: string }[] = [];
 
@@ -175,7 +191,7 @@ async function handleInscriptionTransfers(block: Block<2>) {
 
     await db.inscriptions.addTransfers(ops);
 
-    log(`\r     📭 transfered ${transfers.length} inscriptions [${ts.now} seconds]`);
+    log(`\r       📭 transfered ${transfers.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
   }
 }
 

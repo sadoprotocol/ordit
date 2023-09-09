@@ -4,7 +4,7 @@ import { SPENTS_DATA } from "../../../Paths";
 import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../../Utilities/Address";
 import { writeFile } from "../../../Utilities/Files";
-import { log } from "../../Log";
+import { log, perf } from "../../Log";
 
 export async function crawl(blockN: number, maxBlockN: number) {
   if (blockN > maxBlockN) {
@@ -12,14 +12,18 @@ export async function crawl(blockN: number, maxBlockN: number) {
     return 0;
   }
 
-  const blockHash = await rpc.blockchain.getBlockHash(blockN);
-  const block = await rpc.blockchain.getBlock(blockHash, 2);
+  log(`\n   📦 parsing outputs from block ${blockN}`);
+
+  let ts = perf();
+  const block = await rpc.blockchain.getBlock(blockN, 2);
+  log(`\n     💿 loaded block, processing ${block.tx.length.toLocaleString()} transactions [${ts.now} seconds]`);
 
   // ### Documents
 
   const outputs: OutputDocument[] = [];
   const spents: SpentOutput[] = [];
 
+  ts = perf();
   for (const tx of block.tx) {
     let n = 0;
     for (const vin of tx.vin) {
@@ -59,10 +63,20 @@ export async function crawl(blockN: number, maxBlockN: number) {
     }
   }
 
+  log(
+    `\n     🏷️ transactions parsed ${outputs.length.toLocaleString()} outputs and ${spents.length.toLocaleString()} spents [${
+      ts.now
+    } seconds]`
+  );
+
   // ### Insert
+
+  ts = perf();
 
   await db.outputs.insertMany(outputs);
   await writeFile(`${SPENTS_DATA}/${block.height}`, JSON.stringify(spents));
+
+  log(`\n     💾 saved ${outputs.length.toLocaleString()} outputs [${ts.now} seconds]`);
 
   return outputs.length;
 }

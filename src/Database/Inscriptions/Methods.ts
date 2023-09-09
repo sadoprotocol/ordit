@@ -2,6 +2,7 @@ import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
+import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, Inscription } from "./Collection";
 
 export const inscriptions = {
@@ -38,8 +39,13 @@ export const inscriptions = {
  |
  */
 
-async function insertMany(inscriptions: Inscription[]) {
-  return collection.insertMany(inscriptions);
+async function insertMany(inscriptions: Inscription[], chunkSize = 500) {
+  const promises = [];
+  for (let i = 0; i < inscriptions.length; i += chunkSize) {
+    const chunk = inscriptions.slice(i, i + chunkSize);
+    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
+  }
+  await Promise.all(promises);
 }
 
 async function insertOne(inscription: Inscription) {

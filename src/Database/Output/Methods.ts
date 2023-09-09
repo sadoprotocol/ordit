@@ -54,7 +54,7 @@ export const outputs = {
  |
  */
 
-async function insertMany(outputs: OutputDocument[], chunkSize = 1000) {
+async function insertMany(outputs: OutputDocument[], chunkSize = 500) {
   const promises = [];
   for (let i = 0; i < outputs.length; i += chunkSize) {
     const chunk = outputs.slice(i, i + chunkSize);
@@ -201,7 +201,7 @@ async function getCountByAddress(address: string): Promise<{
  |
  */
 
-async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
+async function addSpents(spents: SpentOutput[], chunkSize = 500) {
   if (spents.length === 0) {
     return;
   }
