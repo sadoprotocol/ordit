@@ -35,6 +35,7 @@ fastify.get("/health", async () => health);
  */
 
 fastify.get("/hooks/bitcoin", async () => {
+  log("block incoming");
   health.redundancyCount = 0;
   clearTimeout(timeout);
   await index().finally(startRedundancyRunner);

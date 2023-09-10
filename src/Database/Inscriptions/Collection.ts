@@ -16,11 +16,13 @@ export const registrar: CollectionRegistrar = {
     [
       {
         height: 1,
+        _id: -1,
       },
     ],
     [
       {
         number: 1,
+        _id: -1,
       },
     ],
     [

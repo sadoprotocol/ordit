@@ -82,7 +82,7 @@ async function getInscriptionsForIds(ids: string[], attempts = 0) {
     }[]
   >(`/inscriptions`, { ids });
   if (inscriptions.length === 0) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     return getInscriptionsForIds(ids, attempts + 1);
   }
   return inscriptions;

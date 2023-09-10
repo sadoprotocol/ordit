@@ -54,7 +54,7 @@ export const aggregatePaginated = async <TDocument extends BaseDocument>(
   return {
     documents,
     pagination: {
-      count: documents.length,
+      limit: documents.length,
       prev: hasPreviousPage ? documents[0]?.$cursor ?? null : null,
       next: hasNextPage ? documents[documents.length - 1]?.$cursor ?? null : null,
     },
@@ -73,7 +73,7 @@ export type AggregatePaginatedParams = {
 export type AggregatePaginatedResult<T> = {
   documents: Array<T & { $cursor: string }>;
   pagination: {
-    count: number;
+    limit: number;
     prev: string | null;
     next: string | null;
   };
