@@ -2,6 +2,7 @@ import { bootstrap } from "../../Bootstrap";
 import { db } from "../../Database";
 import { rpc } from "../../Services/Bitcoin";
 import { getInscriptionContent } from "../../Utilities/Inscriptions";
+import { log } from "../Log";
 
 main().then(() => process.exit(0));
 
@@ -29,6 +30,7 @@ async function main() {
           }
         )
       );
+      log(`\n[${height}/${blockN}] Updated inscription ${inscriptionId}`);
     }
     await Promise.all(promises);
     height += 1;
