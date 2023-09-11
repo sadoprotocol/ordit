@@ -6,6 +6,12 @@ import { parseLocation } from "./Transaction";
 
 const ORD_WITNESS = "6f7264";
 
+const OP_FALSE = 0;
+const OP_IF = 99;
+const OP_PUSH_1 = 81;
+const OP_PUSH_0 = 0;
+const OP_ENDIF = 104;
+
 export function getIdFromOutpoint(outpoint: string) {
   return outpoint.replace(":", "i");
 }
@@ -47,25 +53,98 @@ export function getInscriptionFromWitness(txinwitness: string[]) {
         continue;
       }
 
-      const typeIndex = data.findIndex((chunk) => chunk === 81);
+      const envelope = getInscriptionEnvelope(data);
+      if (envelope === undefined) {
+        continue; // failed to identify inscription envelope
+      }
 
-      const contentData = data.slice(typeIndex + 3);
-      const contentIndex = contentData.slice(
-        0,
-        contentData.findIndex((chunk) => chunk === 104)
-      );
-
-      const type = data.slice(typeIndex + 1, typeIndex + 2)[0].toString();
-      const content = contentIndex
-        .map((chunk) => {
-          if (typeof chunk === "number") {
-            return "";
-          }
-          return chunk.toString("base64");
-        })
-        .join("");
-
-      return { type, content, length: Buffer.from(content, "base64").length };
+      return { type: envelope.type, content: envelope.content };
     }
   }
+}
+
+function getInscriptionEnvelope(data: (number | Buffer)[]) {
+  let startIndex = -1;
+  let endIndex = -1;
+
+  let index = 0;
+  for (const op of data) {
+    const started = startIndex !== -1;
+    if (started === false && op === OP_FALSE) {
+      startIndex = index;
+      continue;
+    }
+    if (op === OP_ENDIF) {
+      if (started === false) {
+        return undefined;
+      }
+      endIndex = index;
+      break;
+    }
+    index += 1;
+  }
+
+  const envelope = data.slice(startIndex, endIndex + 1);
+
+  const protocol = getInscriptionEnvelopeProtocol(envelope);
+  if (protocol !== "ord") {
+    return undefined;
+  }
+
+  const type = getInscriptionEnvelopeType(envelope);
+  if (type === undefined) {
+    return undefined;
+  }
+
+  const content = getInscriptionEnvelopeContent(envelope);
+  if (content === undefined) {
+    return undefined;
+  }
+
+  return { protocol, type, content };
+}
+
+function getInscriptionEnvelopeProtocol(envelope: (number | Buffer)[]) {
+  if (envelope.shift() !== OP_FALSE) {
+    return undefined;
+  }
+  if (envelope.shift() !== OP_IF) {
+    return undefined;
+  }
+  const protocol = envelope.shift();
+  if (!protocol || !isBuffer(protocol)) {
+    return undefined;
+  }
+  return protocol.toString("utf-8");
+}
+
+function getInscriptionEnvelopeType(envelope: (number | Buffer)[]) {
+  const push = envelope.shift();
+  if (push !== OP_PUSH_1) {
+    return undefined;
+  }
+  const type = envelope.shift();
+  if (!type || !isBuffer(type)) {
+    return undefined;
+  }
+  return type.toString("utf-8");
+}
+
+function getInscriptionEnvelopeContent(envelope: (number | Buffer)[]) {
+  const push = envelope.shift();
+  if (push !== OP_PUSH_0) {
+    return undefined;
+  }
+  const content: Buffer[] = [];
+  for (const op of envelope) {
+    if (!isBuffer(op)) {
+      return undefined;
+    }
+    content.push(op);
+  }
+  return Buffer.concat(content);
+}
+
+function isBuffer(value: unknown): value is Buffer {
+  return Buffer.isBuffer(value);
 }

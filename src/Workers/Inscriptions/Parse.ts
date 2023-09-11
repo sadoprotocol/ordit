@@ -70,6 +70,11 @@ async function handleInscriptionsInBlock(block: Block<2>) {
         id: `${tx.txid}i0`,
         genesis: tx.txid,
         ...data,
+        media: {
+          type: data.media.type,
+          content: data.media.content.toString("base64"),
+          length: data.media.content.length,
+        },
       } as InscriptionMap[string];
     }
   }
