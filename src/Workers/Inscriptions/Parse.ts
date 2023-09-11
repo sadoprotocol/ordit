@@ -138,9 +138,8 @@ async function handleInscriptionsInBlock(block: Block<2>) {
 
   if (inscriptions.length > 0) {
     ts = perf();
-    log(`\n       📬 inserting ${inscriptions.length.toLocaleString()} inscriptions`);
     await db.inscriptions.insertMany(inscriptions);
-    log(`\r       📭 inserted ${inscriptions.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
+    log(`\n       📬 inserted ${inscriptions.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
   }
 }
 
@@ -174,9 +173,9 @@ async function handleInscriptionTransfers(block: Block<2>) {
   log(`\n       🔍 found ${transfers.length.toLocaleString()} transfers [${ts.now} seconds]`);
 
   if (transfers.length > 0) {
-    log(`\n       📬 transfering ${transfers.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
-
     const ops: { id: string; owner: string; outpoint: string }[] = [];
+
+    ts = perf();
 
     // ### Retrieve Satpoints
     // Retrieve the new satpoints for every identified transfer as well as
@@ -195,7 +194,7 @@ async function handleInscriptionTransfers(block: Block<2>) {
 
     await db.inscriptions.addTransfers(ops);
 
-    log(`\r       📭 transfered ${transfers.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
+    log(`\n       📬 transfered ${transfers.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
   }
 }
 
