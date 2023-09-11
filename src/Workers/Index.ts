@@ -45,14 +45,14 @@ export async function index() {
 
   // ### Parse
 
-  if (config.ord.enabled === true) {
-    log("\n\n 📰 Indexing inscriptions\n");
-    await indexInscriptions(blockHeight);
-  }
-
   if (config.parser.enabled === true) {
     log("\n\n 📖 Indexing outputs\n");
     await indexUtxos(blockHeight);
+  }
+
+  if (config.ord.enabled === true) {
+    log("\n\n 📰 Indexing inscriptions\n");
+    await indexInscriptions(blockHeight);
   }
 
   if (config.brc20.enabled === true) {
