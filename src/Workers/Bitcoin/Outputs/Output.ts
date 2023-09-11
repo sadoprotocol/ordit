@@ -1,9 +1,7 @@
 import { db } from "../../../Database";
 import { OutputDocument, SpentOutput } from "../../../Database/Output";
-import { SPENTS_DATA } from "../../../Paths";
 import { isCoinbase, rpc } from "../../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../../Utilities/Address";
-import { writeFile } from "../../../Utilities/Files";
 import { log, perf } from "../../Log";
 
 export async function crawl(blockN: number, maxBlockN: number) {
@@ -73,9 +71,13 @@ export async function crawl(blockN: number, maxBlockN: number) {
   ts = perf();
 
   await db.outputs.insertMany(outputs);
-  await writeFile(`${SPENTS_DATA}/${block.height}`, JSON.stringify(spents));
+  await db.outputs.addSpents(spents);
 
-  log(`\n     💾 saved ${outputs.length.toLocaleString()} outputs [${ts.now} seconds]`);
+  log(
+    `\n     💾 saved ${outputs.length.toLocaleString()} outputs and ${spents.length.toLocaleString()} spents [${
+      ts.now
+    } seconds]`
+  );
 
   return outputs.length;
 }

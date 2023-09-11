@@ -1,9 +1,7 @@
 import { config } from "../Config";
 import { db } from "../Database";
-import { limiter } from "../Libraries/Limiter";
 import { rpc } from "../Services/Bitcoin";
 import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
-import { spend } from "./Bitcoin/Outputs/Spend";
 import { getReorgHeight } from "./Bitcoin/Reorg";
 import { parse as indexBrc20 } from "./Brc20/Parse";
 import { parse as indexInscriptions } from "./Inscriptions/Parse";
@@ -47,14 +45,14 @@ export async function index() {
 
   // ### Parse
 
-  if (config.parser.enabled === true) {
-    log("\n\n 📖 Indexing outputs\n");
-    await indexUtxos(blockHeight);
-  }
-
   if (config.ord.enabled === true) {
     log("\n\n 📰 Indexing inscriptions\n");
     await indexInscriptions(blockHeight);
+  }
+
+  if (config.parser.enabled === true) {
+    log("\n\n 📖 Indexing outputs\n");
+    await indexUtxos(blockHeight);
   }
 
   if (config.brc20.enabled === true) {
@@ -86,20 +84,11 @@ export async function index() {
 
 async function indexUtxos(blockHeight: number): Promise<void> {
   const outputBlockHeight = await db.outputs.getHeighestBlock();
-
-  // ### Crawl
-  // Crawl all blocks up until current block height.
-
-  const promises = limiter(10);
-
   let height = outputBlockHeight + 1;
   while (height <= blockHeight) {
     await crawlBlock(height, blockHeight);
     height += 1;
   }
-
-  await promises.run();
-  await spend();
 }
 
 async function reorgUtxos(blockHeight: number) {
@@ -109,13 +98,9 @@ async function reorgUtxos(blockHeight: number) {
 async function indexSado(blockHeight: number): Promise<void> {
   const sadoBlockHeight = await getHeighestSadoBlock();
 
-  // ### Parse
-  // Parse all sado blocks up until current block height.
-
   let height = sadoBlockHeight + 1;
   while (height <= blockHeight) {
-    const hash = await rpc.blockchain.getBlockHash(height);
-    const block = await rpc.blockchain.getBlock(hash, 2);
+    const block = await rpc.blockchain.getBlock(height, 2);
     await addBlock(block);
     height += 1;
   }
