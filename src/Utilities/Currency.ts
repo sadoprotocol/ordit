@@ -1,7 +1,4 @@
-import debug from "debug";
-import fetch from "node-fetch";
-
-const log = debug("ordit-api");
+import { log } from "../Workers/Log";
 
 export const currency: Currency = {};
 
@@ -30,7 +27,9 @@ async function setCurrency(): Promise<void> {
     };
   }
 
-  log("USD: %d | SGD: %d | CNY: %d", currency.USD.value, currency.SGD.value, currency.CNY.value);
+  log(
+    `\n💵 currency tracker [ USD: ${currency.USD.value.toLocaleString()} | SGD: ${currency.SGD.value.toLocaleString()} | CNY: ${currency.CNY.value.toLocaleString()} ]`,
+  );
 }
 
 type Currency = {

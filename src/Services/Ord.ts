@@ -15,7 +15,11 @@ export const ord = {
 };
 
 class OrdError extends Error {
-  constructor(readonly status: number, readonly statusText: string, readonly url: string) {
+  constructor(
+    readonly status: number,
+    readonly statusText: string,
+    readonly url: string,
+  ) {
     super("failed to resolve ord api call");
   }
 }
@@ -142,7 +146,7 @@ async function call<R>(endpoint: string, data?: any): Promise<R> {
     options.headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${getRpcUri()}${endpoint}`, options);
+  const response = await fetch(`${config.ord.endpoint}${endpoint}`, options);
   if (response.status !== 200) {
     throw new OrdError(response.status, response.statusText, response.url);
   }
@@ -158,7 +162,7 @@ async function call<R>(endpoint: string, data?: any): Promise<R> {
 export function getSafeToSpendState(
   ordinals: any[],
   inscriptions: any[],
-  allowedRarity: Rarity[] = ["common", "uncommon"]
+  allowedRarity: Rarity[] = ["common", "uncommon"],
 ): boolean {
   if (inscriptions.length > 0 || ordinals.length === 0) {
     return false;
@@ -176,10 +180,6 @@ export function getSafeToSpendState(
  | Helpers
  |--------------------------------------------------------------------------------
  */
-
-function getRpcUri(): string {
-  return `http://${config.ord.host}:${config.ord.port}`;
-}
 
 async function sleep(seconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));

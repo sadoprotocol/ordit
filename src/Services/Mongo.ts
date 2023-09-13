@@ -1,9 +1,6 @@
-import debug from "debug";
 import { CreateIndexesOptions, Document, IndexSpecification, MongoClient } from "mongodb";
 
 import { config } from "../Config";
-
-const log = debug("ordit-mongo");
 
 const client = new MongoClient(getMongoUri());
 
@@ -30,9 +27,9 @@ async function register(registrars: CollectionRegistrar[]) {
     await client.db(config.mongo.database).createCollection(name);
     for (const [indexSpec, options] of indexes) {
       await mongo.db.collection(name).createIndex(indexSpec, options);
-      log("collection '%s' is indexed [%O] with options %O", name, indexSpec, options ?? {});
+      console.log("collection '%s' is indexed [%O] with options %O", name, indexSpec, options ?? {});
     }
-    log("collection '%s' is registered", name);
+    console.log("collection '%s' is registered", name);
   }
 }
 
@@ -40,14 +37,14 @@ async function register(registrars: CollectionRegistrar[]) {
  * Establishes a connection to the mongodb server and keeps it alive.
  */
 async function connect() {
-  log(`connecting to mongodb server ${getMongoUri()}`);
+  console.log(`connecting to mongodb server ${getMongoUri()}`);
   await client
     .connect()
     .then(() => {
-      log("client connected");
+      console.log("client connected");
     })
     .catch((err) => {
-      log("client failed connection attempt %O", err);
+      console.log("client failed connection attempt %O", err);
     });
 }
 

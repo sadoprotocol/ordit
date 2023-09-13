@@ -3,11 +3,14 @@ import { readdirSync } from "node:fs";
 import { Api } from "@valkyr/api";
 
 import { METHODS_DIR, SRC_DIR } from "./Paths";
+import { log } from "./Workers/Log";
 
-export const api = new Api("ordit-api");
+export const api = new Api();
 
 export async function registerMethods(dir = METHODS_DIR) {
+  log("\n📖 registering methods\n");
   await Promise.all(getMethods(dir));
+  log("\n");
 }
 
 function getMethods(dir: string, promises: Promise<any>[] = []): Promise<any>[] {
@@ -24,8 +27,10 @@ function getMethods(dir: string, promises: Promise<any>[] = []): Promise<any>[] 
         .filter((c) => c !== "");
       promises.push(
         import(relativeFilePath).then(({ default: method }) => {
-          api.register([...parentMethodName, item.name.replace(".ts", "")].join("."), method);
-        })
+          const methodName = [...parentMethodName, item.name.replace(".ts", "")].join(".");
+          api.register(methodName, method);
+          log(`\n👌 ${methodName}`, 2);
+        }),
       );
     }
   }

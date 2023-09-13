@@ -8,8 +8,7 @@ export const config = {
     port: getEnvironmentVariable("PORT", envToNumber),
   },
   rpc: {
-    host: getEnvironmentVariable("RPC_HOST"),
-    port: getEnvironmentVariable("RPC_PORT", envToNumber),
+    endpoint: getEnvironmentVariable("RPC_ENDPOINT"),
     user: getEnvironmentVariable("RPC_USER"),
     password: getEnvironmentVariable("RPC_PASSWORD"),
   },
@@ -19,8 +18,7 @@ export const config = {
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
   ord: {
-    host: getEnvironmentVariable("ORD_HOST"),
-    port: getEnvironmentVariable("ORD_PORT", envToNumber),
+    endpoint: getEnvironmentVariable("ORD_ENDPOINT"),
     enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
   brc20: {

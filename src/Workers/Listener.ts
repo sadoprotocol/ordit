@@ -1,13 +1,10 @@
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
-import debug from "debug";
 import Fastify from "fastify";
 
 import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
 import { index } from "./Index";
-
-const log = debug("ordit-worker");
 
 const fastify = Fastify();
 
@@ -35,7 +32,7 @@ fastify.get("/health", async () => health);
  */
 
 fastify.get("/hooks/bitcoin", async () => {
-  log("block incoming");
+  console.log("block incoming");
   health.redundancyCount = 0;
   clearTimeout(timeout);
   await index().finally(startRedundancyRunner);
@@ -57,15 +54,18 @@ fastify.get("/hooks/bitcoin", async () => {
 
 async function startRedundancyRunner() {
   clearTimeout(timeout);
-  timeout = setTimeout(() => {
-    index()
-      .then((blockHeight) => {
-        if (blockHeight !== undefined) {
-          incrementRedundancyCount(blockHeight);
-        }
-      })
-      .finally(startRedundancyRunner);
-  }, 1000 * 60 * 10);
+  timeout = setTimeout(
+    () => {
+      index()
+        .then((blockHeight) => {
+          if (blockHeight !== undefined) {
+            incrementRedundancyCount(blockHeight);
+          }
+        })
+        .finally(startRedundancyRunner);
+    },
+    1000 * 60 * 10,
+  );
 }
 
 function incrementRedundancyCount(blockHeight: number) {
@@ -86,10 +86,10 @@ const start = async () => {
   await fastify
     .listen({ host: config.parser.host, port: config.parser.port })
     .then((address) => {
-      log(`listening on ${address}`);
+      console.log(`listening on ${address}`);
     })
     .catch((err) => {
-      log(err);
+      console.log(err);
       process.exit(1);
     });
 };
