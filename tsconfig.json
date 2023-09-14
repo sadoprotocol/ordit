@@ -3,7 +3,6 @@
   "display": "Default",
   "compilerOptions": {
     "strict": true,
-    "types": ["bun-types"],
 
     "lib": ["esnext"],
     "module": "esnext",
