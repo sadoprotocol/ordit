@@ -100,7 +100,7 @@ async function getInscriptionsForIds(ids: string[], attempts = 0) {
  */
 async function waitForBlock(blockHeight: number, seconds = 1): Promise<void> {
   const ordHeight = await call<number>("/blockheight");
-  if (ordHeight <= blockHeight) {
+  if (ordHeight >= blockHeight) {
     return;
   }
   await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
