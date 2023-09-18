@@ -119,8 +119,7 @@ function getInscriptionEnvelopeProtocol(envelope: (number | Buffer)[]) {
 }
 
 function getInscriptionEnvelopeType(envelope: (number | Buffer)[]) {
-  const push = envelope.shift();
-  if (push !== OP_PUSH_1) {
+  if (hasOpCode(envelope, OP_PUSH_1) === false) {
     return undefined;
   }
   const type = envelope.shift();
@@ -143,6 +142,17 @@ function getInscriptionEnvelopeContent(envelope: (number | Buffer)[]) {
     content.push(op);
   }
   return Buffer.concat(content);
+}
+
+function hasOpCode(envelope: (number | Buffer)[], opcode: number) {
+  let push = envelope.shift();
+  while (push !== opcode) {
+    push = envelope.shift();
+    if (push === undefined) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function isBuffer(value: unknown): value is Buffer {

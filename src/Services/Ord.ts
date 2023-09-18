@@ -150,7 +150,7 @@ async function call<R>(endpoint: string, data?: any): Promise<R> {
   if (response.status !== 200) {
     throw new OrdError(response.status, response.statusText, response.url);
   }
-  return response.json();
+  return response.json() as R;
 }
 
 /*
