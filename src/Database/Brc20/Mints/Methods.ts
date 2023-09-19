@@ -1,8 +1,7 @@
 import Big from "big.js";
 import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
-import { Inscription } from "../../Inscriptions";
-import { TokenMintedEvent } from "../Events/Events";
+import type { TokenMinted } from "../Events/Collection";
 import { holders } from "../Holders/Methods";
 import { tokens } from "../Tokens/Methods";
 import { collection, Mint } from "./Collection";
@@ -32,7 +31,7 @@ async function updateOne(filter: Filter<Mint>, update: UpdateFilter<Mint> | Part
  * @param event       - Mint event.
  * @param inscription - Inscription the mint was created under.
  */
-async function mint(event: TokenMintedEvent, inscription: Inscription) {
+async function mint(event: TokenMinted) {
   const token = await tokens.findOne({ tick: event.tick });
   if (token === undefined) {
     return;
@@ -51,22 +50,22 @@ async function mint(event: TokenMintedEvent, inscription: Inscription) {
     event.amt = available; // if amount is larger than requested, deliver the remainder
   }
 
-  const mint = await collection.findOne({ inscription: inscription.id });
+  const mint = await collection.findOne({ inscription: event.meta.inscription });
   if (mint !== null) {
     return; // a mint can only occur once
   }
 
   await collection.insertOne({
-    inscription: inscription.id,
+    inscription: event.meta.inscription,
     tick: event.tick,
     slug: event.tick.toLocaleLowerCase(),
     amount: event.amt,
-    minter: inscription.creator,
-    timestamp: inscription.timestamp,
+    minter: event.meta.address,
+    timestamp: event.meta.timestamp,
   });
 
   // ### Update Balances
 
   await tokens.addTokenBalance(event.tick, event.amt);
-  await holders.addAvailableBalance(inscription.creator, event.tick, event.amt);
+  await holders.addAvailableBalance(event.meta.address, event.tick, event.amt);
 }

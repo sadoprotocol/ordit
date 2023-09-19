@@ -1,7 +1,6 @@
 import { bootstrap } from "../../Bootstrap";
 import { db } from "../../Database";
 import { log, perf } from "../../Libraries/Log";
-import { getBrc20Event } from "./Parse";
 
 main()
   .catch(console.log)
@@ -12,9 +11,8 @@ async function main() {
 
   log("starting BRC-20 resolver\n");
 
-  /*
   await Promise.all([
-    db.brc20.accounts.collection.deleteMany(),
+    db.brc20.holders.collection.deleteMany(),
     db.brc20.mints.collection.deleteMany(),
     db.brc20.tokens.collection.deleteMany(),
     db.brc20.transfers.collection.deleteMany(),
@@ -23,39 +21,34 @@ async function main() {
   const ts = perf();
   let events = 0;
 
-  const cursor = db.inscriptions.collection.find({ mediaType: "text/plain" }, { sort: { height: 1, number: 1 } });
+  const cursor = db.brc20.events.collection.find({}, { sort: { "meta.block": 1, "meta.number": 1 } });
   while (await cursor.hasNext()) {
-    const inscription = await cursor.next();
-    if (inscription === null) {
-      continue;
-    }
-    const event = getBrc20Event(inscription);
-    if (event === undefined) {
+    const event = await cursor.next();
+    if (event === null) {
       continue;
     }
     try {
       switch (event.op) {
         case "deploy": {
-          await db.brc20.tokens.deploy(event, inscription);
+          await db.brc20.tokens.deploy(event);
           break;
         }
         case "mint": {
-          await db.brc20.mints.mint(event, inscription);
+          await db.brc20.mints.mint(event);
           break;
         }
         case "transfer": {
-          await db.brc20.transfers.transfer(event, inscription);
+          await db.brc20.transfers.transfer(event);
           break;
         }
       }
       events += 1;
       log(`\r📖 parsed ${events.toLocaleString()} events`);
     } catch (error) {
-      console.log({ event, inscription });
+      console.log({ event });
       throw error;
     }
   }
-  */
 
   log(`\n🏁 brc-20 parser completed [${ts.now}]\n`);
 }

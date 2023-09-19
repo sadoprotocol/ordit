@@ -47,19 +47,20 @@ async function addAvailableBalance(address: string, tick: string, amount: number
   return collection.updateOne(
     { address, tick },
     {
+      $setOnInsert: {
+        address,
+        tick,
+        slug: tick.toLowerCase(),
+        transferable: 0,
+      },
       $inc: {
         total: amount,
         available: amount,
       },
-      $setOnInsert: {
-        address,
-        tick,
-        transferable: 0,
-      },
     },
     {
       upsert: true,
-    }
+    },
   );
 }
 
@@ -87,7 +88,7 @@ async function addTransferableBalance(address: string, tick: string, amount: num
         available: -amount,
         transferable: amount,
       },
-    }
+    },
   );
 }
 
@@ -119,7 +120,7 @@ async function sendTransferableBalance(from: string, to: string, tick: string, a
           available: amount,
           transferable: -amount,
         },
-      }
+      },
     );
   }
   await collection.updateOne(
@@ -132,7 +133,7 @@ async function sendTransferableBalance(from: string, to: string, tick: string, a
         total: -amount,
         transferable: -amount,
       },
-    }
+    },
   );
   await collection.updateOne(
     {
@@ -140,18 +141,19 @@ async function sendTransferableBalance(from: string, to: string, tick: string, a
       tick,
     },
     {
+      $setOnInsert: {
+        address: to,
+        tick,
+        slug: tick.toLowerCase(),
+        transferable: 0,
+      },
       $inc: {
         total: amount,
         available: amount,
       },
-      $setOnInsert: {
-        address: to,
-        tick,
-        transferable: 0,
-      },
     },
     {
       upsert: true,
-    }
+    },
   );
 }

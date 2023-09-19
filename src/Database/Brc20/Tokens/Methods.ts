@@ -2,8 +2,7 @@ import { CountDocumentsOptions, Filter, FindOptions } from "mongodb";
 
 import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
 import { ignoreDuplicateErrors } from "../../../Utilities/Database";
-import { Inscription } from "../../Inscriptions";
-import { TokenDeployedEvent } from "../Events/Events";
+import type { TokenDeployed } from "../Events/Collection";
 import { collection, Token } from "./Collection";
 
 export const tokens = {
@@ -22,21 +21,20 @@ export const tokens = {
  * @remarks This method ignores any duplicate token registrations. First
  * come first serve.
  *
- * @param event       - Token deployed event.
- * @param inscription - Inscription the token was created under.
+ * @param event - Token deployed event.
  */
-async function deploy(event: TokenDeployedEvent, inscription: Inscription) {
+async function deploy(event: TokenDeployed) {
   return collection
     .insertOne({
-      inscription: inscription.id,
+      inscription: event.meta.inscription,
       tick: event.tick,
       slug: event.tick.toLowerCase(),
       max: event.max,
       amount: 0,
       limit: event.lim ?? null,
       decimal: event.dec,
-      creator: inscription.creator,
-      timestamp: inscription.timestamp,
+      creator: event.meta.address,
+      timestamp: event.meta.timestamp,
     })
     .catch(ignoreDuplicateErrors);
 }

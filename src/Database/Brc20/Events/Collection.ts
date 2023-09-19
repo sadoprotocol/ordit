@@ -15,11 +15,11 @@ export const registrar: CollectionRegistrar = {
 
 export type Brc20Event = TokenDeployed | TokenMinted | TokenTransfered;
 
-type TokenDeployed = TokenDeployedEvent & EventMeta;
+export type TokenDeployed = TokenDeployedEvent & EventMeta;
 
-type TokenMinted = TokenMintedEvent & EventMeta;
+export type TokenMinted = TokenMintedEvent & EventMeta;
 
-type TokenTransfered = TokenTransferedEvent & EventMeta;
+export type TokenTransfered = TokenTransferedEvent & EventMeta;
 
 type EventMeta = {
   meta: {

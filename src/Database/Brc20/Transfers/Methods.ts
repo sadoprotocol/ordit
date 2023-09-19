@@ -1,9 +1,8 @@
 import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
 import { rpc } from "../../../Services/Bitcoin";
 import { getLocationFromId } from "../../../Utilities/Inscriptions";
-import { Inscription } from "../../Inscriptions";
 import { OutputDocument, outputs } from "../../Output";
-import { TokenTransferedEvent } from "../Events/Events";
+import { TokenTransfered } from "../Events/Collection";
 import { holders } from "../Holders/Methods";
 import { collection, TokenTransfer } from "./Collection";
 
@@ -19,8 +18,8 @@ export const transfers = {
  * @param event       - Transfer event.
  * @param inscription - Inscription the transfer was created under.
  */
-async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
-  const [txid, n] = getLocationFromId(inscription.id);
+async function transfer(event: TokenTransfered) {
+  const [txid, n] = getLocationFromId(event.meta.inscription);
   const from = await outputs.getByLocation(txid, n);
   if (from === undefined) {
     return; // somehow we could not find the inscriptions output
@@ -30,13 +29,13 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
   // When the transfer event is handled we create a new transfer record if the
   // transfer request is valid.
 
-  const transfer = await collection.findOne({ inscription: inscription.id });
+  const transfer = await collection.findOne({ inscription: event.meta.inscription });
   if (transfer !== null) {
     if (transfer.to) {
       console.log("transfer done");
       return; // transfer has already been handled
     }
-    return sendTransfer(from, event, inscription);
+    return sendTransfer(from, event);
   }
 
   const balance = await holders.getTokenBalance(from.addresses[0], event.tick);
@@ -47,7 +46,7 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
   await holders.addTransferableBalance(from.addresses[0], event.tick, event.amt);
 
   await collection.insertOne({
-    inscription: inscription.id,
+    inscription: event.meta.inscription,
     tick: event.tick,
     slug: event.tick.toLocaleLowerCase(),
     amount: event.amt,
@@ -63,17 +62,17 @@ async function transfer(event: TokenTransferedEvent, inscription: Inscription) {
   // If the inscription genesis transaction output has been spent, we transfer
   // the funds to the output recipient.
 
-  await sendTransfer(from, event, inscription);
+  await sendTransfer(from, event);
 }
 
-async function sendTransfer(from: OutputDocument, event: TokenTransferedEvent, inscription: Inscription) {
+async function sendTransfer(from: OutputDocument, event: TokenTransfered) {
   if (from.vin !== undefined) {
     const to = await outputs.getByLocation(from.vin.txid, from.vin.n);
     if (to === undefined) {
       return; // somehow we could not find the inscriptions recipient
     }
     await collection.updateOne(
-      { inscription: inscription.id },
+      { inscription: event.meta.inscription },
       {
         $set: {
           to: {
@@ -82,7 +81,7 @@ async function sendTransfer(from: OutputDocument, event: TokenTransferedEvent, i
             timestamp: (await rpc.blockchain.getBlockStats(to.vout.block.height, ["time"])).time,
           },
         },
-      }
+      },
     );
     await holders.sendTransferableBalance(from.addresses[0], to.addresses[0], event.tick, event.amt);
   }
