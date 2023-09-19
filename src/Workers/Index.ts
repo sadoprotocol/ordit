@@ -11,16 +11,7 @@ import { parse } from "./Sado/Parse";
 import { resolve } from "./Sado/Resolve";
 import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
 
-let indexing = false;
-let outdated = false;
-
 export async function index() {
-  if (indexing === true) {
-    outdated = true;
-    return;
-  }
-  indexing = true;
-
   const ts = perf();
 
   const blockHeight = await rpc.blockchain.getBlockCount();
@@ -66,12 +57,6 @@ export async function index() {
   }
 
   log(`\n\n ✅ Completed [${ts.now}]\n\n`);
-
-  indexing = false;
-  if (outdated === true) {
-    outdated = false;
-    await index();
-  }
 
   return blockHeight;
 }
