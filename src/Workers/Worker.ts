@@ -145,7 +145,7 @@ function getWorkerStatus() {
 const start = async () => {
   await bootstrap();
   await fastify
-    .listen({ host: config.parser.host, port: config.parser.port })
+    .listen({ host: config.worker.host, port: config.worker.port })
     .then((address) => {
       console.log(`listening on ${address}`);
       checkForBlock();

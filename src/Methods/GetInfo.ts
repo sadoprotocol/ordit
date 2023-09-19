@@ -5,6 +5,12 @@ import { config } from "../Config";
 
 export default method({
   handler: async () => {
-    return fetch(`http://${config.parser.host}:${config.parser.port}/health`);
+    const response = await fetch(`http://${config.worker.host}:${config.worker.port}/health`);
+    if (response.status !== 200) {
+      return {
+        status: "down",
+      };
+    }
+    return response;
   },
 });

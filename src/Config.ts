@@ -7,14 +7,16 @@ export const config = {
     domain: getEnvironmentVariable("DOMAIN"),
     port: getEnvironmentVariable("PORT", envToNumber),
   },
+  worker: {
+    host: getEnvironmentVariable("WORKER_HOST"),
+    port: getEnvironmentVariable("WORKER_PORT", envToNumber),
+  },
   rpc: {
     endpoint: getEnvironmentVariable("RPC_ENDPOINT"),
     user: getEnvironmentVariable("RPC_USER"),
     password: getEnvironmentVariable("RPC_PASSWORD"),
   },
   parser: {
-    host: getEnvironmentVariable("UTXO_PARSER_HOST"),
-    port: getEnvironmentVariable("UTXO_PARSER_PORT", envToNumber),
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
   ord: {

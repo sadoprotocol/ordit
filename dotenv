@@ -7,16 +7,19 @@ NETWORK="regtest"
 DOMAIN="https://network.ordit.io"
 PORT=3030
 
+# WORKER
+
+WORKER_HOST="127.0.0.1"
+WORKER_PORT=3031
+
 # RPC
 
 RPC_ENDPOINT="http://127.0.0.1:18443" # regtest:18443 testnet:18332 mainnet:8332
 RPC_USER="<user>"
 RPC_PASSWORD="<password>"
 
-# UTXO PARSER
+# UTXO
 
-UTXO_PARSER_HOST="0.0.0.0"
-UTXO_PARSER_PORT=3031
 UTXO_PARSER_ENABLED=true
 
 # ORD
