@@ -8,8 +8,8 @@ const ORD_WITNESS = "6f7264";
 
 const OP_FALSE = 0;
 const OP_IF = 99;
-const OP_PUSH_1 = 81;
 const OP_PUSH_0 = 0;
+const OP_PUSH_1 = 81;
 const OP_ENDIF = 104;
 
 export function getIdFromOutpoint(outpoint: string) {
@@ -24,6 +24,26 @@ export function getOutpointFromId(id: string) {
   const outpoint = id.split("");
   outpoint[id.length - 2] = ":";
   return outpoint.join("");
+}
+
+export function getRawInscriptionContent(tx: RawTransaction) {
+  for (const vin of tx.vin) {
+    if (isCoinbase(vin)) {
+      continue;
+    }
+    if (vin.txinwitness) {
+      for (const witness of vin.txinwitness) {
+        if (witness.includes(ORD_WITNESS)) {
+          const data = script.decompile(Buffer.from(witness, "hex"));
+          if (!data) {
+            continue;
+          }
+          return getEnvelope(data);
+        }
+      }
+    }
+  }
+  return undefined;
 }
 
 export function getInscriptionContent(tx: RawTransaction) {
@@ -64,27 +84,10 @@ export function getInscriptionFromWitness(txinwitness: string[]) {
 }
 
 function getInscriptionEnvelope(data: (number | Buffer)[]) {
-  let startIndex = -1;
-  let endIndex = -1;
-
-  let index = 0;
-  for (const op of data) {
-    const started = startIndex !== -1;
-    if (started === false && op === OP_FALSE) {
-      startIndex = index;
-      continue;
-    }
-    if (op === OP_ENDIF) {
-      if (started === false) {
-        return undefined;
-      }
-      endIndex = index;
-      break;
-    }
-    index += 1;
+  const envelope = getEnvelope(data);
+  if (envelope === undefined) {
+    return undefined;
   }
-
-  const envelope = data.slice(startIndex, endIndex + 1);
 
   const protocol = getInscriptionEnvelopeProtocol(envelope);
   if (protocol !== "ord") {
@@ -102,6 +105,30 @@ function getInscriptionEnvelope(data: (number | Buffer)[]) {
   }
 
   return { protocol, type, content };
+}
+
+function getEnvelope(data: (number | Buffer)[]): (number | Buffer)[] | undefined {
+  let startIndex = -1;
+  let endIndex = -1;
+
+  let index = 0;
+  for (const op of data) {
+    const started = startIndex !== -1;
+    if (started === false && op === OP_FALSE) {
+      startIndex = index;
+      continue;
+    }
+    if (op === OP_ENDIF) {
+      if (started === false) {
+        return [];
+      }
+      endIndex = index;
+      break;
+    }
+    index += 1;
+  }
+
+  return data.slice(startIndex, endIndex + 2);
 }
 
 function getInscriptionEnvelopeProtocol(envelope: (number | Buffer)[]) {
@@ -136,6 +163,9 @@ function getInscriptionEnvelopeContent(envelope: (number | Buffer)[]) {
   }
   const content: Buffer[] = [];
   for (const op of envelope) {
+    if (op === OP_ENDIF) {
+      break;
+    }
     if (!isBuffer(op)) {
       return undefined;
     }
@@ -155,6 +185,6 @@ function hasOpCode(envelope: (number | Buffer)[], opcode: number) {
   return true;
 }
 
-function isBuffer(value: unknown): value is Buffer {
+export function isBuffer(value: unknown): value is Buffer {
   return Buffer.isBuffer(value);
 }
