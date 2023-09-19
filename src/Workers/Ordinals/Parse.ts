@@ -1,89 +1,75 @@
-import { db } from "../../Database";
-import { SatRange } from "../../Database/Ordinals";
 import { COIN_VALUE, SUBSIDY_HALVING_INTERVAL } from "../../Libraries/Ordinals/Constants";
-import { Range } from "../../Libraries/Ordinals/Range";
-import { Block, rpc, TxVin } from "../../Services/Bitcoin";
+import { RawTransaction, rpc, TxVin } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
 import { log } from "../Log";
+import { SatRange } from "./SatRange";
+
+const cache = new Map<string, SatRange[]>();
 
 export async function parse() {
   const blockHeight = await rpc.blockchain.getBlockCount();
   let height = 0;
   while (height < blockHeight) {
     const block = await rpc.blockchain.getBlock(height, 2);
-    await assignOrdinals(block);
+
+    const first = firstOrdinal(block.height);
+    const coinbaseInputs: SatRange[] = [[first, first + subsidy(block.height)]];
+
+    for (let i = 1; i < block.tx.length; i++) {
+      const tx = block.tx[i];
+
+      const input_sat_ranges: SatRange[] = [];
+
+      for (const vin of tx.vin) {
+        const key = `${(vin as TxVin).txid}:${(vin as TxVin).vout}`;
+        const sat_ranges = cache.get(key);
+        if (sat_ranges === undefined) {
+          throw new Error(`Could not find outpoint ${key.toString()} in index`);
+        }
+        input_sat_ranges.push(...sat_ranges);
+      }
+
+      indexTransactionSats(tx, input_sat_ranges);
+
+      coinbaseInputs.push(...input_sat_ranges);
+    }
+
+    indexTransactionSats(block.tx[0], coinbaseInputs);
+
     log(`\r${height.toLocaleString()} / ${blockHeight.toLocaleString()}`);
+
     height += 1;
   }
 }
 
-async function assignOrdinals(block: Block<2>) {
-  const first = firstOrdinal(block.height);
-  const last = first + subsidy(block.height);
+function indexTransactionSats(tx: RawTransaction, inputSatRanges: SatRange[]) {
+  for (const vout of tx.vout) {
+    const outpoint = `${tx.txid}:${vout.n}`;
+    const sats: SatRange[] = [];
 
-  const coinbase = new Range(first, last);
-  const coinbaseTransaction = block.tx.shift()!;
+    let remaining = btcToSat(vout.value);
+    while (remaining > 0) {
+      const range = inputSatRanges.shift();
+      if (!range) {
+        return console.log("Insufficient inputs for transaction outputs");
+      }
 
-  for (const tx of block.tx) {
-    const ranges: Range[] = [];
-    const outputs: SatRange[] = [];
+      const count = range[1] - range[0];
+      const assigned: SatRange = count > remaining ? handleSatRangeOverflow(range, remaining, inputSatRanges) : range;
 
-    const inputs = await db.ordinals.sats.findByLocations(
-      tx.vin.map((vin) => `${(vin as TxVin).txid}:${(vin as TxVin).vout}`)
-    );
-    for (const { first, last } of inputs) {
-      ranges.push(new Range(first, last));
+      sats.push(assigned);
+
+      remaining -= assigned[1] - assigned[0];
     }
 
-    for (const vout of tx.vout) {
-      getSats(btcToSat(vout.value), ranges).forEach(([first, last]) => {
-        outputs.push({
-          block: block.height,
-          location: `${tx.txid}:${vout.n}`,
-          first,
-          last,
-        });
-      });
-    }
-
-    await db.ordinals.sats.insertMany(outputs);
+    cache.set(outpoint, sats);
   }
-
-  const outputs: SatRange[] = [];
-  for (const output of coinbaseTransaction.vout) {
-    getSats(btcToSat(output.value), [coinbase]).forEach(([first, last]) => {
-      outputs.push({
-        block: block.height,
-        location: `${coinbaseTransaction.txid}:${output.n}`,
-        first,
-        last,
-      });
-    });
-  }
-  await db.ordinals.sats.insertMany(outputs);
 }
 
-function getSats(value: number, ranges: Range[]): [number, number][] {
-  const result: [number, number][] = [];
-
-  let remaining = value;
-  while (remaining > 0) {
-    const current = ranges.shift();
-    if (!current) {
-      break;
-    }
-
-    const [next, prev] = current.grab(remaining);
-
-    result.push(next.toArray());
-    remaining -= next.value;
-
-    if (prev) {
-      ranges.unshift(prev);
-    }
-  }
-
-  return result;
+function handleSatRangeOverflow(range: SatRange, remaining: number, inputSatRanges: SatRange[]): SatRange {
+  const middle = range[0] + remaining;
+  inputSatRanges.unshift([middle, range[1]]);
+  return [range[0], middle];
 }
 
 function firstOrdinal(height: number): number {
