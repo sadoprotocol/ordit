@@ -9,8 +9,7 @@ PORT=3030
 
 # RPC
 
-RPC_HOST="127.0.0.1"
-RPC_PORT=18443 # regtest:18443 testnet:18332 mainnet:8332
+RPC_ENDPOINT="http://127.0.0.1:18443" # regtest:18443 testnet:18332 mainnet:8332
 RPC_USER="<user>"
 RPC_PASSWORD="<password>"
 
@@ -22,8 +21,7 @@ UTXO_PARSER_ENABLED=true
 
 # ORD
 
-ORD_HOST="127.0.0.1"
-ORD_PORT=3032
+ORD_HOST="http://127.0.0.1:3032"
 ORD_INDEXER_ENABLED=true
 
 # BRC 20
