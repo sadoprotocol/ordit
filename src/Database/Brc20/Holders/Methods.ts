@@ -1,13 +1,37 @@
-import { collection } from "./Collection";
+import { Filter, FindOptions } from "mongodb";
+
+import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
+import { collection, TokenHolder } from "./Collection";
 
 export const holders = {
   collection,
+  find,
+  findPaginated,
   getTokens,
   getTokenBalance,
   addAvailableBalance,
   addTransferableBalance,
   sendTransferableBalance,
 };
+
+/**
+ * Find holders by filter.
+ *
+ * @param filter  - MongoDb filter.
+ * @param options - MongoDb find options to pass to the find method.
+ */
+async function find(filter: Filter<TokenHolder>, options?: FindOptions<TokenHolder>) {
+  return collection.find(filter, options).toArray();
+}
+
+/**
+ * Execute a paginated find query.
+ *
+ * @param params - Pagination params.
+ */
+async function findPaginated(params: FindPaginatedParams<TokenHolder> = {}) {
+  return paginate.findPaginated(collection, params);
+}
 
 /**
  * Get all token balances for the given address.
