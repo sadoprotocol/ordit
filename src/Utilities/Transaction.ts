@@ -1,4 +1,4 @@
-import bitcoin, { Transaction } from "bitcoinjs-lib";
+import bitcoin, { initEccLib, payments, Transaction } from "bitcoinjs-lib";
 import Schema, { boolean, Type } from "computed-types";
 import * as ecc from "tiny-secp256k1";
 
@@ -6,7 +6,7 @@ import { db } from "../Database";
 import { getBitcoinNetwork, Network } from "../Libraries/Network";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
 import { ord as ordService } from "../Services/Ord";
-import { AddressTypes, getAddressessFromVout } from "./Address";
+import { AddressFormats, AddressTypes, getAddressessFromVout } from "./Address";
 
 /*
  |--------------------------------------------------------------------------------
@@ -146,6 +146,55 @@ export function getNullData(asm: string): string | undefined {
   }
 }
 
+export function calculateTxFee({
+  totalInputs,
+  totalOutputs,
+  satsPerByte,
+  type,
+  additional: { witnessScripts = [] } = {},
+}: CalculateTxFeeOptions): number {
+  const txWeight = calculateTxVirtualSize({ totalInputs, totalOutputs, type, additional: { witnessScripts } });
+  return txWeight * satsPerByte;
+}
+
+export function calculateTxVirtualSize({
+  totalInputs,
+  totalOutputs,
+  type,
+  additional: { witnessScripts = [] } = {},
+}: CalculateTxVirtualSizeOptions) {
+  const baseWeight = getInputOutputBaseSizeByType(type);
+
+  const inputVBytes = baseWeight.input * totalInputs;
+  const outputVBytes = baseWeight.output * totalOutputs;
+  const baseVBytes = inputVBytes + outputVBytes + baseWeight.txHeader;
+  const additionalVBytes = witnessScripts.reduce((acc, script) => (acc += script.byteLength), 0) || 0;
+
+  const weight = 3 * baseVBytes + (baseVBytes + additionalVBytes);
+  const vSize = Math.ceil(weight / 4);
+
+  return vSize;
+}
+
+export function getInputOutputBaseSizeByType(type: AddressFormats) {
+  switch (type) {
+    case "taproot":
+      return { input: 57.5, output: 43, txHeader: 10.5 };
+
+    case "segwit":
+      return { input: 68, output: 31, txHeader: 10.5 };
+
+    case "nested-segwit":
+      return { input: 68, output: 32, txHeader: 10.5 };
+
+    case "legacy":
+      return { input: 147.5, output: 34, txHeader: 10.5 };
+
+    default:
+      throw new Error("Invalid type");
+  }
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Types
@@ -175,19 +224,35 @@ export function createTransaction(
   network: Network | bitcoin.Network,
   paymentOptions?: bitcoin.Payment
 ) {
-  bitcoin.initEccLib(ecc);
+  initEccLib(ecc);
   const networkObj = typeof network === "string" ? getBitcoinNetwork() : network;
 
   if (type === "p2tr") {
-    return bitcoin.payments.p2tr({ internalPubkey: key, network: networkObj, ...paymentOptions });
+    return payments.p2tr({ internalPubkey: key, network: networkObj, ...paymentOptions });
   }
 
   if (type === "p2sh") {
-    return bitcoin.payments.p2sh({
-      redeem: bitcoin.payments.p2wpkh({ pubkey: key, network: networkObj }),
+    return payments.p2sh({
+      redeem: payments.p2wpkh({ pubkey: key, network: networkObj }),
       network: networkObj,
     });
   }
 
-  return bitcoin.payments[type]({ pubkey: key, network: networkObj });
+  return payments[type]({ pubkey: key, network: networkObj });
 }
+
+export function generateTxUniqueIdentifier(txId: string, index: number) {
+  return `${txId}:${index}`;
+}
+
+export type CalculateTxFeeOptions = {
+  totalInputs: number;
+  totalOutputs: number;
+  satsPerByte: number;
+  type: AddressFormats;
+  additional?: {
+    witnessScripts?: Buffer[];
+  };
+};
+
+export type CalculateTxVirtualSizeOptions = Omit<CalculateTxFeeOptions, "satsPerByte">;

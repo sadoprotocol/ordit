@@ -29,6 +29,12 @@ export const schema = {
     skip: number.optional(),
   }),
   addressTypes: Schema.either("legacy" as const, "nested-segwit" as const, "segwit" as const, "taproot" as const),
+  network: Schema.either("mainnet" as const, "testnet" as const, "regtest" as const),
+  onOrOff: Schema.either("on" as const, "off" as const),
+  outputs: Schema({
+    address: string,
+    cardinals: number,
+  }),
 };
 
 export type Sort = Type<typeof schema.sort>;

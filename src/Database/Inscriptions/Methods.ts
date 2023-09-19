@@ -104,7 +104,9 @@ async function getInscriptionById(id: string) {
 }
 
 async function getInscriptionsByOutpoint(outpoint: string) {
+  console.log("outpoint:", outpoint);
   const inscriptions = await collection.find({ outpoint }).toArray();
+  console.log("ins id:", inscriptions);
   for (const inscription of inscriptions) {
     inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
   }

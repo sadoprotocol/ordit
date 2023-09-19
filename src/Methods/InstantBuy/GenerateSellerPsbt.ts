@@ -58,7 +58,7 @@ export default method({
     return {
       hex: psbt.toHex(),
       base64: psbt.toBase64(),
-      inputsToSign,
+      inputsToSign, // TODO: enhancement - inputsToSign will be an array of objects
     };
   },
 });
@@ -74,11 +74,12 @@ export async function getSellerInputsOutputs({
 
   const format = addressNameToType[pubKeyType];
   const address = getAddressesFromPublicKey(publicKey, network, format)[0];
+
   const inputs: InputType[] = [];
   const outputs: { address: string; value: number }[] = [];
 
   const outputs_ = await db.outputs.find({
-    addresses: address,
+    addresses: [address.address],
     ...noSpentsFilter,
   });
 
@@ -89,7 +90,9 @@ export async function getSellerInputsOutputs({
   for (const { vout } of outputs_) {
     // required to be done in a loop to be sync
     const outpoint = `${vout.txid}:${vout.n}`;
+
     const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
+
     if (inscriptions.length <= 0) {
       continue;
     }
@@ -125,107 +128,7 @@ export async function getSellerInputsOutputs({
   return { inputs, outputs };
 }
 
-// async function fetchUnspentUTXOs({
-//   address,
-//   type,
-//   decodeMetadata,
-// }: {
-//   address?: string;
-//   type: string;
-//   decodeMetadata?: true;
-// }) {
-//   if (!address) {
-//     throw new Error("Invalid address");
-//   }
-
-//   const utxos = await rpc[network].call<UTXO[]>(
-//     "GetUnspents",
-//     {
-//       address,
-//       options: {
-//         allowedrarity: rarity,
-//         safetospend: type === "spendable",
-//       },
-//       pagination: {
-//         limit: 50,
-//       },
-//       sort: { value: sort },
-//     },
-//     rpc.id
-//   );
-
-//   const { spendableUTXOs, unspendableUTXOs } = utxos.reduce(
-//     (acc, utxo) => {
-//       if (utxo.inscriptions?.length && !utxo.safeToSpend) {
-//         utxo.inscriptions = decodeMetadata ? transformInscriptions(utxo.inscriptions) : utxo.inscriptions;
-
-//         acc.unspendableUTXOs.push(utxo);
-//       } else {
-//         acc.spendableUTXOs.push(utxo);
-//       }
-
-//       return acc;
-//     },
-//     {
-//       spendableUTXOs: [],
-//       unspendableUTXOs: [],
-//     } as Record<string, UTXO[]>
-//   );
-
-//   return {
-//     totalUTXOs: utxos.length,
-//     spendableUTXOs,
-//     unspendableUTXOs,
-//   };
-// }
-
-// function transformInscriptions(inscriptions: Inscription[] | undefined) {
-//   if (!inscriptions) return [];
-
-//   return inscriptions.map((inscription) => {
-//     inscription.meta = inscription.meta ? decodeObject(inscription.meta) : inscription.meta;
-//     return inscription;
-//   });
-// }
-
-// function decodeObject(obj: NestedObject) {
-//   return encodeDecodeObject(obj, { encode: false });
-// }
-
-// function encodeDecodeObject(obj: NestedObject, { encode, depth = 0 }: EncodeDecodeObjectOptions) {
-//   const maxDepth = 5;
-
-//   if (depth > maxDepth) {
-//     throw new Error("Object too deep");
-//   }
-
-//   for (const key in obj) {
-//     // eslint-disable-next-line
-//     if (!obj.hasOwnProperty(key)) continue;
-
-//     const value = obj[key];
-//     if (isObject(value)) {
-//       obj[key] = encodeDecodeObject(value as NestedObject, { encode, depth: depth++ });
-//     } else if (isString(value)) {
-//       obj[key] = encode ? encodeURIComponent(value as string) : decodeURIComponent(value as string);
-//     }
-//   }
-
-//   return obj;
-// }
-// const isObject = (o: any) => o?.constructor === Object;
-// const isString = (s: any) => s instanceof String || typeof s === "string";
-
 type GenerateSellerInstantBuyPsbtOptionsType = Type<typeof GenerateSellerInstantBuyPsbtOptions>;
-
-// type NestedObject = {
-//   [key: string]: NestedObject | any;
-// };
-
-// type EncodeDecodeObjectOptions = {
-//   encode: boolean;
-//   depth?: number;
-// };
 
 export interface InputsToSign {
   address: string;

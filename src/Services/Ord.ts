@@ -43,7 +43,7 @@ async function getHeight(): Promise<number> {
  * @param outpoint - Outpoint to get ordinals for.
  */
 async function getOrdinals(outpoint: string): Promise<Ordinal[]> {
-  return call<Ordinal[]>(`/ordinals/${outpoint}`);
+  return call<Ordinal[]>(`/ordinals/${outpoint}`).catch(() => []); // TODO: tmp catch err response from ord
 }
 
 /**
@@ -85,10 +85,10 @@ async function getInscriptionsForIds(ids: string[], attempts = 0) {
       timestamp: number;
     }[]
   >(`/inscriptions`, { ids });
-  if (inscriptions.length === 0) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return getInscriptionsForIds(ids, attempts + 1);
-  }
+  // if (inscriptions.length === 0) {
+  //   await new Promise((resolve) => setTimeout(resolve, 1000));
+  //   return getInscriptionsForIds(ids, attempts + 1);
+  // }
   return inscriptions;
 }
 

@@ -2,6 +2,7 @@ import { script } from "bitcoinjs-lib";
 
 import { isCoinbase, RawTransaction } from "../Services/Bitcoin";
 import { getMetaFromWitness } from "./Oip";
+import { Inscription } from "./PSBT";
 import { parseLocation } from "./Transaction";
 
 const ORD_WITNESS = "6f7264";
@@ -146,5 +147,51 @@ function getInscriptionEnvelopeContent(envelope: (number | Buffer)[]) {
 }
 
 function isBuffer(value: unknown): value is Buffer {
-  return Buffer.isBuffer(value);
+  return Buffer.isBuffer(value)
+}
+export function transformInscriptions(inscriptions: Inscription[] | undefined) {
+  if (!inscriptions) return [];
+
+  return inscriptions.map((inscription) => {
+    inscription.meta = inscription.meta ? decodeObject(inscription.meta) : inscription.meta;
+    return inscription;
+  });
+}
+
+export function decodeObject(obj: NestedObject) {
+  return encodeDecodeObject(obj, { encode: false });
+}
+
+function encodeDecodeObject(obj: NestedObject, { encode, depth = 0 }: EncodeDecodeObjectOptions) {
+  const maxDepth = 5;
+
+  if (depth > maxDepth) {
+    throw new Error("Object too deep");
+  }
+
+  for (const key in obj) {
+    // eslint-disable-next-line
+    if (!obj.hasOwnProperty(key)) continue;
+
+    const value = obj[key];
+    if (isObject(value)) {
+      obj[key] = encodeDecodeObject(value as NestedObject, { encode, depth: depth++ });
+    } else if (isString(value)) {
+      obj[key] = encode ? encodeURIComponent(value as string) : decodeURIComponent(value as string);
+    }
+  }
+
+  return obj;
+}
+
+export const isObject = (o: any) => o?.constructor === Object;
+export const isString = (s: any) => s instanceof String || typeof s === "string";
+
+interface NestedObject {
+  [key: string]: NestedObject | any;
+}
+
+export interface EncodeDecodeObjectOptions {
+  encode: boolean;
+  depth?: number;
 }

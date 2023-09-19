@@ -1,5 +1,6 @@
 import { Big, BigSource } from "big.js";
 
+import { AddressFormats, addressNameToType, getAddressFormat } from "./Address";
 import { currency } from "./Currency";
 
 const addressFormats = {
@@ -50,6 +51,15 @@ export function getAddressType(address: string): AddressType | undefined {
       return "taproot";
     }
   }
+}
+
+export function getAddressType2(address: string) {
+  const addressFormat = getAddressFormat(address).format;
+  return addressNameToType[addressFormat as AddressFormats];
+}
+
+export function convertBTCToSatoshis(btc: number) {
+  return parseInt((btc * 10 ** 8).toString()); // remove floating point overflow by parseInt
 }
 
 export type AddressType = "p2pkh" | "p2sh" | "bech32" | "taproot";
