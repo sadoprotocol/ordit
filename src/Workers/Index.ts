@@ -1,7 +1,7 @@
 import { config } from "../Config";
 import { db } from "../Database";
 import { rpc } from "../Services/Bitcoin";
-import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
+import { parse as indexUtxos } from "./Bitcoin/Outputs";
 import { getReorgHeight } from "./Bitcoin/Reorg";
 import { parse as indexBrc20 } from "./Brc20/Parse";
 import { parse as indexInscriptions } from "./Inscriptions/Parse";
@@ -81,15 +81,6 @@ export async function index() {
  | Utilities
  |--------------------------------------------------------------------------------
  */
-
-async function indexUtxos(blockHeight: number): Promise<void> {
-  const outputBlockHeight = await db.outputs.getHeighestBlock();
-  let height = outputBlockHeight + 1;
-  while (height <= blockHeight) {
-    await crawlBlock(height, blockHeight);
-    height += 1;
-  }
-}
 
 async function reorgUtxos(blockHeight: number) {
   await db.outputs.deleteMany({ "vout.block.height": { $gte: blockHeight } });

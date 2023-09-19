@@ -71,8 +71,8 @@ async function getInscription(id: string) {
 }
 
 async function getInscriptionsForIds(ids: string[], attempts = 0) {
-  if (attempts > 20) {
-    throw new Error("Could not resolve expected inscription satpoints after 20 attempts!");
+  if (attempts > 10) {
+    return [];
   }
   const inscriptions = await call<
     {

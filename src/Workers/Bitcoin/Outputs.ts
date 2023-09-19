@@ -1,19 +1,27 @@
-import { db } from "../../../Database";
-import { OutputDocument, SpentOutput } from "../../../Database/Output";
-import { isCoinbase, rpc } from "../../../Services/Bitcoin";
-import { getAddressessFromVout } from "../../../Utilities/Address";
-import { log, perf } from "../../Log";
+import { db } from "../../Database";
+import { OutputDocument, SpentOutput } from "../../Database/Output";
+import { isCoinbase, rpc } from "../../Services/Bitcoin";
+import { getAddressessFromVout } from "../../Utilities/Address";
+import { log, perf } from "../Log";
 
-export async function crawl(blockN: number, maxBlockN: number) {
-  if (blockN > maxBlockN) {
-    log("\n   💤 Indexer has latest outputs");
-    return 0;
+export async function parse(blockHeight: number) {
+  let height = (await db.outputs.getHeighestBlock()) + 1;
+
+  if (height > blockHeight) {
+    return log("\n   💤 Indexer has latest outputs");
   }
 
-  log(`\n   📦 parsing outputs from block ${blockN}`);
+  while (height <= blockHeight) {
+    await handleBlock(height);
+    height += 1;
+  }
+}
+
+async function handleBlock(height: number) {
+  log(`\n   📦 parsing outputs from block ${height}`);
 
   let ts = perf();
-  const block = await rpc.blockchain.getBlock(blockN, 2);
+  const block = await rpc.blockchain.getBlock(height, 2);
   log(`\n     💿 loaded block, processing ${block.tx.length.toLocaleString()} transactions [${ts.now} seconds]`);
 
   // ### Documents
@@ -63,7 +71,7 @@ export async function crawl(blockN: number, maxBlockN: number) {
   log(
     `\n     🏷️ transactions parsed ${outputs.length.toLocaleString()} outputs and ${spents.length.toLocaleString()} spents [${
       ts.now
-    } seconds]`
+    } seconds]`,
   );
 
   // ### Insert
@@ -76,8 +84,6 @@ export async function crawl(blockN: number, maxBlockN: number) {
   log(
     `\n     💾 saved ${outputs.length.toLocaleString()} outputs and ${spents.length.toLocaleString()} spents [${
       ts.now
-    } seconds]`
+    } seconds]`,
   );
-
-  return outputs.length;
 }
