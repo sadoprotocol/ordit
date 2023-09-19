@@ -2,8 +2,8 @@ import { readdirSync } from "node:fs";
 
 import { Api } from "@valkyr/api";
 
+import { log } from "./Libraries/Log";
 import { METHODS_DIR, SRC_DIR } from "./Paths";
-import { log } from "./Workers/Log";
 
 export const api = new Api();
 

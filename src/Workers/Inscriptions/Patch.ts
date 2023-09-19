@@ -1,8 +1,8 @@
 import { bootstrap } from "../../Bootstrap";
 import { db } from "../../Database";
+import { log } from "../../Libraries/Log";
 import { rpc } from "../../Services/Bitcoin";
 import { getInscriptionContent } from "../../Utilities/Inscriptions";
-import { log } from "../Log";
 
 main().then(() => process.exit(0));
 
@@ -27,8 +27,8 @@ async function main() {
               mediaContent: data.media.content.toString("base64"),
               mediaSize: data.media.content.length,
             },
-          }
-        )
+          },
+        ),
       );
       log(`\n[${height}/${blockN}] Updated inscription ${inscriptionId}`);
     }

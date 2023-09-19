@@ -1,9 +1,9 @@
 import { db } from "../../Database";
 import { getDeployEvent, getMintEvent, getTransferEvent } from "../../Database/Brc20/Events/Events";
 import { Inscription } from "../../Database/Inscriptions";
+import { log, perf } from "../../Libraries/Log";
 import { DATA_DIR } from "../../Paths";
 import { readFile, writeFile } from "../../Utilities/Files";
-import { log, perf } from "../Log";
 
 export async function parse(blockHeight: number) {
   const eventsHeight = await getNextBrc20Height();
@@ -32,7 +32,7 @@ async function resolveEvents(blockHeight: number) {
 
   const cursor = db.inscriptions.collection.find(
     { mediaType: "text/plain", height: blockHeight },
-    { sort: { number: 1 } }
+    { sort: { number: 1 } },
   );
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();

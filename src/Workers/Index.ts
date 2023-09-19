@@ -1,11 +1,11 @@
 import { config } from "../Config";
 import { db } from "../Database";
+import { log, perf } from "../Libraries/Log";
 import { rpc } from "../Services/Bitcoin";
 import { parse as indexUtxos } from "./Bitcoin/Outputs";
 import { getReorgHeight } from "./Bitcoin/Reorg";
 import { parse as indexBrc20 } from "./Brc20/Parse";
 import { parse as indexInscriptions } from "./Inscriptions/Parse";
-import { log, perf } from "./Log";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
 import { resolve } from "./Sado/Resolve";

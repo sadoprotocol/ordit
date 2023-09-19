@@ -4,8 +4,8 @@ import { registerMethods } from "./Api";
 import { bootstrap } from "./Bootstrap";
 import { config } from "./Config";
 import { fastify } from "./Fastify";
+import { log } from "./Libraries/Log";
 import { startCurrencyTracker } from "./Utilities/Currency";
-import { log } from "./Workers/Log";
 
 const start = async () => {
   await bootstrap();

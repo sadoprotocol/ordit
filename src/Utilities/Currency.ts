@@ -1,4 +1,4 @@
-import { log } from "../Workers/Log";
+import { log } from "../Libraries/Log";
 
 export const currency: Currency = {};
 

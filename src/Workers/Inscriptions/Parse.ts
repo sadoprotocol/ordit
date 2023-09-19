@@ -1,12 +1,12 @@
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
+import { log, perf } from "../../Libraries/Log";
 import { DATA_DIR } from "../../Paths";
 import { Block, isCoinbase, rpc } from "../../Services/Bitcoin";
 import { ord } from "../../Services/Ord";
 import { readFile, writeFile } from "../../Utilities/Files";
 import { getInscriptionContent } from "../../Utilities/Inscriptions";
 import { isOIP2Meta, validateOIP2Meta } from "../../Utilities/Oip";
-import { log, perf } from "../Log";
 
 export async function parse(blockHeight: number) {
   const inscriptionHeight = await getNextInscriptionHeight();

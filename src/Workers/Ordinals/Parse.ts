@@ -1,7 +1,7 @@
 import { COIN_VALUE, SUBSIDY_HALVING_INTERVAL } from "../../Libraries/Ordinals/Constants";
 import { RawTransaction, rpc, TxVin } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { log } from "../Log";
+import { log } from "../../Libraries/Log";
 import { SatRange } from "./SatRange";
 
 const cache = new Map<string, SatRange[]>();

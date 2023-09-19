@@ -1,8 +1,8 @@
 import { db } from "../../Database";
 import { OutputDocument, SpentOutput } from "../../Database/Output";
+import { log, perf } from "../../Libraries/Log";
 import { isCoinbase, rpc } from "../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../Utilities/Address";
-import { log, perf } from "../Log";
 
 export async function parse(blockHeight: number) {
   let height = (await db.outputs.getHeighestBlock()) + 1;

@@ -1,6 +1,6 @@
 import { bootstrap } from "../../Bootstrap";
 import { db } from "../../Database";
-import { log, perf } from "../Log";
+import { log, perf } from "../../Libraries/Log";
 import { getBrc20Event } from "./Parse";
 
 main()

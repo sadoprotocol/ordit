@@ -1,12 +1,12 @@
 import { db } from "../../Database";
 import { parseOffer } from "../../Database/SadoOrders/Utilities/ParseOffer";
 import { parseOrder } from "../../Database/SadoOrders/Utilities/ParseOrder";
+import { log } from "../../Libraries/Log";
 import { SADO_DATA } from "../../Paths";
 import { RawTransaction, rpc } from "../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../Utilities/Address";
 import { readDir, readFile, removeFile } from "../../Utilities/Files";
 import { SadoEntry } from "../../Utilities/Sado";
-import { log } from "../Log";
 
 export async function parse() {
   const blocks = await readDir(SADO_DATA);

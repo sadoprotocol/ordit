@@ -24,6 +24,15 @@ let timeout: NodeJS.Timeout | undefined;
 fastify.register(cors);
 fastify.register(helmet);
 
+/*
+ |--------------------------------------------------------------------------------
+ | Health
+ |--------------------------------------------------------------------------------
+ |
+ | Provides health information for the worker services.
+ |
+ */
+
 fastify.get("/health", async () => {
   const info = await rpc.blockchain.getBlockchainInfo();
 
@@ -34,27 +43,17 @@ fastify.get("/health", async () => {
   const ordHeight = await ord.getHeight();
 
   return {
-    status: getWorkerStatus(),
     chain: info.chain,
-    blocks: info.blocks,
+    status: getWorkerStatus(),
     synced: [outputsHeight, inscriptionsHeight, ordHeight].every((height) => height === info.blocks),
     indexes: {
-      outputs: outputsHeight,
-      inscriptions: inscriptionsHeight,
+      blk: info.blocks,
+      out: outputsHeight,
+      ins: inscriptionsHeight,
       ord: ordHeight,
     },
   };
 });
-
-function getWorkerStatus() {
-  if (indexing === true) {
-    return "indexing";
-  }
-  if (reorging === true) {
-    return "reorg";
-  }
-  return "idle";
-}
 
 /*
  |--------------------------------------------------------------------------------
@@ -127,6 +126,16 @@ async function stopIndexer() {
   checkForBlock();
 }
 
+function getWorkerStatus() {
+  if (indexing === true) {
+    return "indexing";
+  }
+  if (reorging === true) {
+    return "reorg";
+  }
+  return "idle";
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Start Watcher
@@ -139,6 +148,7 @@ const start = async () => {
     .listen({ host: config.parser.host, port: config.parser.port })
     .then((address) => {
       console.log(`listening on ${address}`);
+      checkForBlock();
     })
     .catch((err) => {
       console.log(err);
@@ -147,4 +157,3 @@ const start = async () => {
 };
 
 start();
-checkForBlock();

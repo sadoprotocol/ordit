@@ -1,7 +1,7 @@
 import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
+import { log } from "../Libraries/Log";
 import { index } from "./Index";
-import { log } from "./Log";
 
 main()
   .catch(console.log)
