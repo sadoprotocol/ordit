@@ -12,7 +12,7 @@ export default method({
   handler: async ({ tick, pagination }) => {
     const result = await db.brc20.holders.findPaginated({ ...pagination, filter: { tick, total: { $gt: 0 } } });
     return {
-      tokens: result.documents,
+      holders: result.documents,
       pagination: result.pagination,
     };
   },

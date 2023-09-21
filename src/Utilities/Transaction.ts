@@ -35,7 +35,7 @@ export const schema = {
 
 export async function getExpandedTransaction(
   tx: RawTransaction,
-  { ord = false, hex = false, witness = false }: ExpandOptions = {}
+  { ord = false, hex = false, witness = false }: ExpandOptions = {},
 ): Promise<ExpandedTransaction> {
   let fee = 0;
   let coinbase = false;

@@ -1,3 +1,4 @@
+import { NotFoundError } from "@valkyr/api";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
@@ -18,9 +19,10 @@ class OrdError extends Error {
   constructor(
     readonly status: number,
     readonly statusText: string,
+    readonly text: string,
     readonly url: string,
   ) {
-    super("failed to resolve ord api call");
+    super(text ?? `${status} ${statusText} ${url}`);
   }
 }
 
@@ -147,8 +149,11 @@ async function call<R>(endpoint: string, data?: any): Promise<R> {
   }
 
   const response = await fetch(`${config.ord.endpoint}${endpoint}`, options);
+  if (response.status === 404) {
+    throw new NotFoundError(await response.text());
+  }
   if (response.status !== 200) {
-    throw new OrdError(response.status, response.statusText, response.url);
+    throw new OrdError(response.status, response.statusText, await response.text(), response.url);
   }
   return response.json() as R;
 }
