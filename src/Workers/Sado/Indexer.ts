@@ -1,9 +1,9 @@
 import { bootstrap } from "../../Bootstrap";
 import { config } from "../../Config";
+import { db } from "../../Database";
 import { rpc } from "../../Services/Bitcoin";
 import { printProgress } from "../../Utilities/Progress";
 import { addBlock } from "./AddBlock";
-import { getBlockHeight } from "./Status";
 
 main().finally(() => process.exit(0));
 
@@ -13,7 +13,7 @@ async function main() {
   await bootstrap();
 
   const blockHeight = await rpc.blockchain.getBlockCount();
-  const sadoHeight = await getBlockHeight();
+  const sadoHeight = await db.sado.getBlockNumber();
 
   if (blockHeight === sadoHeight) {
     return console.log("sado is synced with network");

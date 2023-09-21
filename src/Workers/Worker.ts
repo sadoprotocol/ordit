@@ -5,10 +5,8 @@ import Fastify from "fastify";
 import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
 import { db } from "../Database";
-import { DATA_DIR } from "../Paths";
 import { rpc } from "../Services/Bitcoin";
 import { ord } from "../Services/Ord";
-import { readFile } from "../Utilities/Files";
 import { index } from "./Index";
 
 const fastify = Fastify();
@@ -37,19 +35,23 @@ fastify.get("/health", async () => {
   const info = await rpc.blockchain.getBlockchainInfo();
 
   const outputsHeight = await db.outputs.getHeighestBlock();
-  const inscriptionsHeight = await readFile(`${DATA_DIR}/inscriptions_n`)
-    .then((n) => (n ? parseInt(n, 10) : 0))
-    .catch(() => 0);
+  const inscriptionsHeight = await db.inscriptions.getBlockNumber();
+  const brcHeight = await db.brc20.events.getBlockNumber();
+  const sadoHeight = await db.sado.getBlockNumber();
   const ordHeight = await ord.getHeight();
 
   return {
     chain: info.chain,
     status: getWorkerStatus(),
-    synced: [outputsHeight, inscriptionsHeight, ordHeight].every((height) => height === info.blocks),
+    synced: [outputsHeight, inscriptionsHeight, brcHeight, sadoHeight, ordHeight].every(
+      (height) => height === info.blocks,
+    ),
     indexes: {
       blk: info.blocks,
       out: outputsHeight,
       ins: inscriptionsHeight,
+      brc: brcHeight,
+      sad: sadoHeight,
       ord: ordHeight,
     },
   };

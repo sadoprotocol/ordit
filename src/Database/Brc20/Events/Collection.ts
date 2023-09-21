@@ -10,6 +10,7 @@ export const registrar: CollectionRegistrar = {
     [{ "meta.inscription": 1 }, { unique: true }],
     [{ "meta.address": 1 }],
     [{ "meta.block": 1, "meta.number": 1 }],
+    [{ number: 1 }, { unique: true }],
   ],
 };
 
@@ -30,4 +31,5 @@ type EventMeta = {
     number: number;
     timestamp: number;
   };
+  number: number;
 };

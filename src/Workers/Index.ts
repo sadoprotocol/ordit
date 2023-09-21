@@ -5,18 +5,18 @@ import { rpc } from "../Services/Bitcoin";
 import { parse as indexUtxos } from "./Bitcoin/Outputs";
 import { getReorgHeight } from "./Bitcoin/Reorg";
 import { parse as indexBrc20 } from "./Brc20/Parse";
+import { resolve as resolveBrc20 } from "./Brc20/Parse";
 import { parse as indexInscriptions } from "./Inscriptions/Parse";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
 import { resolve } from "./Sado/Resolve";
-import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
 
 export async function index() {
   const ts = perf();
 
   const blockHeight = await rpc.blockchain.getBlockCount();
 
-  log(`\n ---------- indexing to block ${blockHeight} ----------`);
+  log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
   // ### Reorg
   // Check for potential reorg event on the blockchain.
@@ -49,6 +49,7 @@ export async function index() {
   if (config.brc20.enabled === true) {
     log("\n\n 🪙 Indexing BRC-20\n");
     await indexBrc20(blockHeight);
+    await resolveBrc20();
   }
 
   if (config.sado.enabled === true) {
@@ -72,7 +73,7 @@ async function reorgUtxos(blockHeight: number) {
 }
 
 async function indexSado(blockHeight: number): Promise<void> {
-  const sadoBlockHeight = await getHeighestSadoBlock();
+  const sadoBlockHeight = await db.sado.getBlockNumber();
 
   let height = sadoBlockHeight + 1;
   while (height <= blockHeight) {

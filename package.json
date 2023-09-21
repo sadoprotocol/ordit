@@ -30,6 +30,7 @@
     "dotenv": "^16.3.1",
     "fastify": "^4.23.1",
     "form-data": "^4.0.0",
+    "ioredis": "^5.3.2",
     "lodash.get": "^4.4.2",
     "lodash.mapvalues": "^4.6.0",
     "mongodb": "^6.0.0",

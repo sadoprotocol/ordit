@@ -12,7 +12,7 @@ async function main() {
 
   log("starting BRC-20 event importer\n");
 
-  await Promise.all([db.brc20.events.collection.deleteMany()]);
+  await db.brc20.events.collection.deleteMany();
 
   const ts = perf();
 

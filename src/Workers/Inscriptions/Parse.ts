@@ -1,10 +1,8 @@
 import { db } from "../../Database";
 import { Inscription } from "../../Database/Inscriptions";
 import { log, perf } from "../../Libraries/Log";
-import { DATA_DIR } from "../../Paths";
 import { Block, isCoinbase, rpc } from "../../Services/Bitcoin";
 import { ord } from "../../Services/Ord";
-import { readFile, writeFile } from "../../Utilities/Files";
 import { getInscriptionContent } from "../../Utilities/Inscriptions";
 import { isOIP2Meta, validateOIP2Meta } from "../../Utilities/Oip";
 
@@ -36,7 +34,7 @@ export async function parse(blockHeight: number) {
     height += 1;
   }
 
-  await writeFile(`${DATA_DIR}/inscriptions_n`, blockHeight.toString());
+  await db.inscriptions.setBlockNumber(blockHeight);
 }
 
 /*
@@ -46,11 +44,11 @@ export async function parse(blockHeight: number) {
  */
 
 async function getNextInscriptionHeight(): Promise<number> {
-  const parsedHeight = await readFile(`${DATA_DIR}/inscriptions_n`);
+  const parsedHeight = await db.inscriptions.getBlockNumber();
   if (parsedHeight === undefined) {
     throw new Error("Could not read inscriptions_n file");
   }
-  return parseInt(parsedHeight, 10) + 1;
+  return parsedHeight + 1;
 }
 
 async function handleInscriptionsInBlock(block: Block<2>) {

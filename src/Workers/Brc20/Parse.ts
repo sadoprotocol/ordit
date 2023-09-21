@@ -2,11 +2,9 @@ import { db } from "../../Database";
 import { getDeployEvent, getMintEvent, getTransferEvent } from "../../Database/Brc20/Events/Events";
 import { Inscription } from "../../Database/Inscriptions";
 import { log, perf } from "../../Libraries/Log";
-import { DATA_DIR } from "../../Paths";
-import { readFile, writeFile } from "../../Utilities/Files";
 
 export async function parse(blockHeight: number) {
-  const eventsHeight = await getNextBrc20Height();
+  const eventsHeight = await db.brc20.events.getBlockNumber();
   if (eventsHeight === 0) {
     return;
   }
@@ -21,7 +19,54 @@ export async function parse(blockHeight: number) {
     height += 1;
   }
 
-  await writeFile(`${DATA_DIR}/brc20_n`, blockHeight.toString());
+  await db.brc20.events.setBlockNumber(blockHeight);
+
+  log("\n   💤 Event parser done");
+}
+
+export async function resolve() {
+  const number = await db.brc20.events.getProcessedNumber();
+  const total = await db.brc20.events.collection.countDocuments();
+
+  let events = await db.brc20.events.collection.countDocuments({ number: { $lte: number } });
+
+  const remainder = total - events;
+  if (remainder === 0) {
+    return log("\n   💤 Resovler has processed all BRC-20 events");
+  }
+
+  log(`\n     📖 Resolving ${total - events} events`);
+
+  const cursor = db.brc20.events.collection.find({ number: { $gt: number } }, { sort: { number: 1 } });
+  while (await cursor.hasNext()) {
+    const event = await cursor.next();
+    if (event === null) {
+      continue;
+    }
+    try {
+      switch (event.op) {
+        case "deploy": {
+          await db.brc20.tokens.deploy(event);
+          break;
+        }
+        case "mint": {
+          await db.brc20.mints.mint(event);
+          break;
+        }
+        case "transfer": {
+          await db.brc20.transfers.transfer(event);
+          break;
+        }
+      }
+      await db.brc20.events.setProcessedNumber(event.number);
+      events += 1;
+    } catch (error) {
+      console.log({ event });
+      throw error;
+    }
+  }
+
+  log("\n   💤 Event resolver done");
 }
 
 async function resolveEvents(blockHeight: number) {
@@ -50,7 +95,7 @@ async function resolveEvents(blockHeight: number) {
   await Promise.all(promises);
 
   if (events > 0) {
-    log(`\n     📖 stored ${events} events from block ${blockHeight} [${ts.now.toLocaleString()} seconds]`);
+    log(`\n     📖 Stored ${events} events from block ${blockHeight} [${ts.now.toLocaleString()} seconds]`);
   }
 }
 
@@ -102,12 +147,4 @@ function isValidBrc20BaseData(data: any) {
     return false;
   }
   return true;
-}
-
-async function getNextBrc20Height(): Promise<number> {
-  const parsedHeight = await readFile(`${DATA_DIR}/brc20_n`);
-  if (parsedHeight === undefined) {
-    throw new Error("Could not read brc20_n file");
-  }
-  return parseInt(parsedHeight, 10) + 1;
 }

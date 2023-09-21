@@ -2,8 +2,11 @@ import { Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
+import { redis } from "../../Services/Redis";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, Inscription } from "./Collection";
+
+const INSC_BLOCK_KEY = "insc_b";
 
 export const inscriptions = {
   collection,
@@ -27,6 +30,8 @@ export const inscriptions = {
   // ### Indexer Methods
 
   addTransfers,
+  setBlockNumber,
+  getBlockNumber,
 };
 
 /*
@@ -62,7 +67,7 @@ async function findPaginated(params: FindPaginatedParams<Inscription> = {}) {
 
 async function findOne(
   filter: Filter<Inscription>,
-  options?: FindOptions<Inscription>
+  options?: FindOptions<Inscription>,
 ): Promise<Inscription | undefined> {
   const output = await collection.findOne(filter, options);
   if (output === null) {
@@ -143,4 +148,16 @@ async function addTransfers(spents: { id: string; owner: string; outpoint: strin
   }
 
   await Promise.all(bulkops.map((ops) => collection.bulkWrite(ops)));
+}
+
+async function setBlockNumber(n: number) {
+  return redis.set(INSC_BLOCK_KEY, n);
+}
+
+async function getBlockNumber() {
+  const n = await redis.get(INSC_BLOCK_KEY);
+  if (n === null) {
+    return 0;
+  }
+  return parseInt(n, 10);
 }
