@@ -22,6 +22,10 @@ export default method({
       throw new NotFoundError("Output not found");
     }
 
+    if (output.vin !== undefined) {
+      throw new Error("Output is already spent");
+    }
+
     const tx = await rpc.transactions.getRawTransaction(txid, true);
     if (tx === undefined) {
       throw new NotFoundError("Blockchain transaction not found");
