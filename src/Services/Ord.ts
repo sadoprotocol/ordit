@@ -1,44 +1,30 @@
+import { NotFoundError } from "@valkyr/api";
+import fetch from "node-fetch";
+
 import { config } from "../Config";
-import { Inscription } from "../Database/Inscriptions";
-import { ORD_DATA, ORD_DATA_SNAPSHOT, ORD_DATA_SNAPSHOTS } from "../Paths";
-import { fileExists, readDir } from "../Utilities/Files";
-import { Queue } from "../Utilities/Queue";
-import { isError } from "../Utilities/Response";
-import { getStatus } from "../Workers/Ordinals/Status";
-import { cli } from "./Cli";
-
-export const networkFlag = {
-  regtest: "-r",
-  testnet: "-t",
-  mainnet: "",
-};
-
-export const bitcoinArgs = [
-  networkFlag[config.chain.network],
-  `--bitcoin-data-dir=${config.chain.path}`,
-  `--bitcoin-rpc-user=${config.rpc.user}`,
-  `--bitcoin-rpc-pass=${config.rpc.password}`,
-  `--rpc-url=http://${config.rpc.host}:${config.rpc.port}`,
-].filter((val) => val !== "");
 
 export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
-/*
- |--------------------------------------------------------------------------------
- | Service
- |--------------------------------------------------------------------------------
- */
-
 export const ord = {
-  list,
-  traits,
-  latestInscriptionIds,
-  inscription,
-  inscriptions,
-  reorg,
-  status,
-  version,
+  getHeight,
+  getOrdinals,
+  getBlockInscriptions,
+  getInscription,
+  getInscriptionsForIds,
+  waitForBlock,
+  waitForInscriptions,
 };
+
+class OrdError extends Error {
+  constructor(
+    readonly status: number,
+    readonly statusText: string,
+    readonly text: string,
+    readonly url: string,
+  ) {
+    super(text ?? `${status} ${statusText} ${url}`);
+  }
+}
 
 /*
  |--------------------------------------------------------------------------------
@@ -47,110 +33,129 @@ export const ord = {
  */
 
 /**
- * List satoshis under a given location in the format of _(txid:vout)_.
- *
- * @param location - Location of the utxo to list ordinals for.
+ * Get last block parsed.
  */
-async function list(location: string): Promise<Satoshi[]> {
-  const result = await run<Satoshi[]>(["list", location]);
-  if (isError(result)) {
-    if (result.error.includes("output not found")) {
-      return [];
-    }
-    throw new Error(result.error);
-  }
-  return result;
+async function getHeight(): Promise<number> {
+  return call<number>("/blockheight");
 }
 
 /**
- * Get traits for the given satoshi.
+ * Get all ordinals listed for the given outpoint.
  *
- * @param satoshi - Satoshi to get traits for.
+ * @param outpoint - Outpoint to get ordinals for.
  */
-async function traits(satoshi: number): Promise<Traits> {
-  const result = await run<Traits>(["traits", satoshi.toString()]);
-  if (isError(result)) {
-    throw new Error(result.error);
-  }
-  return result;
+async function getOrdinals(outpoint: string): Promise<Ordinal[]> {
+  return call<Ordinal[]>(`/ordinals/${outpoint}`);
 }
 
-async function latestInscriptionIds(limit?: number, from?: number): Promise<LatestInscriptionIds> {
-  const args = ["gli"];
-  if (limit) {
-    args.push(limit.toString());
-  }
-  if (from) {
-    args.push(from.toString());
-  }
-  const result = await run<LatestInscriptionIds>(args);
-  if (isError(result)) {
-    throw new Error(result.error);
-  }
-  return result;
+/**
+ * Get inscriptions for a block.
+ *
+ * @param blockHeight - Block height to get inscriptions for.
+ * @param seconds     - How many seconds to wait between attempts.
+ */
+async function getBlockInscriptions(blockHeight: number, seconds = 1): Promise<Inscription[]> {
+  return call<Inscription[]>(`/inscriptions/block/${blockHeight}`).catch((error) => {
+    console.log(error);
+    return sleep(seconds).then(() => getBlockInscriptions(blockHeight, seconds));
+  });
 }
 
-async function inscription(id: string): Promise<Inscription> {
-  const result = await run<any>(["gie", id]);
-  if ("error" in result) {
-    throw new Error(result.error);
+async function getInscription(id: string) {
+  try {
+    return await call<InscriptionData>(`/inscription/${id}`);
+  } catch (error) {
+    if (error instanceof OrdError && error.status === 404) {
+      return undefined;
+    }
+    throw error;
   }
-  return toInscription(id, result);
 }
 
-async function inscriptions(location: string): Promise<string[]> {
-  const result = await run<{ inscriptions: string[] }>(["gioo", location]);
-  if (isError(result)) {
-    throw new Error(result.error);
+async function getInscriptionsForIds(ids: string[], attempts = 0) {
+  if (attempts > 10) {
+    return [];
   }
-  return result.inscriptions;
+  const inscriptions = await call<
+    {
+      inscription_id: string;
+      number: number;
+      genesis_height: number;
+      genesis_fee: number;
+      sat: number;
+      satpoint: string;
+      timestamp: number;
+    }[]
+  >(`/inscriptions`, { ids });
+  if (inscriptions.length === 0) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return getInscriptionsForIds(ids, attempts + 1);
+  }
+  return inscriptions;
 }
 
-async function reorg(data = ORD_DATA): Promise<boolean> {
-  const result = await run<{ is_reorged: boolean }>(["reorg"], data);
-  if (isError(result)) {
-    throw new Error(result.error);
+/**
+ * Ensure that ord has processed the block before continuing.
+ *
+ * @param blockHeight - Block height to wait for.
+ * @param seconds     - How many seconds to wait between attempts.
+ */
+async function waitForBlock(blockHeight: number, seconds = 1): Promise<void> {
+  const ordHeight = await call<number>("/blockheight");
+  if (ordHeight >= blockHeight) {
+    return;
   }
-  return result.is_reorged;
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  return waitForBlock(blockHeight, seconds);
 }
 
-async function status(): Promise<any> {
-  return {
-    indexer: await getStatus(),
-    snapshot: {
-      running: await fileExists(`${ORD_DATA_SNAPSHOT}/lock`),
-      backups: await readDir(ORD_DATA_SNAPSHOTS),
-    },
-  };
-}
-
-async function version(): Promise<string> {
-  const data = await cli.run(config.ord.bin, ["--version"]);
-  if (data.includes("ord")) {
-    return data.replace("ord", "").replace("\n", "").trim();
+/**
+ * Ensure that inscriptions at block is ready before processing subsequent
+ * operations.
+ *
+ * @param blockHeight - Block height to wait for.
+ * @param seconds     - How many seconds to wait between attempts.
+ */
+async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<void> {
+  try {
+    const status = await call<number>(`/inscriptions/block/check/${blockHeight}`);
+    if (status === 1) {
+      return;
+    }
+  } catch (error) {
+    console.log(error);
   }
-  return "unknown";
+  return sleep(seconds).then(() => waitForInscriptions(blockHeight, seconds));
 }
 
 /*
  |--------------------------------------------------------------------------------
- | Request
+ | Methods
  |--------------------------------------------------------------------------------
  */
 
-const queue = new Queue(async ({ args, dataDir }: { args: ReadonlyArray<string>; dataDir: string }) => {
-  const data = await cli.run(config.ord.bin, [...bitcoinArgs, `--data-dir=${dataDir}`, ...args]);
-  try {
-    return JSON.parse(data);
-  } catch (_) {
-    return { error: data } as const;
-  }
-});
+async function call<R>(endpoint: string, data?: any): Promise<R> {
+  const options: any = {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  };
 
-async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<Response<R>> {
-  return new Promise<Response<R>>((resolve, reject) => {
-    queue.push({ args, dataDir }, resolve, reject);
-  });
+  if (data !== undefined) {
+    options.method = "POST";
+    options.body = JSON.stringify(data);
+    options.headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(`${config.ord.endpoint}${endpoint}`, options);
+  if (response.status === 404) {
+    throw new NotFoundError(await response.text());
+  }
+  if (response.status !== 200) {
+    throw new OrdError(response.status, response.statusText, await response.text(), response.url);
+  }
+  return response.json() as R;
 }
 
 /*
@@ -159,20 +164,30 @@ async function run<R>(args: ReadonlyArray<string>, dataDir = ORD_DATA): Promise<
  |--------------------------------------------------------------------------------
  */
 
-function toInscription(id: string, inscription: any): Inscription {
-  const data = {
-    id,
-    outpoint: inscription.output,
-    owner: inscription.address,
-    ...inscription,
-    mediaType: inscription.media.kind,
-    mediaSize: inscription.media.size,
-    mediaContent: inscription.media.content,
-  };
-  delete data.address;
-  delete data.media;
-  delete data.output;
-  return data;
+export function getSafeToSpendState(
+  ordinals: any[],
+  inscriptions: any[],
+  allowedRarity: Rarity[] = ["common", "uncommon"],
+): boolean {
+  if (inscriptions.length > 0 || ordinals.length === 0) {
+    return false;
+  }
+  for (const ordinal of ordinals) {
+    if (allowedRarity.includes(ordinal.rarity) === false) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*
+ |--------------------------------------------------------------------------------
+ | Helpers
+ |--------------------------------------------------------------------------------
+ */
+
+async function sleep(seconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 /*
@@ -181,21 +196,34 @@ function toInscription(id: string, inscription: any): Inscription {
  |--------------------------------------------------------------------------------
  */
 
-export type RarityOptions = {
-  allowedrarity?: Rarity[];
-};
-
-export type Ordinal = Satoshi & Traits;
-
-export type Satoshi = {
+type Inscription = {
+  id: string;
+  address: string;
+  sat: number;
+  media: InscriptionMedia;
+  timestamp: number;
+  height: number;
+  fee: number;
+  genesis: string;
+  number: number;
   output: string;
-  start: number;
-  size: number;
-  rarity: Rarity;
-  name: string;
 };
 
-export type Traits = {
+type InscriptionData = {
+  inscription_id: string;
+  number: number;
+  genesis_fee: number;
+  genesis_height: number;
+  output_value: number;
+  address: string;
+  sat: number;
+  satpoint: string;
+  content_type: string;
+  content_length: number;
+  timestamp: number;
+};
+
+export type Ordinal = {
   number: number;
   decimal: string;
   degree: string;
@@ -206,18 +234,16 @@ export type Traits = {
   period: number;
   offset: number;
   rarity: Rarity;
+  output: string;
+  start: number;
+  end: number;
+  size: number;
+};
+
+type InscriptionMedia = {
+  kind: string;
+  size: number;
+  content: string;
 };
 
 export type Rarity = (typeof rarity)[number];
-
-type LatestInscriptionIds = {
-  inscriptions: string[];
-  prev: number | null;
-  next: number | null;
-};
-
-type Response<R> =
-  | R
-  | {
-      error: string;
-    };

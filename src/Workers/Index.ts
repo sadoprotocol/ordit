@@ -1,71 +1,63 @@
-import debug from "debug";
-
 import { config } from "../Config";
 import { db } from "../Database";
+import { log, perf } from "../Libraries/Log";
 import { rpc } from "../Services/Bitcoin";
-import { crawl as crawlBlock } from "./Bitcoin/Outputs/Output";
-import { spend } from "./Bitcoin/Outputs/Spend";
+import { parse as indexUtxos } from "./Bitcoin/Outputs";
 import { getReorgHeight } from "./Bitcoin/Reorg";
-import { crawl as crawlOrdinals } from "./Ordinals/Crawl";
+import { parse as indexBrc20 } from "./Brc20/Parse";
+import { resolve as resolveBrc20 } from "./Brc20/Parse";
+import { parse as indexInscriptions } from "./Inscriptions/Parse";
 import { addBlock } from "./Sado/AddBlock";
 import { parse } from "./Sado/Parse";
 import { resolve } from "./Sado/Resolve";
-import { getBlockHeight as getHeighestSadoBlock } from "./Sado/Status";
-
-const log = debug("ordit-worker");
-
-let indexing = false;
-let outdated = false;
 
 export async function index() {
-  if (indexing === true) {
-    outdated = true;
-    return;
-  }
-  indexing = true;
-
-  log("starting indexer");
+  const ts = perf();
 
   const blockHeight = await rpc.blockchain.getBlockCount();
+
+  log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
   // ### Reorg
   // Check for potential reorg event on the blockchain.
 
-  log("reorg check");
+  log("\n\n 🏥 Performing reorg check\n");
 
   const reorgHeight = await getReorgHeight();
   if (reorgHeight !== -1) {
-    if (blockHeight - reorgHeight > 100) {
-      return log("reorg at block %d is unexpectedly far behind, needs manual review", reorgHeight);
+    if (blockHeight - reorgHeight > config.reorg.treshold) {
+      return log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
     }
-    log("reorg detected at block %d, starting rollback", reorgHeight);
+    log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
     await Promise.all([reorgUtxos(reorgHeight), reorgSado(reorgHeight)]);
   }
+
+  log("\n   💯 Chain is healthy");
 
   // ### Parse
 
   if (config.parser.enabled === true) {
-    log("indexing outputs");
+    log("\n\n 📖 Indexing outputs\n");
     await indexUtxos(blockHeight);
   }
 
+  if (config.ord.enabled === true) {
+    log("\n\n 📰 Indexing inscriptions\n");
+    await indexInscriptions(blockHeight);
+  }
+
+  if (config.brc20.enabled === true) {
+    log("\n\n 🪙 Indexing BRC-20\n");
+    await indexBrc20(blockHeight);
+    await resolveBrc20();
+  }
+
   if (config.sado.enabled === true) {
-    log("indexing sado");
+    log("\n\n 🌎 Indexing sado\n");
     await indexSado(blockHeight);
   }
 
-  if (config.ord.enabled === true) {
-    log("indexing ordinals");
-    await indexOrdinals();
-  }
-
-  log("indexed to block %d", blockHeight);
-
-  indexing = false;
-  if (outdated === true) {
-    outdated = false;
-    await index();
-  }
+  log(`\n\n ✅ Completed [${ts.now}]\n\n`);
 
   return blockHeight;
 }
@@ -76,38 +68,17 @@ export async function index() {
  |--------------------------------------------------------------------------------
  */
 
-async function indexUtxos(blockHeight: number): Promise<void> {
-  const outputBlockHeight = await db.outputs.getHeighestBlock();
-
-  // ### Crawl
-  // Crawl all blocks up until current block height.
-
-  let height = outputBlockHeight + 1;
-  while (height <= blockHeight) {
-    await crawlBlock(height, blockHeight);
-    log("parsed output block %d", height);
-    height += 1;
-  }
-
-  await spend();
-}
-
 async function reorgUtxos(blockHeight: number) {
-  await db.outputs.deleteMany({ "vout.block.height": { $gt: blockHeight } });
+  await db.outputs.deleteMany({ "vout.block.height": { $gte: blockHeight } });
 }
 
 async function indexSado(blockHeight: number): Promise<void> {
-  const sadoBlockHeight = await getHeighestSadoBlock();
-
-  // ### Parse
-  // Parse all sado blocks up until current block height.
+  const sadoBlockHeight = await db.sado.getBlockNumber();
 
   let height = sadoBlockHeight + 1;
   while (height <= blockHeight) {
-    const hash = await rpc.blockchain.getBlockHash(height);
-    const block = await rpc.blockchain.getBlock(hash, 2);
+    const block = await rpc.blockchain.getBlock(height, 2);
     await addBlock(block);
-    log("parsed sado block %d", height);
     height += 1;
   }
 
@@ -117,11 +88,7 @@ async function indexSado(blockHeight: number): Promise<void> {
 
 async function reorgSado(blockHeight: number) {
   await Promise.all([
-    db.sado.deleteMany({ height: { $gt: blockHeight } }),
-    db.orders.deleteMany({ "block.height": { $gt: blockHeight } }),
+    db.sado.deleteMany({ height: { $gte: blockHeight } }),
+    db.orders.deleteMany({ "block.height": { $gte: blockHeight } }),
   ]);
-}
-
-async function indexOrdinals(): Promise<void> {
-  await crawlOrdinals();
 }

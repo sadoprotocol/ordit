@@ -1,15 +1,13 @@
-import debug from "debug";
+import { bootstrap } from "../../Bootstrap";
+import { parse } from "./Parse";
 
-import { crawl } from "./Crawl";
+index()
+  .catch(console.log)
+  .finally(() => {
+    process.exit(0);
+  });
 
-const log = debug("ord-indexer");
-
-main()
-  .then(() => process.exit(0))
-  .catch(console.log);
-
-async function main() {
-  log("starting ord indexer");
-  await crawl();
-  log("done");
+async function index() {
+  await bootstrap();
+  await parse();
 }

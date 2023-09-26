@@ -3,7 +3,7 @@ import Schema, { number } from "computed-types";
 
 import { rpc } from "../../Services/Bitcoin";
 
-export const getBlocks = method({
+export default method({
   params: Schema({
     limit: number.gt(0).lte(20).optional(),
     from: number.optional(),

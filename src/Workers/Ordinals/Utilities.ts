@@ -5,7 +5,7 @@ export function getIndexPath(path: string): string {
 }
 
 export function getNetworkPath(path: string) {
-  switch (config.chain.network) {
+  switch (config.network) {
     case "mainnet": {
       return `${path}`;
     }
@@ -16,7 +16,7 @@ export function getNetworkPath(path: string) {
       return `${path}/regtest`;
     }
     default: {
-      throw new Error(`Ord Index Path: invalid network ${config.chain.network} provided in config.`);
+      throw new Error(`Ord Index Path: invalid network ${config.network} provided in config.`);
     }
   }
 }

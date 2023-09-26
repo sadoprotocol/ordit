@@ -85,9 +85,14 @@ async function getBlockHash(height: number): Promise<string> {
  * Compute per block statistics for a given window. All amounts are in satoshis.
  *
  * @param height - Height of the block whose hash should be returned.
+ * @param pluck  - Values to pluck from the stats. Default. all
  */
-async function getBlockStats(hashOrHeight: string | number): Promise<BlockStats> {
-  const stats = await rpc("getblockstats", [hashOrHeight]);
+async function getBlockStats(hashOrHeight: string | number, pluck?: string[]): Promise<BlockStats> {
+  const args: [string | number, string[]?] = [hashOrHeight];
+  if (pluck !== undefined) {
+    args.push(pluck);
+  }
+  const stats = await rpc("getblockstats", args);
   if (stats === undefined) {
     throw new Error("Block not found");
   }

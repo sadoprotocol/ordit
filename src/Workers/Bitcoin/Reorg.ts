@@ -20,7 +20,9 @@ export async function getReorgHeight(): Promise<number> {
 
     const output = await db.outputs.findOne({ "vout.block.height": currentHeight });
     if (output === undefined) {
-      reorgHeight = currentHeight;
+      if (block.nTx !== 0) {
+        reorgHeight = currentHeight;
+      }
       currentHeight -= 1;
       continue;
     }

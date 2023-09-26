@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  keydb:
+    image: eqalpha/keydb
+    container_name: keydb
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - ./.keydb:/data

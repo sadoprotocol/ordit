@@ -4,7 +4,7 @@ import Schema, { number } from "computed-types";
 import { isCoinbase, RawTransaction, rpc } from "../../Services/Bitcoin";
 import { getTransactionAmount, getTransactionFee } from "../../Utilities/Transaction";
 
-export const getTransactions = method({
+export default method({
   params: Schema({
     pagination: Schema({
       block: number.optional(),

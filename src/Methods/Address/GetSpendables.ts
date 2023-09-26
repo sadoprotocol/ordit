@@ -2,30 +2,28 @@ import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
 import { db } from "../../Database";
-import { noVinFilter } from "../../Database/Output/Utilities";
+import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
-import { ord } from "../../Services/Ord";
+import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getOrdinalsByOutpoint } from "../../Utilities/Transaction";
 
 const MAX_SPENDABLES = 200;
 
-export const getSpendables = method({
+export default method({
   params: Schema({
     address: string,
     value: number,
     safetospend: boolean.optional(),
-    allowedrarity: array.of(string).optional(),
     filter: array.of(string).optional(),
   }),
-  handler: async ({ address, value, safetospend = true, allowedrarity = ["common", "uncommon"], filter = [] }) => {
+  handler: async ({ address, value, safetospend = true, filter = [] }) => {
     const spendables = [];
 
     let totalValue = 0;
     let safeToSpend = 0;
     let scanned = 0;
 
-    const cursor = db.outputs.collection.find({ addresses: address, ...noVinFilter }, { sort: { value: -1 } });
+    const cursor = db.outputs.collection.find({ addresses: address, ...noSpentsFilter }, { sort: { value: -1 } });
     while (await cursor.hasNext()) {
       const output = await cursor.next();
       if (output === null) {
@@ -44,18 +42,12 @@ export const getSpendables = method({
       // configured treshold is not safe to spend.
 
       if (safetospend === true) {
-        const inscriptions = await ord.inscriptions(outpoint);
-        if (inscriptions.length > 0) {
+        const outpoint = `${output.vout.txid}:${output.vout.n}`;
+        const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
+        const ordinals = await ord.getOrdinals(`${output.vout.txid}:${output.vout.n}`);
+        if (getSafeToSpendState(ordinals, inscriptions) === false) {
           continue;
         }
-
-        const ordinals = await getOrdinalsByOutpoint(outpoint);
-        for (const ordinal of ordinals) {
-          if (allowedrarity.includes(ordinal.rarity) === false) {
-            continue;
-          }
-        }
-
         safeToSpend += 1;
       }
 
@@ -73,7 +65,6 @@ export const getSpendables = method({
       spendables.push({
         txid: output.vout.txid,
         n: output.vout.n,
-        value: output.value,
         sats: btcToSat(output.value),
         scriptPubKey: tx.vout[output.vout.n].scriptPubKey,
       });

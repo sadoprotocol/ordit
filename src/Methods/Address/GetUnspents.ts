@@ -2,14 +2,12 @@ import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
 import { db } from "../../Database";
-import { noVinFilter } from "../../Database/Output/Utilities";
+import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
+import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
-import { getMetaFromTxId } from "../../Utilities/Oip";
-import { getInscriptionsByOutpoint, getOrdinalsByOutpoint, getSafeToSpendState } from "../../Utilities/Transaction";
 
 const options = Schema({
-  ord: boolean.optional(),
   safetospend: boolean.optional(),
   allowedrarity: array.of(string).optional(),
 });
@@ -24,15 +22,14 @@ const pagination = Schema({
   next: string.optional(),
 });
 
-export const getUnspents = method({
+export default method({
   params: Schema({
     address: string,
-    format: Schema.either("legacy" as const, "next" as const).optional(),
     options: options.optional(),
     sort: sort.optional(),
     pagination: pagination.optional(),
   }),
-  handler: async ({ format = "legacy", address, options, sort, pagination }) => {
+  handler: async ({ address, options, sort, pagination }) => {
     let result: any[] = [];
     let cursors: string[] = [];
 
@@ -46,9 +43,9 @@ export const getUnspents = method({
     const cursor = db.outputs.collection.find(
       {
         addresses: address,
-        ...noVinFilter,
+        ...noSpentsFilter,
       },
-      { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } }
+      { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } },
     );
 
     while (await cursor.hasNext()) {
@@ -74,33 +71,21 @@ export const getUnspents = method({
 
       const vout = tx.vout[output.vout.n];
       const utxo: any = {
-        _id: output._id.toString(),
         txid: output.vout.txid,
         n: output.vout.n,
-        blockHash: output.vout.block.hash,
-        blockN: output.vout.block.height,
-        scriptPubKey: vout.scriptPubKey,
-        value: vout.value,
         sats: btcToSat(vout.value),
+        scriptPubKey: vout.scriptPubKey,
       };
 
       if (vout.scriptPubKey.type === "pubkeyhash") {
         utxo.txhex = tx.hex;
       }
 
-      if (options?.ord !== false) {
-        utxo.ordinals = await getOrdinalsByOutpoint(`${output.vout.txid}:${output.vout.n}`);
-        utxo.inscriptions = await getInscriptionsByOutpoint(
-          `${output.vout.txid}:${output.vout.n}`,
-          await getMetaFromTxId(output.vout.txid)
-        );
-      }
+      const outpoint = `${output.vout.txid}:${output.vout.n}`;
+      const ordinals = await ord.getOrdinals(outpoint);
+      const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
 
-      utxo.safeToSpend = getSafeToSpendState(
-        utxo.ordinals ?? [],
-        utxo.inscriptions ?? [],
-        options?.allowedrarity ?? ["common", "uncommon"]
-      );
+      utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, options?.allowedrarity);
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {
@@ -113,10 +98,6 @@ export const getUnspents = method({
       if (result.length === limit) {
         break;
       }
-    }
-
-    if (format === "legacy") {
-      return result;
     }
 
     result = reverse ? result.reverse() : result;

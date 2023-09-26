@@ -1,26 +1,23 @@
-import debug from "debug";
-
 import { db } from "../../Database";
 import { parseOffer } from "../../Database/SadoOrders/Utilities/ParseOffer";
 import { parseOrder } from "../../Database/SadoOrders/Utilities/ParseOrder";
+import { log } from "../../Libraries/Log";
 import { SADO_DATA } from "../../Paths";
 import { RawTransaction, rpc } from "../../Services/Bitcoin";
 import { getAddressessFromVout } from "../../Utilities/Address";
 import { readDir, readFile, removeFile } from "../../Utilities/Files";
 import { SadoEntry } from "../../Utilities/Sado";
 
-const log = debug("sado-parser");
-
 export async function parse() {
   const blocks = await readDir(SADO_DATA);
   if (blocks.length === 0) {
-    return log("all items processed");
+    return log("\n   💤 All sado items has been processed");
   }
 
-  log("processing %d items", blocks.length);
+  log(`\n   🛒 processing ${blocks.length} items`);
 
   for (const block of blocks) {
-    parseBlock(block);
+    await parseBlock(block);
   }
 }
 
@@ -40,7 +37,7 @@ export async function parseBlock(block: string) {
   // ### Orders
 
   for (const { cid, txid } of json.orders) {
-    log("processing order %s", cid);
+    log(`\n   📥 Processing order ${cid}`);
     const tx = await rpc.transactions.getRawTransaction(txid, true);
     if (tx === undefined) {
       continue;
@@ -58,7 +55,7 @@ export async function parseBlock(block: string) {
   // ### Offers
 
   for (const { cid, txid } of json.offers) {
-    log("processing offer %s", cid);
+    log(`\n   📤 Processing offer ${cid}`);
     const tx = await rpc.transactions.getRawTransaction(txid, true);
     if (tx === undefined) {
       continue;

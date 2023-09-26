@@ -1,32 +1,36 @@
-import debug from "debug";
 import fetch from "node-fetch";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
 
-const log = debug("ordit-rpc");
-
 export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
   const ts = performance.now();
   try {
-    const id = "ordit";
-    const response = await fetch(getRpcUri(), {
+    const id = "trinity";
+    const response = await fetch(config.rpc.endpoint, {
       method: "POST",
       headers: {
+        Authorization: "Basic " + btoa(`${config.rpc.user}:${config.rpc.password}`),
         "Content-Type": "text/plain",
       },
       body: JSON.stringify({
         jsonrpc: "1.0",
-        id,
         method: method,
         params: args,
+        id,
       }),
     });
+
+    if (response.status !== 200) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
     const text = await response.text();
     let json: any;
     try {
       json = JSON.parse(text);
     } catch (error) {
+      console.log({ text });
       throw new Error(`bitcoin rcp error: ${text}`);
     }
     if (json.error !== null) {
@@ -35,16 +39,13 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
     return json.result;
   } catch (error) {
     if (error instanceof RpcError === false) {
-      console.log("RpcError", {
-        method,
-        args,
-      });
+      console.log("\n⛑️ RpcError", error.message, { endpoint: config.rpc.endpoint, method, args });
     }
     throw error;
   } finally {
     const time = performance.now() - ts;
     if (time / 1000 > 1) {
-      log("rpc call %s args [%s] took %s seconds", method, args.join(", "), (time / 1000).toFixed(3));
+      console.log("⏲️ rpc call %s args [%s] took %s seconds", method, args.join(", "), (time / 1000).toFixed(3));
     }
     logger.addRpc(method, time);
   }
@@ -77,16 +78,6 @@ export function optional<F>(code: number, fallback?: F): (error: unknown) => F |
 
 /*
  |--------------------------------------------------------------------------------
- | Helpers
- |--------------------------------------------------------------------------------
- */
-
-function getRpcUri(): string {
-  return `http://${config.rpc.user}:${config.rpc.password}@${config.rpc.host}:${config.rpc.port}`;
-}
-
-/*
- |--------------------------------------------------------------------------------
  | Errors
  |--------------------------------------------------------------------------------
  */
@@ -97,7 +88,7 @@ export class RpcError {
       code: number;
       message: string;
     },
-    readonly id: string
+    readonly id: string,
   ) {}
 
   get code(): number {

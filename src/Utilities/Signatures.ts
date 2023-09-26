@@ -54,8 +54,8 @@ export function validateOrditSignature(message: string, key: string, signature: 
  * @param address   - Address that signed the message.
  * @param signature - Signature to verify.
  */
-export function validateCoreSignature(message: string, address: string, signature: string): boolean {
-  return verify(message, address, signature) === true || fallbackVerification(message, address, signature) === true;
+export function validateCoreSignature(message: string, address: string, signature: string) {
+  return verifyMessage(message, address, signature) || verifyFallback(message, address, signature);
 }
 
 /*
@@ -64,23 +64,31 @@ export function validateCoreSignature(message: string, address: string, signatur
  |--------------------------------------------------------------------------------
  */
 
-function fallbackVerification(message: string, address: string, signature: string) {
-  let isValid = false;
+function verifyMessage(message: string, address: string, signature: string) {
+  try {
+    return verify(message, address, signature);
+  } catch (err) {
+    return false;
+  }
+}
+
+function verifyFallback(message: string, address: string, signature: string) {
   const flags = [...Array(12).keys()].map((i) => i + 31);
   for (const flag of flags) {
     const flagByte = Buffer.alloc(1);
     flagByte.writeInt8(flag);
+
     let sigBuffer = Buffer.from(signature, "base64").slice(1);
     sigBuffer = Buffer.concat([flagByte, sigBuffer]);
+
     const candidateSig = sigBuffer.toString("base64");
     try {
-      isValid = verify(message, address, candidateSig);
-      if (isValid) break;
+      return verify(message, address, candidateSig);
     } catch (_) {
-      // ...
+      continue;
     }
   }
-  return isValid;
+  return false;
 }
 
 /*

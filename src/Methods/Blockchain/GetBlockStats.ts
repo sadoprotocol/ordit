@@ -3,7 +3,7 @@ import Schema, { number, string } from "computed-types";
 
 import { rpc } from "../../Services/Bitcoin";
 
-export const getBlockStats = method({
+export default method({
   params: Schema({
     hashOrHeight: Schema.either(string, number).optional(),
   }),

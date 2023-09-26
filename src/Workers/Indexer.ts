@@ -1,5 +1,16 @@
+import { bootstrap } from "../Bootstrap";
+import { config } from "../Config";
+import { log } from "../Libraries/Log";
 import { index } from "./Index";
 
-index().finally(() => {
-  process.exit(0);
-});
+main()
+  .catch(console.log)
+  .finally(() => {
+    process.exit(0);
+  });
+
+async function main() {
+  log(`network: ${config.network}`);
+  await bootstrap();
+  await index();
+}

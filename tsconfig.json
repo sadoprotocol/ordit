@@ -3,11 +3,15 @@
   "display": "Default",
   "compilerOptions": {
     "strict": true,
-    
-    "lib": ["ES2022"],
-    "target": "ES2022",
-    "module": "CommonJS",
+
+    "lib": ["esnext"],
+    "module": "esnext",
+    "target": "esnext",
+
     "moduleResolution": "node",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
 
     "esModuleInterop": true,
     "skipLibCheck": true,

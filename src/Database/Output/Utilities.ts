@@ -2,7 +2,7 @@ import { Filter } from "mongodb";
 
 import { OutputDocument } from "./Collection";
 
-export const noVinFilter: Filter<OutputDocument> = {
+export const noSpentsFilter: Filter<OutputDocument> = {
   spent: { $ne: true },
-  $or: [{ vin: { $exists: false } }, { vin: null }],
+  $or: [{ vin: { $exists: false } }],
 };

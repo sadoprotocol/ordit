@@ -15,18 +15,24 @@ export const registrar: CollectionRegistrar = {
     ],
     [
       {
-        number: 1,
+        height: 1,
+        _id: -1,
       },
+    ],
+    [
       {
-        unique: true,
+        number: 1,
+        _id: -1,
+      },
+    ],
+    [
+      {
+        outpoint: 1,
       },
     ],
     [
       {
         sat: 1,
-      },
-      {
-        unique: true,
       },
     ],
     [
@@ -49,6 +55,7 @@ export const registrar: CollectionRegistrar = {
 
 export type Inscription = {
   id: string;
+  creator: string;
   owner: string;
   sat: number;
   mimeType: string;
@@ -64,4 +71,5 @@ export type Inscription = {
   number: number;
   outpoint: string;
   meta?: any;
+  verified?: boolean;
 };

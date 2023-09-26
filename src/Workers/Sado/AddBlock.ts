@@ -1,8 +1,8 @@
+import { db } from "../../Database";
 import { SADO_DATA } from "../../Paths";
 import { Block } from "../../Services/Bitcoin";
 import { writeFile } from "../../Utilities/Files";
 import { sado, SadoEntry } from "../../Utilities/Sado";
-import { setBlockHeight } from "./Status";
 
 export async function addBlock(block: Block<2>) {
   const orders: SadoEntry[] = [];
@@ -33,9 +33,9 @@ export async function addBlock(block: Block<2>) {
         },
         orders,
         offers,
-      })
+      }),
     );
   }
 
-  await setBlockHeight(block.height);
+  await db.sado.setBlockNumber(block.height);
 }

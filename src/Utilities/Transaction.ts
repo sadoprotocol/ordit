@@ -1,12 +1,10 @@
 import { Transaction } from "bitcoinjs-lib";
 import Schema, { boolean, Type } from "computed-types";
 
-import { config } from "../Config";
 import { db } from "../Database";
 import { isCoinbase, RawTransaction, rpc, Vout } from "../Services/Bitcoin";
-import { ord, Rarity } from "../Services/Ord";
+import { ord as ordService } from "../Services/Ord";
 import { getAddressessFromVout } from "./Address";
-import { getMetaFromWitness } from "./Oip";
 
 /*
  |--------------------------------------------------------------------------------
@@ -37,9 +35,8 @@ export const schema = {
 
 export async function getExpandedTransaction(
   tx: RawTransaction,
-  { ord = false, hex = false, witness = false }: ExpandOptions = {}
+  { ord = false, hex = false, witness = false }: ExpandOptions = {},
 ): Promise<ExpandedTransaction> {
-  let meta: any = undefined;
   let fee = 0;
   let coinbase = false;
 
@@ -47,13 +44,6 @@ export async function getExpandedTransaction(
     if (isCoinbase(vin)) {
       coinbase = true;
       continue;
-    }
-
-    if (vin.txinwitness) {
-      const oipMeta = await getMetaFromWitness(vin.txinwitness);
-      if (oipMeta !== undefined) {
-        meta = oipMeta;
-      }
     }
 
     if (witness === false) {
@@ -72,8 +62,8 @@ export async function getExpandedTransaction(
     const outpoint = `${tx.txid}:${vout.n}`;
 
     if (ord === true) {
-      (vout as any).ordinals = await getOrdinalsByOutpoint(outpoint);
-      (vout as any).inscriptions = await getInscriptionsByOutpoint(outpoint, meta);
+      (vout as any).ordinals = await ordService.getOrdinals(outpoint);
+      (vout as any).inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
     }
 
     (vout as any).spent = (await db.outputs.getVinLocation(outpoint)) ?? false;
@@ -120,50 +110,24 @@ export function getTransactionAmount(tx: RawTransaction): number {
  |--------------------------------------------------------------------------------
  */
 
-export async function getOrdinalsByOutpoint(outpoint: string): Promise<any[]> {
-  const ordinals = [];
-
-  const satoshis = await ord.list(outpoint);
-  for (const satoshi of satoshis) {
-    ordinals.push({
-      ...(await ord.traits(satoshi.start)),
-      ...satoshi,
-    });
+export async function getTransactionOutputHex(txid: string, vout: number): Promise<string | undefined> {
+  const transaction = await rpc.transactions.getRawTransaction(txid, true);
+  if (transaction === undefined) {
+    return undefined;
   }
-
-  return ordinals;
+  const utxo = transaction.vout[vout];
+  if (utxo === undefined) {
+    return undefined;
+  }
+  return utxo.scriptPubKey.hex;
 }
 
-export async function getInscriptionsByOutpoint(outpoint: string, meta?: any): Promise<any[]> {
-  const inscriptions = [];
-
-  const inscriptionIds = await ord.inscriptions(outpoint);
-  for (const inscriptionId of inscriptionIds) {
-    const inscription = await ord.inscription(inscriptionId);
-    inscriptions.push({
-      ...inscription,
-      mediaContent: `${config.api.domain}/content/${inscriptionId}`,
-      meta,
-    });
+export function parseLocation(location: string): [string, number] {
+  const [txid, vout] = location.split(":");
+  if (txid === undefined || vout === undefined) {
+    throw new Error(`Failed to parse location ${location}`);
   }
-
-  return inscriptions;
-}
-
-export function getSafeToSpendState(
-  ordinals: any[],
-  inscriptions: any[],
-  allowedRarity: Rarity[] = ["common", "uncommon"]
-): boolean {
-  if (inscriptions.length > 0 || ordinals.length === 0) {
-    return false;
-  }
-  for (const ordinal of ordinals) {
-    if (allowedRarity.includes(ordinal.rarity) === false) {
-      return false;
-    }
-  }
-  return true;
+  return [txid, parseInt(vout)];
 }
 
 export function decodeRawTransaction(hex: string): Transaction | undefined {

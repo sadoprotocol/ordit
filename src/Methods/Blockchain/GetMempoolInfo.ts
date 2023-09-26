@@ -2,7 +2,7 @@ import { method } from "@valkyr/api";
 
 import { rpc } from "../../Services/Bitcoin";
 
-export const getMempoolInfo = method({
+export default method({
   handler: async () => {
     return rpc.blockchain.getMemPoolInfo();
   },

@@ -26,9 +26,13 @@ fastify.get(
       .header("X-Frame-Options", "ALLOWALL")
       .header("Access-Control-Allow-Origin", "*")
       .header("Cross-Origin-Resource-Policy", "cross-origin")
-      .header("Content-Security-Policy", "frame-src https://*.ordit.io/")
+      .header("Content-Security-Policy", "default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob:")
+      .header(
+        "Content-Security-Policy",
+        "default-src *:*/content/ *:*/blockheight *:*/blockhash *:*/blockhash/ *:*/blocktime 'unsafe-eval' 'unsafe-inline' data: blob:",
+      )
       .header("Content-Type", media.type)
       .header("Content-Length", buffer.length)
       .send(buffer);
-  }
+  },
 );

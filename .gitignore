@@ -6,12 +6,13 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Docker
+
+/docker/**/data
+
 # Development
 
-.bitcoin
 .data
-.mongodb
-.neo
 .ord
 .env
 inscriptions.tsv

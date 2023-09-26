@@ -1,7 +1,6 @@
 import {
   AggregateOptions,
   AggregationCursor,
-  AnyBulkWriteOperation,
   DeleteOptions,
   Document,
   Filter,
@@ -12,7 +11,7 @@ import {
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, OutputDocument, SpentOutput } from "./Collection";
-import { noVinFilter } from "./Utilities";
+import { noSpentsFilter } from "./Utilities";
 
 export const outputs = {
   collection,
@@ -31,6 +30,7 @@ export const outputs = {
   // ### Helper Methods
 
   getByAddress,
+  getByLocation,
   getUnspentByAddress,
   getVinLocation,
   getHeighestBlock,
@@ -40,7 +40,6 @@ export const outputs = {
 
   addSpents,
   addRelayed,
-  addValues,
 };
 
 /*
@@ -53,7 +52,7 @@ export const outputs = {
  |
  */
 
-async function insertMany(outputs: OutputDocument[], chunkSize = 1000) {
+async function insertMany(outputs: OutputDocument[], chunkSize = 500) {
   const promises = [];
   for (let i = 0; i < outputs.length; i += chunkSize) {
     const chunk = outputs.slice(i, i + chunkSize);
@@ -137,8 +136,16 @@ async function getByAddress(
   return collection.find({ addresses: address, ...filter }, options).toArray();
 }
 
+async function getByLocation(txid: string, n: number) {
+  const output = await collection.findOne({ "vout.txid": txid, "vout.n": n });
+  if (output === null) {
+    return undefined;
+  }
+  return output;
+}
+
 async function getUnspentByAddress(address: string, options?: FindOptions<OutputDocument>): Promise<OutputDocument[]> {
-  return collection.find({ addresses: address, ...noVinFilter }, options).toArray();
+  return collection.find({ addresses: address, ...noSpentsFilter }, options).toArray();
 }
 
 async function getCountByAddress(address: string): Promise<{
@@ -192,13 +199,16 @@ async function getCountByAddress(address: string): Promise<{
  |
  */
 
-async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
+async function addSpents(spents: SpentOutput[], chunkSize = 500) {
   if (spents.length === 0) {
     return;
   }
-  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
+
+  const bulkops: any[][] = new Array(Math.ceil(spents.length / chunkSize)).fill(0).map(() => []);
+
+  let i = 0;
   for (const { vout, vin } of spents) {
-    bulkops.push({
+    bulkops[i].push({
       updateOne: {
         filter: { "vout.txid": vout.txid, "vout.n": vout.n },
         update: {
@@ -206,55 +216,14 @@ async function addSpents(spents: SpentOutput[], chunkSize = 1000) {
         },
       },
     });
-    if (bulkops.length === chunkSize) {
-      await collection.bulkWrite(bulkops);
-      bulkops.length = 0;
+    if (bulkops[i].length % chunkSize === 0) {
+      i += 1;
     }
   }
-  if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
-  }
+
+  await Promise.all(bulkops.map((ops) => collection.bulkWrite(ops)));
 }
 
 async function addRelayed(txid: string, n: number) {
   await collection.updateOne({ "vout.txid": txid, "vout.n": n }, { $set: { spent: true } });
-}
-
-/*
- |--------------------------------------------------------------------------------
- | Indexer Patch Methods
- |--------------------------------------------------------------------------------
- |
- | List of temporary methods aimed at patching the database. These are
- | used when we have to re-run indexers to update outputs with new blockchain
- | values.
- |
- | These methods should be removed once the database is up-to-date.
- |
- */
-
-async function addValues(values: { txid: string; n: number; value: number }[], chunkSize = 1000) {
-  if (values.length === 0) {
-    return;
-  }
-  const bulkops: AnyBulkWriteOperation<OutputDocument>[] = [];
-  for (const { txid, n, value } of values) {
-    bulkops.push({
-      updateOne: {
-        filter: { "vout.txid": txid, "vout.n": n },
-        update: {
-          $set: {
-            value: value,
-          },
-        },
-      },
-    });
-    if (bulkops.length === chunkSize) {
-      await collection.bulkWrite(bulkops);
-      bulkops.length = 0;
-    }
-  }
-  if (bulkops.length > 0) {
-    await collection.bulkWrite(bulkops);
-  }
 }
