@@ -45,7 +45,7 @@ export default method({
         addresses: address,
         ...noSpentsFilter,
       },
-      { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } }
+      { sort: { value: reverse ? (sort?.value === "asc" ? -1 : 1) : sort?.value === "asc" ? 1 : -1 } },
     );
 
     while (await cursor.hasNext()) {
@@ -71,14 +71,10 @@ export default method({
 
       const vout = tx.vout[output.vout.n];
       const utxo: any = {
-        _id: output._id.toString(),
         txid: output.vout.txid,
         n: output.vout.n,
-        blockHash: output.vout.block.hash,
-        blockN: output.vout.block.height,
-        scriptPubKey: vout.scriptPubKey,
-        value: vout.value,
         sats: btcToSat(vout.value),
+        scriptPubKey: vout.scriptPubKey,
       };
 
       if (vout.scriptPubKey.type === "pubkeyhash") {
@@ -86,10 +82,10 @@ export default method({
       }
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
+      const ordinals = await ord.getOrdinals(outpoint);
+      const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
 
-      utxo.ordinals = await ord.getOrdinals(outpoint);
-      utxo.inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
-      utxo.safeToSpend = getSafeToSpendState(utxo.ordinals, utxo.inscriptions, options?.allowedrarity);
+      utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, options?.allowedrarity);
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {

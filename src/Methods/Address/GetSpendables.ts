@@ -65,7 +65,6 @@ export default method({
       spendables.push({
         txid: output.vout.txid,
         n: output.vout.n,
-        value: output.value,
         sats: btcToSat(output.value),
         scriptPubKey: tx.vout[output.vout.n].scriptPubKey,
       });

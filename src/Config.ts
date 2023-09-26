@@ -46,6 +46,10 @@ export const config = {
     username: getEnvironmentVariable("MONGO_USERNAME"),
     password: getEnvironmentVariable("MONGO_PASSWORD"),
   },
+  redis: {
+    hostname: getEnvironmentVariable("REDIS_HOSTNAME"),
+    port: getEnvironmentVariable("REDIS_PORT", envToNumber),
+  },
   faucet: {
     seed: getEnvironmentVariable("FAUCET_SEED"),
     auth: getEnvironmentVariable("FAUCET_AUTH"),
