@@ -5,10 +5,6 @@ import { log, perf } from "../../Libraries/Log";
 
 export async function parse(blockHeight: number) {
   const eventsHeight = await db.brc20.events.getBlockNumber();
-  if (eventsHeight === 0) {
-    return;
-  }
-
   if (eventsHeight > blockHeight) {
     return log("\n   💤 Indexer has latest BRC-20 events");
   }

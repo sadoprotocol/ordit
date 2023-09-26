@@ -1,5 +1,6 @@
 import { redis } from "../../../Services/Redis";
 import { ignoreDuplicateErrors } from "../../../Utilities/Database";
+import { INSCRIPTION_EPOCH_BLOCK } from "../../../Utilities/Inscriptions";
 import { Inscription } from "../../Inscriptions";
 import { collection } from "./Collection";
 import { TokenEvent } from "./Events";
@@ -52,7 +53,7 @@ async function setProcessedNumber(n: number) {
 async function getProcessedNumber() {
   const n = await redis.get(BRC20_EVENTS_KEY);
   if (n === null) {
-    return 0;
+    return INSCRIPTION_EPOCH_BLOCK;
   }
   return parseInt(n, 10);
 }

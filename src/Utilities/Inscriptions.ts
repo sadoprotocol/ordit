@@ -1,8 +1,12 @@
 import { script } from "bitcoinjs-lib";
 
+import { config } from "../Config";
 import { isCoinbase, RawTransaction } from "../Services/Bitcoin";
 import { getMetaFromWitness } from "./Oip";
 import { parseLocation } from "./Transaction";
+
+export const INSCRIPTION_EPOCH_BLOCK =
+  config.network === "mainnet" ? 767_429 : config.network === "testnet" ? 2_413_342 : 0;
 
 const ORD_WITNESS = "6f7264";
 
