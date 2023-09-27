@@ -1,3 +1,4 @@
+import { BadRequestError, InternalError } from "@valkyr/api";
 import fetch from "node-fetch";
 
 import { config } from "../../Config";
@@ -22,26 +23,28 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
     });
 
     if (response.status !== 200) {
-      throw new Error(`${response.status} ${response.statusText}`);
+      throw RpcError.from(await response.text());
     }
 
     const text = await response.text();
+
     let json: any;
     try {
       json = JSON.parse(text);
     } catch (error) {
-      console.log({ text });
       throw new Error(`bitcoin rcp error: ${text}`);
     }
-    if (json.error !== null) {
+
+    if (json.error) {
       throw new RpcError(json.error, id);
     }
+
     return json.result;
   } catch (error) {
     if (error instanceof RpcError === false) {
       console.log("\n⛑️ RpcError", error.message, { endpoint: config.rpc.endpoint, method, args });
     }
-    throw error;
+    throw new BadRequestError(error.message, { code: error.code, method });
   } finally {
     const time = performance.now() - ts;
     if (time / 1000 > 1) {
@@ -90,6 +93,17 @@ export class RpcError {
     },
     readonly id: string,
   ) {}
+
+  static from(text: string) {
+    try {
+      const json = JSON.parse(text);
+      if (json.error !== null) {
+        return new RpcError(json.error, json.id);
+      }
+    } catch (_) {
+      return new InternalError(text);
+    }
+  }
 
   get code(): number {
     return this.error.code;
