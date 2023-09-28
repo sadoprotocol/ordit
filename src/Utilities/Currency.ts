@@ -1,3 +1,5 @@
+import fetch from "node-fetch";
+
 import { log } from "../Libraries/Log";
 
 export const currency: Currency = {};
@@ -19,7 +21,7 @@ async function setCurrency(): Promise<void> {
     return;
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as any;
   for (const key in data) {
     currency[key] = {
       value: data[key].last,

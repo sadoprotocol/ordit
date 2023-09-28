@@ -188,7 +188,7 @@ export type Vout = {
     hex: string;
     reqSigs?: number;
     type: string;
-    addresses: string[];
+    addresses?: string[];
     address?: string;
   };
 };
