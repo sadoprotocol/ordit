@@ -4,7 +4,7 @@ export const schema = {
   location: string.regexp(/^[a-f0-9]{64}:[0-9]+$/, "Expected value to be a valid utxo location in format of txid:vout"),
   signature: {
     format: Schema.either("psbt" as const, "ordit" as const, "core" as const).error(
-      "Expected value to be 'psbt', 'ordit', or 'core'"
+      "Expected value to be 'psbt', 'ordit', or 'core'",
     ),
   },
   sort: Schema.record(
@@ -16,12 +16,13 @@ export const schema = {
       "desc" as const,
       "ascending" as const,
       "descending" as const,
-      Schema({ $meta: string })
-    )
+      Schema({ $meta: string }),
+    ),
   ).optional(),
   sado: {
     type: Schema.either("sell" as const, "buy" as const).error("Expected value to be 'sell' or 'buy'"),
   },
+  include,
   pagination: Schema({
     limit: number.gt(0).lt(100).optional(),
     prev: string.optional(),
@@ -29,6 +30,19 @@ export const schema = {
     skip: number.optional(),
   }),
 };
+
+function include<const T>(...args: T[]): (inputs?: string[]) => T[] {
+  return (inputs?: string[]): T[] => {
+    if (inputs !== undefined) {
+      for (const val of inputs) {
+        if (args.includes(val as any) === false) {
+          throw new Error(`'${val}' is not a valid include value, valid values: '${args.join("', '")}'`);
+        }
+      }
+    }
+    return args;
+  };
+}
 
 export type Sort = Type<typeof schema.sort>;
 
