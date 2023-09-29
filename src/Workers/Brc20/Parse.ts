@@ -4,10 +4,12 @@ import { Inscription } from "../../Database/Inscriptions";
 import { log, perf } from "../../Libraries/Log";
 
 export async function parse(blockHeight: number) {
-  const eventsHeight = await db.brc20.events.getBlockNumber();
+  const eventsHeight = (await db.brc20.events.getBlockNumber()) + 1;
   if (eventsHeight > blockHeight) {
-    return log("\n   💤 Indexer has latest BRC-20 events");
+    return log("\n   💤 Indexer has latest BRC-20 inscriptions.");
   }
+
+  log(`\n   💽 Parsing BRC-20 inscriptions.`);
 
   let height = eventsHeight;
   while (height <= blockHeight) {
@@ -16,22 +18,14 @@ export async function parse(blockHeight: number) {
   }
 
   await db.brc20.events.setBlockNumber(blockHeight);
-
-  log("\n   💤 Event parser done");
 }
 
 export async function resolve() {
   const number = await db.brc20.events.getProcessedNumber();
-  const total = await db.brc20.events.collection.countDocuments();
 
-  let events = await db.brc20.events.collection.countDocuments({ number: { $lte: number } });
+  let processed = 0;
 
-  const remainder = total - events;
-  if (remainder === 0) {
-    return log("\n   💤 Resovler has processed all BRC-20 events");
-  }
-
-  log(`\n     📖 Resolving ${total - events} events`);
+  const ts = perf();
 
   const cursor = db.brc20.events.collection.find({ number: { $gt: number } }, { sort: { number: 1 } });
   while (await cursor.hasNext()) {
@@ -55,14 +49,18 @@ export async function resolve() {
         }
       }
       await db.brc20.events.setProcessedNumber(event.number);
-      events += 1;
+      processed += 1;
     } catch (error) {
       console.log({ event });
       throw error;
     }
   }
 
-  log("\n   💤 Event resolver done");
+  if (processed === 0) {
+    log("\n   💤 Event parser has no pending events.");
+  } else {
+    log(`\n   💾 Resolved ${processed} events [${ts.now} seconds]`);
+  }
 }
 
 async function resolveEvents(blockHeight: number) {
@@ -91,7 +89,7 @@ async function resolveEvents(blockHeight: number) {
   await Promise.all(promises);
 
   if (events > 0) {
-    log(`\n     📖 Stored ${events} events from block ${blockHeight} [${ts.now.toLocaleString()} seconds]`);
+    log(`\n     💾 Stored ${events} events from block ${blockHeight} [${ts.now.toLocaleString()} seconds]`);
   }
 }
 
