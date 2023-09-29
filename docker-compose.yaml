@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    restart: always
+    ports:
+      - 3030
+    env_file:
+      - .env
+    deploy:
+      replicas: 4
+      restart_policy:
+        max_attempts: 3
+        condition: on-failure
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 4000:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
