@@ -19,7 +19,7 @@ async function main() {
   let promises: Promise<any>[] = [];
   let events = 0;
 
-  const cursor = db.inscriptions.collection.find({ mediaType: "text/plain" });
+  const cursor = db.inscriptions.collection.find({ mediaType: { $in: ["text/plain", "application/json"] } });
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();
     if (inscription === null) {
