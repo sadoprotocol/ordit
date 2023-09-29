@@ -70,7 +70,7 @@ async function resolveEvents(blockHeight: number) {
   let events = 0;
 
   const cursor = db.inscriptions.collection.find(
-    { mediaType: "text/plain", height: blockHeight },
+    { mediaType: { $in: ["text/plain", "application/javascript"] }, height: blockHeight },
     { sort: { number: 1 } },
   );
   while (await cursor.hasNext()) {
