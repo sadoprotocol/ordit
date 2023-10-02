@@ -104,14 +104,14 @@ async function getInscriptionById(id: string) {
   if (inscription === null) {
     return undefined;
   }
-  inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
+  inscription.mediaContent = `${config.api.uri}/content/${inscription.id}`;
   return inscription;
 }
 
 async function getInscriptionsByOutpoint(outpoint: string) {
   const inscriptions = await collection.find({ outpoint }).toArray();
   for (const inscription of inscriptions) {
-    inscription.mediaContent = `${config.api.domain}/content/${inscription.id}`;
+    inscription.mediaContent = `${config.api.uri}/content/${inscription.id}`;
   }
   return inscriptions;
 }

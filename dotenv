@@ -1,53 +1,86 @@
-# Network
+#------------------------------------------------------------
+# GENERAL
+#------------------------------------------------------------
 
 NETWORK="regtest"
 
+#------------------------------------------------------------
 # API
+#------------------------------------------------------------
 
-DOMAIN="https://network.ordit.io"
-PORT=3030
+API_URI="https://network.ordit.io"
+API_HOST="127.0.0.1"
+API_PORT=3030
+API_REPLICAS=1
 
+#------------------------------------------------------------
 # WORKER
+#------------------------------------------------------------
 
+# Worker Server
+# Configuration for the worker instance handling indexing and
+# related operations. URI defines the global endpoint that
+# can access the read layer. HOST and PORT settings defines
+# the instance configuration. 
+
+WORKER_URI="http://127.0.0.1:3031"
 WORKER_HOST="127.0.0.1"
 WORKER_PORT=3031
 
-# RPC
-
-RPC_ENDPOINT="http://127.0.0.1:18443" # regtest:18443 testnet:18332 mainnet:8332
-RPC_USER="<user>"
-RPC_PASSWORD="<password>"
-
 # UTXO
+# Index individual vins and vouts for every block.
 
 UTXO_PARSER_ENABLED=true
 
-# ORD
+# Ord Server
+# Currently used to serve our ability to track sat ranges and
+# movements of envelopes on the bitcoin network. URI is used
+# by the indexer to lookup dependent sat tracking.
 
-ORD_ENDPOINT="http://127.0.0.1:3032"
+ORD_URI="http://127.0.0.1:3032"
 ORD_INDEXER_ENABLED=true
 
-# BRC 20
+# BRC-20
+# Index BRC-20 events and resolve said events into optimized
+# read collections for service consumption.
 
 BRC20_ENABLED=true
 
 # SADO PARSER
+# Index SADO outputs and resolve said outputs into optimized
+# read collection for service consumption.
 
 SADO_START_BLOCK=0
 SADO_PARSER_ENABLED=true
 
+#------------------------------------------------------------
+# BLOCKCHAIN
+#------------------------------------------------------------
+
+RPC_URI="http://127.0.0.1:18443" # regtest:18443 testnet:18332 mainnet:8332
+RPC_PORT=18332
+RPC_USER="bitcoin"
+RPC_PASSWORD="bitcoin"
+
 # REORG
+# For every new block we want to reverse lookup previous 
+# block hashes against local indexes to check for reorg 
+# events.
 
 REORG_SCAN_LENGTH=10
-REORG_MANUAL_TRESHOLD=10
-REORG_DEBUG=false
+REORG_MANUAL_TRESHOLD=10 # Treshold for automated recovery.
+REORG_DEBUG=false        # Log reorg trace for manual checks.
 
+#------------------------------------------------------------
 # IPFS
+#------------------------------------------------------------
 
 IPFS_GATEWAY=https://content.sado.space
 IPFS_API=https://ipfs.sado.space
 
-# MONGO
+#------------------------------------------------------------
+# DATABASES
+#------------------------------------------------------------
 
 MONGO_HOSTNAME="127.0.0.1"
 MONGO_PORT=27017
@@ -55,12 +88,12 @@ MONGO_DATABASE="bitcoin-regtest"
 MONGO_USERNAME=""
 MONGO_PASSWORD=""
 
-# REDIS
-
 REDIS_HOSTNAME="127.0.0.1"
 REDIS_PORT=6379
 
-# FAUCET
+#------------------------------------------------------------
+# REGTEST
+#------------------------------------------------------------
 
 FAUCET_SEED=""
 FAUCET_AUTH=""

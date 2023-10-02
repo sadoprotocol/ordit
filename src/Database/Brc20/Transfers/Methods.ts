@@ -1,3 +1,5 @@
+import { Filter, FindOptions } from "mongodb";
+
 import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
 import { rpc } from "../../../Services/Bitcoin";
 import { getLocationFromId } from "../../../Utilities/Inscriptions";
@@ -8,9 +10,14 @@ import { collection, TokenTransfer } from "./Collection";
 
 export const transfers = {
   collection,
+  find,
   transfer,
   findPaginated,
 };
+
+async function find(filter: Filter<TokenTransfer>, options?: FindOptions<TokenTransfer>) {
+  return collection.find(filter, options).toArray();
+}
 
 /**
  * Handle transfer event for a token.

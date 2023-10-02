@@ -4,6 +4,9 @@ import { rpc } from "../../Services/Bitcoin";
 
 export async function getReorgHeight(): Promise<number> {
   const heighestBlock = await db.outputs.getHeighestBlock();
+  if (heighestBlock === 0) {
+    return -1; // fresh database, start from genesis
+  }
 
   let targetHeight = heighestBlock - config.reorg.scanLength;
   let reorgHeight = -1;
@@ -47,7 +50,7 @@ function logProgress(currentHeight: number, targetHeight: number, reorgHeight: n
     process.stdout.write(
       `\r  scanning block ${currentHeight} | ${
         currentHeight - targetHeight
-      } blocks left to scan | reorg height: ${reorgHeight}          `
+      } blocks left to scan | reorg height: ${reorgHeight}          `,
     );
   }
 }

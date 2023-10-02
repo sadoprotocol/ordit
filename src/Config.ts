@@ -4,23 +4,21 @@ import { envToNetwork } from "./Libraries/Network";
 export const config = {
   network: getEnvironmentVariable("NETWORK", envToNetwork),
   api: {
-    domain: getEnvironmentVariable("DOMAIN"),
-    port: getEnvironmentVariable("PORT", envToNumber),
+    uri: getEnvironmentVariable("API_URI"),
+    host: getEnvironmentVariable("API_HOST"),
+    port: getEnvironmentVariable("API_PORT", envToNumber),
+    replicas: getEnvironmentVariable("API_REPLICAS", envToNumber),
   },
   worker: {
+    uri: getEnvironmentVariable("WORKER_URI"),
     host: getEnvironmentVariable("WORKER_HOST"),
     port: getEnvironmentVariable("WORKER_PORT", envToNumber),
   },
-  rpc: {
-    endpoint: getEnvironmentVariable("RPC_ENDPOINT"),
-    user: getEnvironmentVariable("RPC_USER"),
-    password: getEnvironmentVariable("RPC_PASSWORD"),
-  },
-  parser: {
+  utxo: {
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
   ord: {
-    endpoint: getEnvironmentVariable("ORD_ENDPOINT"),
+    uri: getEnvironmentVariable("ORD_URI"),
     enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
   },
   brc20: {
@@ -29,6 +27,12 @@ export const config = {
   sado: {
     startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),
     enabled: getEnvironmentVariable("SADO_PARSER_ENABLED", envToBoolean),
+  },
+  rpc: {
+    uri: getEnvironmentVariable("RPC_URI"),
+    port: getEnvironmentVariable("RPC_PORT", envToNumber),
+    user: getEnvironmentVariable("RPC_USER"),
+    password: getEnvironmentVariable("RPC_PASSWORD"),
   },
   reorg: {
     scanLength: getEnvironmentVariable("REORG_SCAN_LENGTH", envToNumber),

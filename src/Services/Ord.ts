@@ -134,7 +134,7 @@ async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<vo
  |--------------------------------------------------------------------------------
  */
 
-async function call<R>(endpoint: string, data?: any): Promise<R> {
+async function call<R>(path: string, data?: any): Promise<R> {
   const options: any = {
     method: "GET",
     headers: {
@@ -148,7 +148,7 @@ async function call<R>(endpoint: string, data?: any): Promise<R> {
     options.headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${config.ord.endpoint}${endpoint}`, options);
+  const response = await fetch(`${config.ord.uri}${path}`, options);
   if (response.status === 404) {
     throw new NotFoundError(await response.text());
   }

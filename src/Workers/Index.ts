@@ -36,7 +36,7 @@ export async function index() {
 
   // ### Parse
 
-  if (config.parser.enabled === true) {
+  if (config.utxo.enabled === true) {
     log("\n\n 📖 Indexing outputs\n");
     await indexUtxos(blockHeight);
   }

@@ -7,7 +7,7 @@ const id = getRandomString();
 
 export default method({
   handler: async () => {
-    return fetch(`http://${config.worker.host}:${config.worker.port}/health`)
+    return fetch(`${config.worker.uri}/health`)
       .then(async (response) => ({
         id,
         ...((await response.json()) as any),

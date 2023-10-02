@@ -12,7 +12,7 @@ const start = async () => {
   await registerMethods();
   await startCurrencyTracker();
   await fastify
-    .listen({ host: "0.0.0.0", port: config.api.port })
+    .listen({ host: config.api.host, port: config.api.port })
     .then((address) => {
       log(`\n👂 listening on ${address}\n`);
     })

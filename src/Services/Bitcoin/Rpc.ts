@@ -8,7 +8,7 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
   const ts = performance.now();
   try {
     const id = "trinity";
-    const response = await fetch(config.rpc.endpoint, {
+    const response = await fetch(config.rpc.uri, {
       method: "POST",
       headers: {
         Authorization: "Basic " + btoa(`${config.rpc.user}:${config.rpc.password}`),
@@ -42,7 +42,7 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
     return json.result;
   } catch (error) {
     if (error instanceof RpcError === false) {
-      console.log("\n⛑️ RpcError", error.message, { endpoint: config.rpc.endpoint, method, args });
+      console.log("\n⛑️ RpcError", error.message, { endpoint: config.rpc.uri, method, args });
     }
     throw new BadRequestError(error.message, { code: error.code, method });
   } finally {
