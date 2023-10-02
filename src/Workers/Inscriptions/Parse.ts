@@ -184,15 +184,19 @@ async function handleInscriptionTransfers(block: Block<2>) {
     // Retrieve the new satpoints for every identified transfer as well as
     // resolving the new owner address for the inscription.
 
-    const data = await ord.getInscriptionsForIds(transfers.map((item) => item.id));
-    for (const item of data) {
-      const [txid, vout] = item.satpoint.split(":");
-      const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": parseInt(vout) });
-      ops.push({
-        id: item.inscription_id,
-        owner: output?.addresses[0] ?? "",
-        outpoint: `${txid}:${vout}`,
-      });
+    const chunkSize = 1000;
+    for (let i = 0; i < transfers.length; i += chunkSize) {
+      const chunk = transfers.slice(i, i + chunkSize);
+      const data = await ord.getInscriptionsForIds(chunk.map((item) => item.id));
+      for (const item of data) {
+        const [txid, vout] = item.satpoint.split(":");
+        const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": parseInt(vout) });
+        ops.push({
+          id: item.inscription_id,
+          owner: output?.addresses[0] ?? "",
+          outpoint: `${txid}:${vout}`,
+        });
+      }
     }
 
     await db.inscriptions.addTransfers(ops);
