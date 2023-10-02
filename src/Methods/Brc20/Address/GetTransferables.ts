@@ -6,6 +6,7 @@ import { db } from "../../../Database";
 import { Token } from "../../../Database/Brc20/Tokens/Collection";
 import { TokenTransfer } from "../../../Database/Brc20/Transfers/Collection";
 import { schema } from "../../../Libraries/Schema";
+import { getLocationFromId } from "../../../Utilities/Inscriptions";
 
 export default method({
   params: Schema({
@@ -19,7 +20,15 @@ export default method({
     if (tick) {
       filter.slug = tick.toLowerCase();
     }
-    const result = await db.brc20.transfers.findPaginated({ ...pagination, filter });
+    const result = await db.brc20.transfers.findPaginated({
+      ...pagination,
+      filter,
+      transform: (transfer) => {
+        const [txid, n] = getLocationFromId(transfer.inscription);
+        (transfer.from as any).txid = txid;
+        (transfer.from as any).vout = n;
+      },
+    });
     if (include?.includes("token")) {
       result.documents = await includeTokenData(result.documents);
     }
