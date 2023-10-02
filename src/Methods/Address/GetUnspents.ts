@@ -85,6 +85,10 @@ export default method({
       const ordinals = await ord.getOrdinals(outpoint);
       const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
 
+      // DEPRECATED, REMOVE WHEN CLIENT CATCHES UP
+      utxo.ordinals = ordinals;
+      utxo.inscriptions = inscriptions;
+
       utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, options?.allowedrarity);
       utxo.confirmation = height - output.vout.block.height + 1;
 
