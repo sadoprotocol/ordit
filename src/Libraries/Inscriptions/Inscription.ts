@@ -53,11 +53,11 @@ export class Inscription {
         creator: await getInscriptionCreator(tx.txid),
         owner: await getInscriptionOwner(txid, vout),
         media: {
-          type: envelope.type ?? "",
+          type: envelope.media.type ?? "",
           charset: envelope.media.charset,
           mime: {
-            type: envelope.media.type,
-            subtype: envelope.media.subtype,
+            type: envelope.media.mimeType,
+            subtype: envelope.media.mimeSubtype,
           },
           content: envelope.content?.body ?? "",
           size: envelope.content?.size ?? 0,

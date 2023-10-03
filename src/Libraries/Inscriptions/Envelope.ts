@@ -29,10 +29,10 @@ export class Envelope {
     body: string;
   };
   readonly media: {
-    format: string;
     type: string;
-    subtype: string;
     charset: string;
+    mimeType: string;
+    mimeSubtype: string;
   };
   readonly meta: object;
 
@@ -47,18 +47,6 @@ export class Envelope {
     this.meta = getEnvelopeMeta(data) ?? {};
   }
 
-  get isValid() {
-    return this.protocol === "ord";
-  }
-
-  get size() {
-    return this.content?.size ?? 0;
-  }
-
-  get body() {
-    return this.content?.body ?? "";
-  }
-
   /**
    * Return a inscription envelope from a transaction or undefined if no valid
    * envelope is present.
@@ -70,6 +58,18 @@ export class Envelope {
     if (data) {
       return new Envelope(data, oip);
     }
+  }
+
+  get isValid() {
+    return this.protocol === "ord";
+  }
+
+  get size() {
+    return this.content?.size ?? 0;
+  }
+
+  get body() {
+    return this.content?.body ?? "";
   }
 
   toJSON() {
@@ -223,14 +223,14 @@ function getEnvelope(data: EnvelopeData[]): EnvelopeData[] | undefined {
  */
 
 function getMediaMeta(data: string = "") {
-  const [media, format = ""] = data.split(";");
-  const [type, subtype] = media.split("/");
+  const [type, format = ""] = data.split(";");
+  const [mimeType, mimeSubtype] = type.split("/");
   const [, charset = ""] = format.split("=");
   return {
-    format,
     type,
-    subtype,
     charset,
+    mimeType,
+    mimeSubtype,
   };
 }
 
