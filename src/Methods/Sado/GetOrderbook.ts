@@ -2,7 +2,6 @@ import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "../../Database";
-import { parseLocation } from "../../Database/SadoOrders/Utilities/ParseLocation";
 import { satToUsd } from "../../Utilities/Bitcoin";
 import { getPagination, pagination } from "../../Utilities/Pagination";
 
@@ -25,13 +24,12 @@ export default method({
       },
     });
     for (const order of orders) {
-      const [txid, n] = parseLocation(order.location);
       result.push({
         ...order,
         price: {
           usd: satToUsd(order.cardinals),
         },
-        inscriptions: await db.inscriptions.getInscriptionsByOutpoint(`${txid}:${n}`),
+        inscriptions: await db.inscriptions.getInscriptionsByOutpoint(order.location),
       });
     }
 

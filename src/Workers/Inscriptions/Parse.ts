@@ -100,11 +100,13 @@ async function handleInscriptionsInBlock(block: Block<2>) {
       number: inscription.number,
       outpoint: inscription.outpoint,
       ometa: inscription.meta,
-      meta: inscription.oip,
     };
 
-    if (inscription.oip && isOIP2Meta(inscription.oip)) {
-      entry.verified = await validateOIP2Meta(inscription.oip);
+    if (inscription.oip) {
+      entry.meta = inscription.oip;
+      if (isOIP2Meta(inscription.oip)) {
+        entry.verified = await validateOIP2Meta(inscription.oip);
+      }
     }
 
     inscriptions.push(entry as Inscription);

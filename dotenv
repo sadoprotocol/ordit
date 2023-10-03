@@ -58,7 +58,7 @@ SADO_PARSER_ENABLED=true
 #------------------------------------------------------------
 
 RPC_URI="http://127.0.0.1:18443" # regtest:18443 testnet:18332 mainnet:8332
-RPC_PORT=18332
+RPC_PORT=18443
 RPC_USER="bitcoin"
 RPC_PASSWORD="bitcoin"
 

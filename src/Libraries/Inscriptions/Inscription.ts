@@ -39,8 +39,14 @@ export class Inscription {
     const envelope = Envelope.fromTransaction(tx);
     if (envelope && envelope.isValid) {
       const id = `${tx.txid}i0`;
+
       const ordData = await ord.getInscriptionsForIds([id]).then((data) => data[0]);
+      if (ordData === undefined) {
+        return undefined;
+      }
+
       const [txid, vout] = parseLocation(ordData.satpoint);
+
       return new Inscription({
         id,
         genesis: tx.txid,
@@ -60,8 +66,10 @@ export class Inscription {
         height: ordData.genesis_height,
         fee: ordData.genesis_fee,
         sat: ordData.sat,
-        outpoint: ordData.satpoint,
+        outpoint: `${txid}:${vout}`,
         timestamp: ordData.timestamp,
+        meta: envelope.meta,
+        oip: envelope.oip,
       });
     }
   }
@@ -101,7 +109,7 @@ type InscriptionData = {
   sat: number;
   outpoint: string;
   timestamp: number;
-  meta?: Object;
+  meta: Object;
   oip?: Object;
 };
 

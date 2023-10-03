@@ -34,17 +34,17 @@ export class Envelope {
     subtype: string;
     charset: string;
   };
-  readonly meta?: any;
+  readonly meta: object;
 
   constructor(
     readonly data: EnvelopeData[],
-    readonly oip?: any,
+    readonly oip?: object,
   ) {
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.content = getEnvelopeContent(data);
     this.media = getMediaMeta(this.type);
-    this.meta = getEnvelopeMeta(data);
+    this.meta = getEnvelopeMeta(data) ?? {};
   }
 
   get isValid() {
@@ -79,6 +79,7 @@ export class Envelope {
       body: this.body,
       size: this.size,
       meta: this.meta,
+      oip: this.oip,
     };
   }
 }
@@ -170,10 +171,13 @@ function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | un
       for (const witness of vin.txinwitness) {
         if (witness.includes(PROTOCOL_ID)) {
           const data = script.decompile(Buffer.from(witness, "hex"));
-          if (!data) {
-            continue;
+          if (data) {
+            const oip = getMetaFromWitness(vin.txinwitness);
+            if (oip) {
+              return [getEnvelope(data), oip];
+            }
+            return [getEnvelope(data)];
           }
-          return [getEnvelope(data), getMetaFromWitness(vin.txinwitness)];
         }
       }
     }
@@ -218,8 +222,8 @@ function getEnvelope(data: EnvelopeData[]): EnvelopeData[] | undefined {
  |--------------------------------------------------------------------------------
  */
 
-function getMediaMeta(data?: string) {
-  const [media, format] = data?.split(";") ?? ["", ""];
+function getMediaMeta(data: string = "") {
+  const [media, format = ""] = data.split(";");
   const [type, subtype] = media.split("/");
   const [, charset = ""] = format.split("=");
   return {
