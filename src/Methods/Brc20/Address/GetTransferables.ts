@@ -5,8 +5,8 @@ import { Filter } from "mongodb";
 import { db } from "../../../Database";
 import { Token } from "../../../Database/Brc20/Tokens/Collection";
 import { TokenTransfer } from "../../../Database/Brc20/Transfers/Collection";
+import { getLocationFromId } from "../../../Libraries/Inscriptions/Utilities";
 import { schema } from "../../../Libraries/Schema";
-import { getLocationFromId } from "../../../Utilities/Inscriptions";
 
 export default method({
   params: Schema({

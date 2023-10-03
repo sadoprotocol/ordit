@@ -1,8 +1,8 @@
 import { Filter, FindOptions } from "mongodb";
 
+import { getLocationFromId } from "../../../Libraries/Inscriptions/Utilities";
 import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
 import { rpc } from "../../../Services/Bitcoin";
-import { getLocationFromId } from "../../../Utilities/Inscriptions";
 import { OutputDocument, outputs } from "../../Output";
 import { TokenTransfered } from "../Events/Collection";
 import { holders } from "../Holders/Methods";

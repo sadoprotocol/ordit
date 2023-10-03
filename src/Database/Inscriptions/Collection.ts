@@ -70,6 +70,7 @@ export type Inscription = {
   genesis: string;
   number: number;
   outpoint: string;
+  ometa?: any;
   meta?: any;
   verified?: boolean;
 };

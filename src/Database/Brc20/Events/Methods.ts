@@ -1,6 +1,6 @@
+import { INSCRIPTION_EPOCH_BLOCK } from "../../../Libraries/Inscriptions/Constants";
 import { redis } from "../../../Services/Redis";
 import { ignoreDuplicateErrors } from "../../../Utilities/Database";
-import { INSCRIPTION_EPOCH_BLOCK } from "../../../Utilities/Inscriptions";
 import { Inscription } from "../../Inscriptions";
 import { collection } from "./Collection";
 import { TokenEvent } from "./Events";

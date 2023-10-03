@@ -1,8 +1,8 @@
 import { method, NotFoundError } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
+import { Envelope } from "../../Libraries/Inscriptions/Envelope";
 import { rpc } from "../../Services/Bitcoin";
-import { getInscriptionContent, getRawInscriptionContent, isBuffer } from "../../Utilities/Inscriptions";
 
 export default method({
   params: Schema({
@@ -13,27 +13,10 @@ export default method({
     if (tx === undefined) {
       throw new NotFoundError("Transaction not found");
     }
-    const envelope = getRawInscriptionContent(tx);
+    const envelope = Envelope.fromTransaction(tx);
     if (envelope === undefined) {
-      throw new NotFoundError("Inscription not found");
+      return new NotFoundError("Transaction does not have inscription envelope");
     }
-    const data = getInscriptionContent(tx);
-    return {
-      envelope: envelope.map((chunk) => {
-        if (typeof chunk === "number") {
-          return chunk;
-        }
-        if (isBuffer(chunk)) {
-          return chunk.toString("utf-8");
-        }
-        return chunk;
-      }),
-      media: {
-        type: data?.media.type,
-        content: data?.media.content.toString("utf-8"),
-        length: data?.media.content.length,
-      },
-      tx,
-    };
+    return envelope.toJSON();
   },
 });

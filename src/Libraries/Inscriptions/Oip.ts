@@ -1,9 +1,9 @@
 import { script } from "bitcoinjs-lib";
 
-import { db } from "../Database";
-import { isCoinbase, rpc } from "../Services/Bitcoin";
-import { makeObjectKeyChecker } from "../Services/IPFS";
-import { validateCoreSignature, validateOrditSignature } from "./Signatures";
+import { db } from "../../Database";
+import { isCoinbase, rpc } from "../../Services/Bitcoin";
+import { makeObjectKeyChecker } from "../../Services/IPFS";
+import { validateCoreSignature, validateOrditSignature } from "../../Utilities/Signatures";
 
 const hasValidOip2Keys = makeObjectKeyChecker(["p", "v", "ty", "col", "iid", "publ", "nonce", "sig"]);
 
@@ -63,7 +63,7 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
       chunks
         .slice(startIndex, endIndex)
         .filter((chunk) => chunk.includes("\x00") === false)
-        .join("")
+        .join(""),
     );
   } catch (error) {
     console.log("Error parsing json from witness", {

@@ -2,7 +2,7 @@ import { method, NotFoundError } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "../../../Database";
-import { getMetaFromTxId } from "../../../Utilities/Oip";
+import { getMetaFromTxId } from "../../../Libraries/Inscriptions/Oip";
 
 export default method({
   params: Schema({
