@@ -1,12 +1,12 @@
 import { DeleteOptions, Filter, FindOptions } from "mongodb";
 
-import { config } from "../../Config";
-import { redis } from "../../Services/Redis";
+import { config } from "../../../Config";
+import { redis } from "../../../Services/Redis";
 import { collection, SadoDocument } from "./Collection";
 
 const SADO_BLOCK_KEY = "sado_b";
 
-export const sado = {
+export const events = {
   collection,
 
   // ### Core Methods

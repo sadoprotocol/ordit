@@ -1,9 +1,9 @@
-import { CollectionRegistrar, mongo } from "../../Services/Mongo";
+import { CollectionRegistrar, mongo } from "../../../Services/Mongo";
 
-export const collection = mongo.db.collection<SadoDocument>("sado");
+export const collection = mongo.db.collection<SadoDocument>("sado_events");
 
 export const registrar: CollectionRegistrar = {
-  name: "sado",
+  name: "sado_events",
   indexes: [[{ cid: 1 }, { unique: true }], [{ addresses: 1 }], [{ height: 1 }]],
 };
 

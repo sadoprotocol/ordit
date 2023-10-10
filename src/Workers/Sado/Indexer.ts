@@ -13,7 +13,7 @@ async function main() {
   await bootstrap();
 
   const blockHeight = await rpc.blockchain.getBlockCount();
-  const sadoHeight = await db.sado.getBlockNumber();
+  const sadoHeight = await db.sado.events.getBlockNumber();
 
   if (blockHeight === sadoHeight) {
     return console.log("sado is synced with network");

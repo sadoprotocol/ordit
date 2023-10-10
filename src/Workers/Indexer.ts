@@ -1,6 +1,7 @@
-import { bootstrap } from "../Bootstrap";
-import { config } from "../Config";
-import { log } from "../Libraries/Log";
+import { bootstrap } from "~Bootstrap";
+import { config } from "~Config";
+import { log } from "~Libraries/Log";
+
 import { index } from "./Index";
 
 main()
@@ -10,7 +11,7 @@ main()
   });
 
 async function main() {
-  log(`network: ${config.network}`);
+  log(`network: ${config.network}\n`);
   await bootstrap();
   await index();
 }

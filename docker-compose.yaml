@@ -2,15 +2,56 @@
 
 version: "3.9"
 
+networks:
+  web:
+    name: web
+    external: false
+  internal:
+    name: internal
+    external: false
+
 services:
+  # nginx:
+  #   image: nginx:latest
+  #   profiles: ["server"]
+  #   depends_on:
+  #     - api
+  #   ports:
+  #     - 4000:80
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  traefik:
+    image: traefik
+    profiles: ["server", "traefik"]
+    restart: always
+    labels:
+      - traefik.enable=false
+    networks:
+      - internal
+      - web
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - ./devops:/etc/traefik
+      - /var/run/docker.sock:/var/run/docker.sock
+
   api:
     build: .
-    profiles: ["server"]
+    profiles: ["server", "api"]
     restart: always
-    ports:
-      - 3030
+    labels:
+      - traefik.http.routers.ordit.rule=Host(`${TRAEFIK_HOST}`)
+      - traefik.port=80
     env_file:
       - .env
+    networks:
+      - internal
+      - web
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       replicas: ${API_REPLICAS}
       restart_policy:
@@ -18,38 +59,18 @@ services:
         condition: on-failure
     command: npm start
 
-  nginx:
-    image: nginx:latest
-    profiles: ["server"]
-    depends_on:
-      - api
-    ports:
-      - 4000:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-
-  indexer:
-    build: .
-    profiles: ["indexer"]
-    restart: always
-    ports:
-      - 3031
-    env_file:
-      - .env
-    deploy:
-      restart_policy:
-        max_attempts: 3
-        condition: on-failure
-    command: npm run worker
-
   bitcoin:
     image: ruimarinho/bitcoin-core
     profiles: ["local", "bitcoin"]
     restart: always
+    labels:
+      - traefik.enable=false
     ports:
       - ${RPC_PORT}:${RPC_PORT} # regtest:18443 testnet:18332 mainnet:8332
     volumes:
       - ./.data/bitcoin:/home/bitcoin/.bitcoin
+    networks:
+      - internal
     command:
       -printtoconsole
       -txindex=1
@@ -58,14 +79,18 @@ services:
       -rpcbind=0.0.0.0
       -rpcuser=bitcoin
       -rpcpassword=bitcoin
-      -blocknotify='curl http://${WORKER_HOST}:${WORKER_PORT}/hooks/bitcoin?block=%s'
+      -blocknotify='curl ${RPC_NOTIFY}/hooks/bitcoin?block=%s'
 
   keydb:
     image: eqalpha/keydb
     profiles: ["local", "db", "keydb"]
     restart: always
+    labels:
+      - traefik.enable=false
     ports:
       - ${REDIS_PORT}:6379
+    networks:
+      - internal
     volumes:
       - ./.data/keydb:/data
 
@@ -73,7 +98,11 @@ services:
     image: mongo:latest
     profiles: ["local", "db", "mongodb"]
     restart: always
+    labels:
+      - traefik.enable=false
     ports:
       - ${MONGO_PORT}:27017
+    networks:
+      - internal
     volumes:
       - ./.data/mongodb:/data/db

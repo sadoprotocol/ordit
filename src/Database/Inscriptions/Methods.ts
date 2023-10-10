@@ -1,4 +1,4 @@
-import { Filter, FindOptions, UpdateFilter } from "mongodb";
+import { DeleteOptions, Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
@@ -20,6 +20,7 @@ export const inscriptions = {
   findOne,
   updateOne,
   count,
+  deleteMany,
 
   // ### Helper Methods
 
@@ -82,6 +83,10 @@ async function updateOne(filter: Filter<Inscription>, update: UpdateFilter<Inscr
 
 async function count(filter: Filter<Inscription>) {
   return collection.countDocuments(filter);
+}
+
+async function deleteMany(filter: Filter<Inscription>, options?: DeleteOptions) {
+  return collection.deleteMany(filter, options);
 }
 
 /*

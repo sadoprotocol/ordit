@@ -1,7 +1,8 @@
 import { ipfs } from "../../../Services/IPFS";
-import { db } from "../..";
-import { SadoDocument } from "../../Sado";
-import { parseLocation } from "./ParseLocation";
+import { parseLocation } from "../../../Utilities/Transaction";
+import { outputs } from "../../Output";
+import { SadoDocument } from "../Events/Collection";
+import { orders } from "../Orders/Methods";
 import { validateOrderSignature } from "./ValidateSignature";
 
 export async function getOrderStatus(entry: SadoDocument) {
@@ -16,7 +17,7 @@ export async function getOrderStatus(entry: SadoDocument) {
     return status("rejected", { reason: error.message });
   }
 
-  const order = await db.orders.findOne({ cid: entry.cid });
+  const order = await orders.findOne({ cid: entry.cid });
   if (order !== undefined) {
     delete (order as any)._id;
     return status("pending", { order, ipfs: data });
@@ -24,7 +25,7 @@ export async function getOrderStatus(entry: SadoDocument) {
 
   const [txid, n] = parseLocation(data.location);
 
-  const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
+  const output = await outputs.findOne({ "vout.txid": txid, "vout.n": n });
   if (output === undefined) {
     return status("rejected", { reason: "Order location does not exist" });
   }

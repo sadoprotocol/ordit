@@ -1,6 +1,6 @@
 import { method } from "@valkyr/api";
 
-import { toMessageString } from "../../../Database/SadoOrders";
+import { toMessageString } from "../../../Database/Sado";
 import { sado } from "../../../Libraries/Sado";
 
 export default method({

@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 
 import { db } from "../../Database";
-import { parseLocation } from "../../Database/SadoOrders";
+import { parseLocation } from "../../Utilities/Transaction";
 
 export async function resolve() {
   return {
@@ -13,7 +13,7 @@ export async function resolve() {
 async function removeResolvedOrders() {
   const deleteIds: ObjectId[] = [];
 
-  const orders = await db.orders.find({});
+  const orders = await db.sado.orders.find({});
   for (const order of orders) {
     const [txid, n] = parseLocation(order.location);
     const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
@@ -22,7 +22,7 @@ async function removeResolvedOrders() {
     }
   }
 
-  await db.orders.deleteMany({ _id: { $in: deleteIds } });
+  await db.sado.orders.deleteMany({ _id: { $in: deleteIds } });
 
   return deleteIds;
 }
@@ -37,14 +37,14 @@ async function removeDuplicateOrders() {
   }));
 
   if (deleteOperations.length > 0) {
-    await db.orders.collection.bulkWrite(deleteOperations);
+    await db.sado.orders.collection.bulkWrite(deleteOperations);
   }
 
   return duplicates;
 }
 
 async function getDuplicateOrders() {
-  return db.orders.collection
+  return db.sado.orders.collection
     .aggregate([
       {
         $group: {

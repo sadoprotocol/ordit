@@ -1,5 +1,5 @@
-import { CollectionRegistrar, mongo } from "../../Services/Mongo";
-import { Inscription } from "../Inscriptions";
+import { CollectionRegistrar, mongo } from "../../../Services/Mongo";
+import { Inscription } from "../../Inscriptions";
 
 export const collection = mongo.db.collection<SadoOrder>("sado_orders");
 

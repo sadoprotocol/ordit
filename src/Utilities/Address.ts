@@ -1,4 +1,6 @@
-import { networks, payments } from "bitcoinjs-lib";
+import { address as addr, networks, payments } from "bitcoinjs-lib";
+
+import { rpc } from "~Services/Bitcoin";
 
 import { config } from "../Config";
 import { Vout } from "../Services/Bitcoin";
@@ -8,56 +10,66 @@ if (network === undefined) {
   throw new Error("invalid network", network);
 }
 
-export function getAddressessFromVout(vout: Vout) {
+export async function getAddressessFromVout(vout: Vout) {
   if (vout.scriptPubKey.address !== undefined) {
     return [vout.scriptPubKey.address];
   }
   if (vout.scriptPubKey.addresses) {
     return vout.scriptPubKey.addresses;
   }
-  const address = extractAddress(vout.scriptPubKey.hex);
-  if (address === undefined) {
-    return [];
+  const address = extractAddress(Buffer.from(vout.scriptPubKey.hex, "hex"));
+  if (address !== undefined) {
+    return [address];
   }
-  return [address];
+  if (vout.scriptPubKey.desc !== undefined) {
+    return rpc.util.deriveAddresses(vout.scriptPubKey.desc).catch(() => []);
+  }
+  return [];
 }
 
-function extractAddress(scriptPubKeyHex: string) {
-  const scriptPubKey = Buffer.from(scriptPubKeyHex, "hex");
-
+function extractAddress(script: Buffer) {
   try {
-    const address = payments.p2pkh({ output: scriptPubKey, network }).address;
+    const address = addr.fromOutputScript(script, network);
     if (address) {
       return address;
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 
   try {
-    const address = payments.p2sh({ output: scriptPubKey, network }).address;
+    const address = payments.p2pkh({ output: script, network }).address;
     if (address) {
       return address;
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 
   try {
-    const address = payments.p2wpkh({ output: scriptPubKey, network }).address;
+    const address = payments.p2sh({ output: script, network }).address;
     if (address) {
       return address;
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 
   try {
-    const address = payments.p2wsh({ output: scriptPubKey, network }).address;
+    const address = payments.p2wpkh({ output: script, network }).address;
     if (address) {
       return address;
     }
-  } catch (e) {
+  } catch {
+    // ignore
+  }
+
+  try {
+    const address = payments.p2wsh({ output: script, network }).address;
+    if (address) {
+      return address;
+    }
+  } catch {
     // ignore
   }
 

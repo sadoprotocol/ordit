@@ -2,14 +2,14 @@ import { method, NotFoundError, ServerError } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "../../Database";
-import { getOfferStatus, getOrderStatus } from "../../Database/SadoOrders";
+import { getOfferStatus, getOrderStatus } from "../../Database/Sado";
 
 export default method({
   params: Schema({
     cid: string,
   }),
   handler: async ({ cid }) => {
-    const sado = await db.sado.findOne({ cid });
+    const sado = await db.sado.events.findOne({ cid });
     if (sado === undefined) {
       throw new NotFoundError();
     }
