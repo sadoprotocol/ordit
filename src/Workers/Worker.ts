@@ -33,25 +33,15 @@ fastify.register(helmet);
 
 fastify.get("/health", async () => {
   const info = await rpc.blockchain.getBlockchainInfo();
-
-  const outputsHeight = await db.outputs.getHeighestBlock();
-  const inscriptionsHeight = await db.inscriptions.getBlockNumber();
-  const brcHeight = await db.brc20.events.getBlockNumber();
-  const sadoHeight = await db.sado.getBlockNumber();
+  const orditHeight = await db.indexer.getHeight();
   const ordHeight = await ord.getHeight();
-
   return {
     chain: info.chain,
     status: getWorkerStatus(),
-    synced: [outputsHeight, inscriptionsHeight, brcHeight, sadoHeight, ordHeight].every(
-      (height) => height === info.blocks,
-    ),
+    synced: [orditHeight, ordHeight].every((height) => height === info.blocks),
     indexes: {
-      blk: info.blocks,
-      out: outputsHeight,
-      ins: inscriptionsHeight,
-      brc: brcHeight,
-      sad: sadoHeight,
+      blockchain: info.blocks,
+      ordit: orditHeight,
       ord: ordHeight,
     },
   };
