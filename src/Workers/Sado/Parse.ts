@@ -1,6 +1,6 @@
 import { db } from "../../Database";
-import { parseOffer } from "../../Database/SadoOrders/Utilities/ParseOffer";
-import { parseOrder } from "../../Database/SadoOrders/Utilities/ParseOrder";
+import { parseOffer } from "../../Database/Sado/Utilities/ParseOffer";
+import { parseOrder } from "../../Database/Sado/Utilities/ParseOrder";
 import { log } from "../../Libraries/Log";
 import { SADO_DATA } from "../../Paths";
 import { RawTransaction, rpc } from "../../Services/Bitcoin";
@@ -42,7 +42,7 @@ export async function parseBlock(block: string) {
     if (tx === undefined) {
       continue;
     }
-    await db.sado.insertOne({
+    await db.sado.events.insertOne({
       cid,
       type: "order",
       addresses: getAddressesFromTx(tx),
@@ -60,7 +60,7 @@ export async function parseBlock(block: string) {
     if (tx === undefined) {
       continue;
     }
-    await db.sado.insertOne({
+    await db.sado.events.insertOne({
       cid,
       type: "offer",
       addresses: getAddressesFromTx(tx),

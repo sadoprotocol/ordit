@@ -14,6 +14,7 @@ export default method({
       }))
       .catch(() => {
         return {
+          id,
           status: "down",
         };
       });

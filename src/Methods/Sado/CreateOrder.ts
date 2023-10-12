@@ -1,6 +1,6 @@
 import { BadRequestError, method, NotFoundError } from "@valkyr/api";
 
-import { validateOrderSignature } from "../../Database/SadoOrders";
+import { validateOrderSignature } from "../../Database/Sado";
 import { createOrderPsbt, params } from "../../Libraries/Sado/CreateOrderPsbt";
 import { getOrderIPFS, uploadOrder } from "../../Libraries/Sado/UploadOrder";
 import { rpc } from "../../Services/Bitcoin";

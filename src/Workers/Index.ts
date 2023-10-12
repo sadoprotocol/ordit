@@ -1,63 +1,27 @@
-import { config } from "../Config";
-import { db } from "../Database";
-import { log, perf } from "../Libraries/Log";
-import { rpc } from "../Services/Bitcoin";
-import { parse as indexUtxos } from "./Bitcoin/Outputs";
-import { getReorgHeight } from "./Bitcoin/Reorg";
-import { parse as indexBrc20 } from "./Brc20/Parse";
-import { resolve as resolveBrc20 } from "./Brc20/Parse";
-import { parse as indexInscriptions } from "./Inscriptions/Parse";
-import { addBlock } from "./Sado/AddBlock";
-import { parse } from "./Sado/Parse";
-import { resolve } from "./Sado/Resolve";
+import { config } from "~Config";
+import { Indexer, IndexHandler } from "~Libraries/Indexer";
+import { INSCRIPTION_EPOCH_BLOCK } from "~Libraries/Inscriptions/Constants";
+import { rpc } from "~Services/Bitcoin";
+
+import { inscriptionsIndexer } from "./Indexers/Inscriptions";
+import { outputIndexer } from "./Indexers/Outputs";
+import { utxoIndexer } from "./Indexers/Utxos";
 
 export async function index() {
-  const ts = perf();
-
   const blockHeight = await rpc.blockchain.getBlockCount();
-
-  log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
-
-  // ### Reorg
-  // Check for potential reorg event on the blockchain.
-
-  log("\n\n 🏥 Performing reorg check\n");
-
-  const reorgHeight = await getReorgHeight();
-  if (reorgHeight !== -1) {
-    if (blockHeight - reorgHeight > config.reorg.treshold) {
-      return log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
-    }
-    log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
-    await Promise.all([reorgUtxos(reorgHeight), reorgSado(reorgHeight)]);
-  }
-
-  log("\n   💯 Chain is healthy");
-
-  // ### Parse
+  const indexers: IndexHandler[] = [];
 
   if (config.utxo.enabled === true) {
-    log("\n\n 📖 Indexing outputs\n");
-    await indexUtxos(blockHeight);
+    indexers.push(outputIndexer);
+    indexers.push(utxoIndexer);
   }
 
   if (config.ord.enabled === true) {
-    log("\n\n 📰 Indexing inscriptions\n");
-    await indexInscriptions(blockHeight);
+    indexers.push(inscriptionsIndexer);
   }
 
-  if (config.brc20.enabled === true) {
-    log("\n\n 🪙 Indexing BRC-20\n");
-    await indexBrc20(blockHeight);
-    await resolveBrc20();
-  }
-
-  if (config.sado.enabled === true) {
-    log("\n\n 🌎 Indexing sado\n");
-    await indexSado(blockHeight);
-  }
-
-  log(`\n\n ✅ Completed [${ts.now}]\n\n`);
+  const indexer = new Indexer({ indexers, treshold: { height: INSCRIPTION_EPOCH_BLOCK - 1 } });
+  await indexer.run(blockHeight);
 
   return blockHeight;
 }
@@ -66,7 +30,7 @@ export async function index() {
  |--------------------------------------------------------------------------------
  | Utilities
  |--------------------------------------------------------------------------------
- */
+ *
 
 async function reorgUtxos(blockHeight: number) {
   await db.outputs.deleteMany({ "vout.block.height": { $gte: blockHeight } });
@@ -92,3 +56,4 @@ async function reorgSado(blockHeight: number) {
     db.orders.deleteMany({ "block.height": { $gte: blockHeight } }),
   ]);
 }
+*/

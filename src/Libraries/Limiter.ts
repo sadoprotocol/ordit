@@ -2,9 +2,9 @@ import pLimit from "p-limit";
 
 export function limiter(concurrency: number) {
   const limit = pLimit(concurrency);
-  const input: Promise<void>[] = [];
+  const input: Promise<any>[] = [];
   return {
-    push: (fn: () => Promise<void>) => {
+    push: (fn: () => Promise<any>) => {
       input.push(limit(fn));
     },
     run: async () => {

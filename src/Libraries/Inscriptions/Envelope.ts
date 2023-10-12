@@ -60,6 +60,13 @@ export class Envelope {
     }
   }
 
+  static fromTxinWitness(txinwitness: string[]) {
+    const [data, oip] = getEnvelopeFromTxinWitness(txinwitness) ?? [];
+    if (data) {
+      return new Envelope(data, oip);
+    }
+  }
+
   get isValid() {
     return this.protocol === "ord";
   }
@@ -105,10 +112,6 @@ function getEnvelopeProtocol(data: EnvelopeData[]) {
 function getEnvelopeType(data: EnvelopeData[]) {
   const startIndex = data.indexOf(TYPE_TAG);
   if (startIndex === -1) {
-    console.log({
-      startIndex,
-      tag: TYPE_TAG,
-    });
     return undefined;
   }
   const type = data[startIndex + 1];
@@ -168,17 +171,21 @@ function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | un
       continue;
     }
     if (vin.txinwitness) {
-      for (const witness of vin.txinwitness) {
-        if (witness.includes(PROTOCOL_ID)) {
-          const data = script.decompile(Buffer.from(witness, "hex"));
-          if (data) {
-            const oip = getMetaFromWitness(vin.txinwitness);
-            if (oip) {
-              return [getEnvelope(data), oip];
-            }
-            return [getEnvelope(data)];
-          }
+      return getEnvelopeFromTxinWitness(vin.txinwitness);
+    }
+  }
+}
+
+function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?] | undefined {
+  for (const witness of txinwitness) {
+    if (witness.includes(PROTOCOL_ID)) {
+      const data = script.decompile(Buffer.from(witness, "hex"));
+      if (data) {
+        const oip = getMetaFromWitness(txinwitness);
+        if (oip) {
+          return [getEnvelope(data), oip];
         }
+        return [getEnvelope(data)];
       }
     }
   }

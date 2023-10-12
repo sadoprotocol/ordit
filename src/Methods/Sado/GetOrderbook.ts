@@ -17,7 +17,7 @@ export default method({
     const result: any[] = [];
     const filter = { $or: [{ "orderbooks.address": address }, { maker: address }] };
 
-    const orders = await db.orders.find(filter, {
+    const orders = await db.sado.orders.find(filter, {
       ...getPagination(pagination),
       sort: {
         "block.time": sort?.time === "asc" ? 1 : -1,
@@ -38,7 +38,7 @@ export default method({
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 10,
-        total: await db.orders.count(filter),
+        total: await db.sado.orders.count(filter),
       },
     };
   },

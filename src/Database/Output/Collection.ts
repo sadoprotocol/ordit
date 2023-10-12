@@ -7,11 +7,6 @@ export const registrar: CollectionRegistrar = {
   indexes: [
     [
       {
-        addresses: 1,
-      },
-    ],
-    [
-      {
         "vout.txid": 1,
         "vout.n": 1,
       },
@@ -22,11 +17,6 @@ export const registrar: CollectionRegistrar = {
     [
       {
         "vout.block.height": 1,
-      },
-    ],
-    [
-      {
-        spent: 1,
       },
     ],
   ],

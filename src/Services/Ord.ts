@@ -7,6 +7,7 @@ export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythi
 
 export const ord = {
   getHeight,
+  getOutputs,
   getOrdinals,
   getBlockInscriptions,
   getInscription,
@@ -37,6 +38,10 @@ class OrdError extends Error {
  */
 async function getHeight(): Promise<number> {
   return call<number>("/blockheight");
+}
+
+async function getOutputs(outpoints: string[]): Promise<any[]> {
+  return call<any[]>(`/outputs`, { outpoints });
 }
 
 /**

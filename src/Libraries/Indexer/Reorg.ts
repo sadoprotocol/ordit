@@ -1,6 +1,6 @@
-import { config } from "../../Config";
-import { db } from "../../Database";
-import { rpc } from "../../Services/Bitcoin";
+import { config } from "~Config";
+import { db } from "~Database";
+import { rpc } from "~Services/Bitcoin";
 
 export async function getReorgHeight(): Promise<number> {
   const heighestBlock = await db.outputs.getHeighestBlock();

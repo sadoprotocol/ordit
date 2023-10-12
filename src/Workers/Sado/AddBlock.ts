@@ -37,5 +37,5 @@ export async function addBlock(block: Block<2>) {
     );
   }
 
-  await db.sado.setBlockNumber(block.height);
+  await db.sado.events.setBlockNumber(block.height);
 }

@@ -5,11 +5,17 @@
 NETWORK="regtest"
 
 #------------------------------------------------------------
+# TRAEFIK
+#------------------------------------------------------------
+
+TRAEFIK_HOST="network.ordit.io"
+
+#------------------------------------------------------------
 # API
 #------------------------------------------------------------
 
 API_URI="https://network.ordit.io"
-API_HOST="127.0.0.1"
+API_HOST="0.0.0.0"
 API_PORT=3030
 API_REPLICAS=1
 
@@ -24,7 +30,7 @@ API_REPLICAS=1
 # the instance configuration. 
 
 WORKER_URI="http://127.0.0.1:3031"
-WORKER_HOST="127.0.0.1"
+WORKER_HOST="0.0.0.0"
 WORKER_PORT=3031
 
 # UTXO
@@ -61,6 +67,7 @@ RPC_URI="http://127.0.0.1:18443" # regtest:18443 testnet:18332 mainnet:8332
 RPC_PORT=18443
 RPC_USER="bitcoin"
 RPC_PASSWORD="bitcoin"
+RPC_NOTIFY="http://host.docker.internal:3031"
 
 # REORG
 # For every new block we want to reverse lookup previous 

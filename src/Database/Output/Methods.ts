@@ -10,6 +10,7 @@ import {
 } from "mongodb";
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
+import { getChunkSize } from "../Utilities";
 import { collection, OutputDocument, SpentOutput } from "./Collection";
 import { noSpentsFilter } from "./Utilities";
 
@@ -52,8 +53,9 @@ export const outputs = {
  |
  */
 
-async function insertMany(outputs: OutputDocument[], chunkSize = 500) {
+async function insertMany(outputs: OutputDocument[]) {
   const promises = [];
+  const chunkSize = getChunkSize(outputs.length);
   for (let i = 0; i < outputs.length; i += chunkSize) {
     const chunk = outputs.slice(i, i + chunkSize);
     promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
@@ -67,7 +69,7 @@ async function find(filter: Filter<OutputDocument>, options?: FindOptions<Output
 
 async function findOne(
   filter: Filter<OutputDocument>,
-  options?: FindOptions<OutputDocument>
+  options?: FindOptions<OutputDocument>,
 ): Promise<OutputDocument | undefined> {
   const output = await collection.findOne(filter, options);
   if (output === null) {
@@ -79,7 +81,7 @@ async function findOne(
 async function updateOne(
   filter: Filter<OutputDocument>,
   update: UpdateFilter<OutputDocument> | Partial<OutputDocument>,
-  options?: UpdateOptions
+  options?: UpdateOptions,
 ) {
   return collection.updateOne(filter, update, options);
 }
@@ -131,7 +133,7 @@ async function getHeighestBlock(): Promise<number> {
 async function getByAddress(
   address: string,
   filter?: Filter<OutputDocument>,
-  options?: FindOptions<OutputDocument>
+  options?: FindOptions<OutputDocument>,
 ): Promise<OutputDocument[]> {
   return collection.find({ addresses: address, ...filter }, options).toArray();
 }
@@ -199,11 +201,12 @@ async function getCountByAddress(address: string): Promise<{
  |
  */
 
-async function addSpents(spents: SpentOutput[], chunkSize = 500) {
+async function addSpents(spents: SpentOutput[]) {
   if (spents.length === 0) {
     return;
   }
 
+  const chunkSize = getChunkSize(spents.length);
   const bulkops: any[][] = new Array(Math.ceil(spents.length / chunkSize)).fill(0).map(() => []);
 
   let i = 0;

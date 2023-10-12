@@ -1,8 +1,9 @@
 import { ipfs } from "../../../Services/IPFS";
 import { decodePsbt, getPsbtAsJSON } from "../../../Utilities/PSBT";
 import { decodeRawTransaction } from "../../../Utilities/Transaction";
-import { db } from "../..";
-import { SadoDocument } from "../../Sado/Collection";
+import { outputs } from "../../Output";
+import { SadoDocument } from "../Events/Collection";
+import { orders } from "../Orders/Methods";
 
 export async function getOfferStatus(entry: SadoDocument) {
   const data = await ipfs.getOffer(entry.cid);
@@ -35,13 +36,13 @@ export async function getOfferStatus(entry: SadoDocument) {
     return status("rejected", { reason: "Offer PSBT does not spend order location in first input" });
   }
 
-  const orderOutput = await db.outputs.findOne({ "vout.txid": input.txid, "vout.n": input.vout });
+  const orderOutput = await outputs.findOne({ "vout.txid": input.txid, "vout.n": input.vout });
   if (orderOutput === undefined) {
     return status("rejected", { reason: "Order location does not exist" });
   }
 
   if (orderOutput.vin !== undefined && orderOutput.vin !== null) {
-    const receiver = await db.outputs.findOne({ "vout.txid": orderOutput.vin.txid, "vout.n": orderOutput.vin.n });
+    const receiver = await outputs.findOne({ "vout.txid": orderOutput.vin.txid, "vout.n": orderOutput.vin.n });
     if (receiver === undefined) {
       return status("rejected", { reason: "Receiver of order location does not exist" });
     }
@@ -62,7 +63,7 @@ export async function getOfferStatus(entry: SadoDocument) {
   }
 
   for (const input of offer.inputs) {
-    const output = await db.outputs.findOne({ "vout.txid": input.txid, "vout.n": input.vout });
+    const output = await outputs.findOne({ "vout.txid": input.txid, "vout.n": input.vout });
     if (output === undefined) {
       return status("rejected", { reason: "Input on offer PSBT does not exist", input });
     }
@@ -75,7 +76,7 @@ export async function getOfferStatus(entry: SadoDocument) {
     }
   }
 
-  const sadoOrder = await db.orders.findOne({ cid: data.origin });
+  const sadoOrder = await orders.findOne({ cid: data.origin });
   if (sadoOrder !== undefined) {
     return status("pending", { order: sadoOrder, offer: data });
   }

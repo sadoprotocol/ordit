@@ -17,7 +17,7 @@ export default method({
     const filter = { addresses: address };
     return {
       entries: (
-        await db.sado.find(filter, {
+        await db.sado.events.find(filter, {
           ...getPagination(pagination),
           sort: {
             height: sort?.height === "asc" ? 1 : -1,
@@ -27,7 +27,7 @@ export default method({
       pagination: {
         page: pagination?.page ?? 1,
         limit: pagination?.limit ?? 10,
-        total: await db.sado.count(filter),
+        total: await db.sado.events.count(filter),
       },
     };
   },

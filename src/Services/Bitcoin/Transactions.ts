@@ -104,7 +104,7 @@ export function isCoinbaseTx(tx: RawTransaction): boolean {
   return tx.vin.length === 1 && isCoinbase(tx.vin[0]);
 }
 
-export function isCoinbase(vin: Vin): vin is Coinbase {
+export function isCoinbase(vin: Vin): boolean {
   return "coinbase" in vin;
 }
 
@@ -120,15 +120,15 @@ export type RawTransaction = {
   hash: string;
   size: number;
   vsize: number;
+  weight: number;
   version: number;
   locktime: number;
   vin: Vin[];
   vout: Vout[];
   blockhash: string;
   confirmations: number;
-  time: number;
   blocktime: number;
-  weight: number;
+  time: number;
 };
 
 export type DecodedTransaction = {
@@ -139,7 +139,7 @@ export type DecodedTransaction = {
   weight: number;
   version: number;
   locktime: number;
-  vin: TxVin[];
+  vin: Vin[];
   vout: Vout[];
 };
 
@@ -161,14 +161,7 @@ export type SegWit = {
   p2shSegwit: string;
 };
 
-export type Vin = Coinbase | TxVin;
-
-export type Coinbase = {
-  coinbase: string;
-  sequence: number;
-};
-
-export type TxVin = {
+export type Vin = {
   txid: string;
   vout: number;
   scriptSig: {
@@ -182,13 +175,15 @@ export type TxVin = {
 export type Vout = {
   value: number;
   n: number;
-  scriptPubKey: {
-    asm: string;
-    desc: string;
-    hex: string;
-    reqSigs?: number;
-    type: string;
-    addresses?: string[];
-    address?: string;
-  };
+  scriptPubKey: ScriptPubKey;
+};
+
+export type ScriptPubKey = {
+  asm: string;
+  desc: string;
+  hex: string;
+  reqSigs?: number;
+  type: string;
+  addresses?: string[];
+  address?: string;
 };

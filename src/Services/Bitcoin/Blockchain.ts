@@ -1,5 +1,5 @@
 import { rpc } from "./Rpc";
-import { RawTransaction } from "./Transactions";
+import { RawTransaction, ScriptPubKey } from "./Transactions";
 
 const BLOCK_NOT_FOUND = -5;
 const BLOCK_HASH_NOT_FOUND = -8;
@@ -262,10 +262,14 @@ export type RawMempoolTransation = {
 export type Block<Verbosity = 1> = {
   hash: string;
   confirmations: number;
+  size: number;
+  strippedsize: number;
+  weight: number;
   height: number;
   version: number;
   versionHex: string;
   merkleroot: string;
+  tx: Verbosity extends 1 ? string[] : RawTransaction[];
   time: number;
   mediantime: number;
   nonce: number;
@@ -273,10 +277,8 @@ export type Block<Verbosity = 1> = {
   difficulty: number;
   chainwork: string;
   nTx: number;
-  strippedsize: number;
-  size: number;
-  weight: number;
-  tx: Verbosity extends 1 ? string[] : RawTransaction[];
+  previousblockhash: string;
+  nextblockhash: string;
 };
 
 type TxOut = {
@@ -285,12 +287,4 @@ type TxOut = {
   value: number;
   scriptPubKey: ScriptPubKey;
   coinbase: boolean;
-};
-
-export type ScriptPubKey = {
-  asm: string;
-  hex: string;
-  reqSigs: number;
-  type: string;
-  addresses: string[];
 };
