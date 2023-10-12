@@ -14,9 +14,17 @@ services:
   traefik:
     image: traefik
     profiles: ["server", "traefik"]
-    restart: always
-    labels:
-      - traefik.enable=false
+    restart: unless-stopped
+    command:
+      - --api.insecure=true 
+      - --providers.docker=true 
+      - --providers.docker.exposedbydefault=false 
+      - --log.level=${TRAEFIK_LOG}
+      - --entrypoints.http.address=:80 
+      - --entrypoints.https.address=:443
+      - --certificatesresolvers.${TRAEFIK_ACME_PROVIDER}.acme.tlschallenge=true
+      - --certificatesresolvers.${TRAEFIK_ACME_PROVIDER}.acme.email=${TRAEFIK_ACME_EMAIL}
+      - --certificatesresolvers.${TRAEFIK_ACME_PROVIDER}.acme.storage=acme.json
     networks:
       - internal
       - web
@@ -25,16 +33,23 @@ services:
       - 443:443
       - 8080:8080
     volumes:
-      - ./devops:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock
 
   api:
     build: .
     profiles: ["server", "api"]
-    restart: always
+    restart: unless-stopped
     labels:
-      - traefik.http.routers.ordit.rule=Host(`${TRAEFIK_HOST}`)
-      - traefik.port=80
+      - traefik.enable=true
+      # Default route over HTTPS
+      - traefik.http.routers.ordit.rule=Host(`${API_DOMAIN}`)
+      - traefik.http.routers.ordit.entrypoints=https
+      - traefik.http.routers.ordit.tls.certresolver=${TRAEFIK_ACME_PROVIDER}
+      # HTTP to HTTPS
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.ordit-redirect.rule=hostregexp(`{host:.+}`)
+      - traefik.http.routers.ordit-redirect.entrypoints=http
+      - traefik.http.routers.ordit-redirect.middlewares=redirect-to-https
     env_file:
       - .env
     networks:
@@ -52,7 +67,7 @@ services:
   bitcoin:
     image: ruimarinho/bitcoin-core
     profiles: ["local", "bitcoin"]
-    restart: always
+    restart: unless-stopped
     labels:
       - traefik.enable=false
     ports:
@@ -74,7 +89,7 @@ services:
   mongodb:
     image: mongo:latest
     profiles: ["local", "db", "mongodb"]
-    restart: always
+    restart: unless-stopped
     labels:
       - traefik.enable=false
     ports:
