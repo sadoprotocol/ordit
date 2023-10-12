@@ -9,4 +9,4 @@ http:
     ordit:
       loadBalancer:
         servers:
-          - url: "http://192.168.11.82:3030/"
+          - url: "http://127.0.0.1:3030/"

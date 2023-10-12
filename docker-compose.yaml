@@ -11,32 +11,32 @@ networks:
     external: false
 
 services:
-  # nginx:
-  #   image: nginx:latest
-  #   profiles: ["server"]
-  #   depends_on:
-  #     - api
-  #   ports:
-  #     - 4000:80
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
-
-  traefik:
-    image: traefik
-    profiles: ["server", "traefik"]
-    restart: always
-    labels:
-      - traefik.enable=false
-    networks:
-      - internal
-      - web
+  nginx:
+    image: nginx:latest
+    profiles: ["server"]
+    depends_on:
+      - api
     ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
+      - 4000:80
     volumes:
-      - ./devops:/etc/traefik
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  # traefik:
+  #   image: traefik
+  #   profiles: ["server", "traefik"]
+  #   restart: always
+  #   labels:
+  #     - traefik.enable=false
+  #   networks:
+  #     - internal
+  #     - web
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #     - 8080:8080
+  #   volumes:
+  #     - ./devops:/etc/traefik
+  #     - /var/run/docker.sock:/var/run/docker.sock
 
   api:
     build: .
