@@ -1,6 +1,7 @@
+import { getReorgHeight } from "~Libraries/Indexer/Reorg";
+
 import { bootstrap } from "../Bootstrap";
 import { config } from "../Config";
-import { getReorgHeight } from "./Bitcoin/Reorg";
 
 main().finally(() => process.exit(0));
 
