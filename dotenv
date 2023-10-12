@@ -8,12 +8,16 @@ NETWORK="regtest"
 # TRAEFIK
 #------------------------------------------------------------
 
-TRAEFIK_HOST="network.ordit.io"
+TRAEFIK_VERSION=latest
+TRAEFIK_LOG=INFO
+TRAEFIK_ACME_PROVIDER=lets-encrypt
+TRAEFIK_ACME_EMAIL=hi@xyz.io
 
 #------------------------------------------------------------
 # API
 #------------------------------------------------------------
 
+API_DOMAIN="network.ordit.io"
 API_URI="https://network.ordit.io"
 API_HOST="0.0.0.0"
 API_PORT=3030
