@@ -1,10 +1,7 @@
 import { DeleteOptions, Filter, FindOptions } from "mongodb";
 
 import { config } from "../../../Config";
-import { redis } from "../../../Services/Redis";
 import { collection, SadoDocument } from "./Collection";
-
-const SADO_BLOCK_KEY = "sado_b";
 
 export const events = {
   collection,
@@ -20,8 +17,6 @@ export const events = {
   // ### Indexer Methods
 
   getHeighestBlock,
-  setBlockNumber,
-  getBlockNumber,
 };
 
 /*
@@ -73,16 +68,4 @@ async function getHeighestBlock(): Promise<number> {
     return config.sado.startBlock;
   }
   return order.height;
-}
-
-async function setBlockNumber(n: number) {
-  return redis.set(SADO_BLOCK_KEY, n);
-}
-
-async function getBlockNumber() {
-  const n = await redis.get(SADO_BLOCK_KEY);
-  if (n === null) {
-    return 0;
-  }
-  return parseInt(n, 10);
 }

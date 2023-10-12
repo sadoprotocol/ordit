@@ -1,7 +1,7 @@
 import { config } from "~Config";
+import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
 import { Block, isCoinbaseTx, rpc, ScriptPubKey } from "~Services/Bitcoin";
-import { redis } from "~Services/Redis";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
@@ -77,7 +77,7 @@ export class Indexer {
       }
       log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
       await Promise.all(this.#indexers.map((indexer) => indexer.reorg(reorgHeight)));
-      await redis.set("indexer:height", reorgHeight - 1);
+      await indexer.setHeight(reorgHeight - 1);
       return reorgHeight;
     }
 
@@ -189,7 +189,7 @@ export class Indexer {
         },
       });
     }
-    await redis.set("indexer:height", height);
+    await indexer.setHeight(height);
 
     // ### Clear
     // Once all indexers has fully processed without error we clear the
@@ -221,11 +221,11 @@ export class Indexer {
   }
 
   async #getCurrentHeight() {
-    const currentHeight = await redis.get("indexer:height");
+    const currentHeight = await indexer.getHeight();
     if (currentHeight === null) {
       return -1;
     }
-    return parseInt(currentHeight, 10);
+    return currentHeight;
   }
 }
 

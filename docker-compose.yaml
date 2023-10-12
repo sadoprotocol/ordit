@@ -81,19 +81,6 @@ services:
       -rpcpassword=bitcoin
       -blocknotify='curl ${RPC_NOTIFY}/hooks/bitcoin?block=%s'
 
-  keydb:
-    image: eqalpha/keydb
-    profiles: ["local", "db", "keydb"]
-    restart: always
-    labels:
-      - traefik.enable=false
-    ports:
-      - ${REDIS_PORT}:6379
-    networks:
-      - internal
-    volumes:
-      - ./.data/keydb:/data
-
   mongodb:
     image: mongo:latest
     profiles: ["local", "db", "mongodb"]

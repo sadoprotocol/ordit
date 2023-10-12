@@ -12,7 +12,9 @@ export const utxoIndexer: IndexHandler = {
 
     const utxos: Utxo[] = [];
     const spents: string[] = [];
+    const outputMap = new Map<string, number>();
 
+    let i = 0;
     for (const vout of indexer.vouts) {
       const address = vout.addresses[0];
       if (address !== undefined) {
@@ -23,7 +25,11 @@ export const utxoIndexer: IndexHandler = {
           scriptPubKey: vout.scriptPubKey,
           address,
           location: `${vout.txid}:${vout.n}`,
+          satRanges: [],
+          inscriptions: [],
         });
+        outputMap.set(`${vout.txid}:${vout.n}`, i);
+        i += 1;
       }
     }
 
