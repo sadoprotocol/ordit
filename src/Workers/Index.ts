@@ -1,10 +1,11 @@
 import { config } from "~Config";
 import { Indexer, IndexHandler } from "~Libraries/Indexer";
-import { INSCRIPTION_EPOCH_BLOCK } from "~Libraries/Inscriptions/Constants";
 import { rpc } from "~Services/Bitcoin";
 
+import { brc20Indexer } from "./Indexers/Brc20";
 import { inscriptionsIndexer } from "./Indexers/Inscriptions";
 import { outputIndexer } from "./Indexers/Outputs";
+import { sadoIndexer } from "./Indexers/Sado";
 import { utxoIndexer } from "./Indexers/Utxos";
 
 export async function index() {
@@ -18,42 +19,17 @@ export async function index() {
 
   if (config.ord.enabled === true) {
     indexers.push(inscriptionsIndexer);
+    if (config.brc20.enabled === true) {
+      indexers.push(brc20Indexer);
+    }
   }
 
-  const indexer = new Indexer({ indexers, treshold: { height: INSCRIPTION_EPOCH_BLOCK - 1 } });
+  if (config.sado.enabled === true) {
+    indexers.push(sadoIndexer);
+  }
+
+  const indexer = new Indexer({ indexers });
   await indexer.run(blockHeight);
 
   return blockHeight;
 }
-
-/*
- |--------------------------------------------------------------------------------
- | Utilities
- |--------------------------------------------------------------------------------
- *
-
-async function reorgUtxos(blockHeight: number) {
-  await db.outputs.deleteMany({ "vout.block.height": { $gte: blockHeight } });
-}
-
-async function indexSado(blockHeight: number): Promise<void> {
-  const sadoBlockHeight = await db.sado.getBlockNumber();
-
-  let height = sadoBlockHeight + 1;
-  while (height <= blockHeight) {
-    const block = await rpc.blockchain.getBlock(height, 2);
-    await addBlock(block);
-    height += 1;
-  }
-
-  await parse();
-  await resolve();
-}
-
-async function reorgSado(blockHeight: number) {
-  await Promise.all([
-    db.sado.deleteMany({ height: { $gte: blockHeight } }),
-    db.orders.deleteMany({ "block.height": { $gte: blockHeight } }),
-  ]);
-}
-*/

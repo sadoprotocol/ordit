@@ -6,12 +6,12 @@ import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { btcToSat, getAddressType } from "../../Utilities/Bitcoin";
 import { getEstimatedPsbtFee } from "../../Utilities/PSBT";
-import { sado } from "../../Utilities/Sado";
 import { getTransactionOutputHex } from "../../Utilities/Transaction";
 import { getBitcoinNetwork } from "../Network";
 import { schema } from "../Schema";
 import { getPaymentOutput } from "./GetPaymentOutput";
 import { order } from "./Order";
+import { parseOrderbookListing } from "./Orderbook";
 
 export const params = Schema({
   order: order.schema,
@@ -39,7 +39,7 @@ export async function createOrderPsbt(cid: string, params: OrderParams): Promise
   let amount = 600; // 600 sats guarantee of change back to the maker
 
   for (const orderbook of params.order.orderbooks ?? []) {
-    const [address, value] = sado.parseOrderbookListing(orderbook);
+    const [address, value] = parseOrderbookListing(orderbook);
     amount += value;
     psbt.addOutput({ address, value });
   }

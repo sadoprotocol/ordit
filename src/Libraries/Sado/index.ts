@@ -1,4 +1,5 @@
-import { RawTransaction } from "../../Services/Bitcoin";
+import { VoutData } from "~Libraries/Indexer";
+
 import { getNullData } from "../../Utilities/Transaction";
 import { order } from "./Order";
 
@@ -15,19 +16,24 @@ export const sado = {
  |--------------------------------------------------------------------------------
  */
 
-function getTransactions(txs: RawTransaction[]): SadoTransaction[] {
+function getTransactions(vouts: VoutData[]): SadoTransaction[] {
   const result: SadoTransaction[] = [];
-  for (const tx of txs) {
-    const output = sado.getOutput(tx);
+  for (const vout of vouts) {
+    const output = sado.getOutput(vout);
     if (output !== undefined) {
-      result.push({ type: output.type, cid: output.cid, txid: tx.txid });
+      result.push({
+        type: output.type,
+        cid: output.cid,
+        block: { hash: vout.block.hash, height: vout.block.height, time: vout.block.time },
+        tx: { txid: vout.txid, n: vout.n },
+      });
     }
   }
   return result;
 }
 
-function getOutput(tx: RawTransaction): SadoOutput | undefined {
-  const utf8 = getUtf8(tx);
+function getOutput(vout: VoutData): SadoOutput | undefined {
+  const utf8 = getUtf8(vout);
   if (utf8 !== undefined) {
     const sado = parseSadoOutput(utf8);
     if (sado !== undefined) {
@@ -36,12 +42,10 @@ function getOutput(tx: RawTransaction): SadoOutput | undefined {
   }
 }
 
-function getUtf8(tx: RawTransaction): string | undefined {
-  for (const vout of tx.vout) {
-    const utf8 = getNullData(vout.scriptPubKey.asm);
-    if (utf8 !== undefined && utf8.includes("sado=") === true) {
-      return utf8;
-    }
+function getUtf8(vout: VoutData): string | undefined {
+  const utf8 = getNullData(vout.scriptPubKey.asm);
+  if (utf8 !== undefined && utf8.includes("sado=") === true) {
+    return utf8;
   }
 }
 
@@ -69,12 +73,20 @@ function parseSadoOutput(utf8?: string): SadoOutput | undefined {
 
 export type SadoEntry = Omit<SadoTransaction, "type">;
 
-export type SadoOutput = Omit<SadoTransaction, "txid">;
+export type SadoOutput = Omit<SadoTransaction, "block" | "tx">;
 
 export type SadoTransaction = {
   type: SadoType;
   cid: string;
-  txid: string;
+  block: {
+    hash: string;
+    height: number;
+    time: number;
+  };
+  tx: {
+    txid: string;
+    n: number;
+  };
 };
 
 export type SadoType = "order" | "offer" | "collection";

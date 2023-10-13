@@ -1,5 +1,7 @@
 import { DeleteOptions, Filter, FindOptions, UpdateFilter } from "mongodb";
 
+import { getChunkSize } from "~Database/Utilities";
+
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
@@ -40,7 +42,7 @@ export const inscriptions = {
  |
  */
 
-async function insertMany(inscriptions: Inscription[], chunkSize = 500) {
+async function insertMany(inscriptions: Inscription[], chunkSize = getChunkSize(inscriptions.length)) {
   const promises = [];
   for (let i = 0; i < inscriptions.length; i += chunkSize) {
     const chunk = inscriptions.slice(i, i + chunkSize);

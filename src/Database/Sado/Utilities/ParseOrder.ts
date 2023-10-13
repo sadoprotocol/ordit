@@ -37,8 +37,8 @@ export async function parseOrder(cid: string, block: Block) {
       meta: order.meta,
       block,
     });
-  } catch (error) {
-    return console.log(error);
+  } catch {
+    // ignore invalid orders
   }
 }
 

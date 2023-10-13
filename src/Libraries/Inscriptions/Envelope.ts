@@ -22,6 +22,7 @@ type EnvelopeData = number | Buffer;
  */
 
 export class Envelope {
+  readonly id: string;
   readonly protocol?: string;
   readonly type?: string;
   readonly content?: {
@@ -37,9 +38,11 @@ export class Envelope {
   readonly meta: object;
 
   constructor(
+    readonly txid: string,
     readonly data: EnvelopeData[],
     readonly oip?: object,
   ) {
+    this.id = `${txid}i0`;
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.content = getEnvelopeContent(data);
@@ -56,14 +59,14 @@ export class Envelope {
   static fromTransaction(tx: RawTransaction) {
     const [data, oip] = getEnvelopeDataFromTx(tx) ?? [];
     if (data) {
-      return new Envelope(data, oip);
+      return new Envelope(tx.txid, data, oip);
     }
   }
 
-  static fromTxinWitness(txinwitness: string[]) {
+  static fromTxinWitness(txid: string, txinwitness: string[]) {
     const [data, oip] = getEnvelopeFromTxinWitness(txinwitness) ?? [];
     if (data) {
-      return new Envelope(data, oip);
+      return new Envelope(txid, data, oip);
     }
   }
 

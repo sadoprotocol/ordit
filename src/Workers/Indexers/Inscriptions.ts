@@ -2,10 +2,11 @@ import { db } from "~Database";
 import { Inscription } from "~Database/Inscriptions";
 import { Indexer, IndexHandler, VinData } from "~Libraries/Indexer/Indexer";
 import { INSCRIPTION_EPOCH_BLOCK } from "~Libraries/Inscriptions/Constants";
-import { Inscription as RawInscription } from "~Libraries/Inscriptions/Inscription";
+import { Envelope } from "~Libraries/Inscriptions/Envelope";
+import { getInscriptionFromEnvelope, Inscription as RawInscription } from "~Libraries/Inscriptions/Inscription";
 import { isOIP2Meta, validateOIP2Meta } from "~Libraries/Inscriptions/Oip";
 import { perf } from "~Libraries/Log";
-import { ord } from "~Services/Ord";
+import { ord, OrdInscription } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 export const inscriptionsIndexer: IndexHandler = {
@@ -17,6 +18,11 @@ export const inscriptionsIndexer: IndexHandler = {
     }
 
     let ts = perf();
+    log(`⏳ Waiting for block ${height.toLocaleString()}`);
+    await ord.waitForBlock(height);
+    log(`  ⌛ Resolved [${ts.now} seconds]`);
+
+    ts = perf();
     const inscriptions = await getInscriptions(indexer.vins);
     log(`🚚 Delivering ${inscriptions.length.toLocaleString()} inscriptions [${ts.now} seconds]`);
 
@@ -35,10 +41,28 @@ export const inscriptionsIndexer: IndexHandler = {
 };
 
 async function getInscriptions(vins: VinData[]) {
-  const inscriptions: RawInscription[] = [];
+  const envelopes: Envelope[] = [];
   for (const vin of vins) {
-    const inscription = await RawInscription.fromVin(vin);
-    if (inscription) {
+    const envelope = Envelope.fromTxinWitness(vin.txid, vin.witness);
+    if (envelope && envelope.isValid) {
+      envelopes.push(envelope);
+    }
+  }
+
+  const ordData = new Map<string, OrdInscription>();
+  const chunkSize = 5_000;
+  for (let i = 0; i < envelopes.length; i += chunkSize) {
+    const chunk = envelopes.slice(i, i + chunkSize);
+    const data = await ord.getInscriptionsForIds(chunk.map((item) => item.id));
+    for (const item of data) {
+      ordData.set(item.inscription_id, item);
+    }
+  }
+
+  const inscriptions: RawInscription[] = [];
+  for (const envelope of envelopes) {
+    const inscription = await getInscriptionFromEnvelope(envelope, ordData);
+    if (inscription !== undefined) {
       inscriptions.push(inscription);
     }
   }
@@ -84,26 +108,41 @@ async function transferInscriptions(outpoints: string[]) {
   if (outpoints.length === 0) {
     return 0;
   }
-  const transfers = await db.inscriptions.find({ outpoint: { $in: outpoints } });
-  if (transfers.length > 0) {
-    const ops: { id: string; owner: string; outpoint: string }[] = [];
 
-    const chunkSize = 10_000;
-    for (let i = 0; i < transfers.length; i += chunkSize) {
-      const chunk = transfers.slice(i, i + chunkSize);
-      const data = await ord.getInscriptionsForIds(chunk.map((item) => item.id));
-      for (const item of data) {
-        const [txid, n] = parseLocation(item.satpoint);
-        const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
-        ops.push({
-          id: item.inscription_id,
-          owner: output?.addresses[0] ?? "",
-          outpoint: item.satpoint,
-        });
-      }
+  const ids: string[] = [];
+  let count = 0;
+
+  const cursor = db.inscriptions.collection.find({ outpoint: { $in: outpoints } });
+  while (await cursor.hasNext()) {
+    const inscription = await cursor.next();
+    console.log(inscription);
+    if (inscription === null) {
+      continue;
     }
-
-    await db.inscriptions.addTransfers(ops);
+    ids.push(inscription.id);
+    if (ids.length === 2_500) {
+      await commitTransfers(ids);
+      count += ids.length;
+      ids.length = 0;
+    }
   }
-  return transfers.length;
+
+  await commitTransfers(ids);
+
+  return count + ids.length;
+}
+
+async function commitTransfers(ids: string[]) {
+  const ops: { id: string; owner: string; outpoint: string }[] = [];
+  const data = await ord.getInscriptionsForIds(ids);
+  for (const item of data) {
+    const [txid, n] = parseLocation(item.satpoint);
+    const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
+    ops.push({
+      id: item.inscription_id,
+      owner: output?.addresses[0] ?? "",
+      outpoint: item.satpoint,
+    });
+  }
+  await db.inscriptions.addTransfers(ops);
 }

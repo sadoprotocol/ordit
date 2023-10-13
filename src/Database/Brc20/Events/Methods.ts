@@ -1,26 +1,28 @@
+import { getChunkSize } from "~Database/Utilities";
+
 import { ignoreDuplicateErrors } from "../../../Utilities/Database";
-import { Inscription } from "../../Inscriptions";
-import { collection } from "./Collection";
-import { TokenEvent } from "./Events";
+import { Brc20Event, collection } from "./Collection";
 
 export const events = {
   collection,
-  addEvent,
+  addEvents,
+  getLastBlock,
 };
 
-async function addEvent(event: TokenEvent, inscription: Inscription) {
-  return collection
-    .insertOne({
-      ...event,
-      meta: {
-        slug: event.tick.toLowerCase(),
-        inscription: inscription.id,
-        address: inscription.creator,
-        block: inscription.height,
-        number: inscription.number,
-        timestamp: inscription.timestamp,
-      },
-      number: inscription.height + inscription.number,
-    })
-    .catch(ignoreDuplicateErrors);
+async function addEvents(events: Brc20Event[]) {
+  const promises = [];
+  const chunkSize = getChunkSize(events.length);
+  for (let i = 0; i < events.length; i += chunkSize) {
+    const chunk = events.slice(i, i + chunkSize);
+    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
+  }
+  await Promise.all(promises);
+}
+
+async function getLastBlock() {
+  const event = await collection.findOne({}, { sort: { number: -1 } });
+  if (event === null) {
+    return 0;
+  }
+  return event.meta.block;
 }

@@ -1,7 +1,7 @@
 import { db } from "~Database";
 import { VinData } from "~Libraries/Indexer";
 import { RawTransaction } from "~Services/Bitcoin";
-import { ord } from "~Services/Ord";
+import { OrdInscription } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 import { Envelope } from "./Envelope";
@@ -40,14 +40,14 @@ export class Inscription {
   static async fromTransaction(tx: RawTransaction) {
     const envelope = Envelope.fromTransaction(tx);
     if (envelope && envelope.isValid) {
-      return getInscriptionFromEnvelope(envelope, tx.txid);
+      return envelope;
     }
   }
 
   static async fromVin(vin: VinData) {
-    const envelope = Envelope.fromTxinWitness(vin.witness);
+    const envelope = Envelope.fromTxinWitness(vin.txid, vin.witness);
     if (envelope && envelope.isValid) {
-      return getInscriptionFromEnvelope(envelope, vin.vout.txid);
+      return envelope;
     }
   }
 }
@@ -58,10 +58,11 @@ export class Inscription {
  |--------------------------------------------------------------------------------
  */
 
-async function getInscriptionFromEnvelope(envelope: Envelope, txid: string) {
-  const id = `${txid}i0`;
-
-  const ordData = await ord.getInscriptionsForIds([id]).then((data) => data[0]);
+export async function getInscriptionFromEnvelope(
+  envelope: Envelope,
+  ord: Map<string, OrdInscription>,
+): Promise<Inscription | undefined> {
+  const ordData = ord.get(envelope.id);
   if (ordData === undefined) {
     return undefined;
   }
@@ -69,9 +70,9 @@ async function getInscriptionFromEnvelope(envelope: Envelope, txid: string) {
   const [locationTxid, locationN] = parseLocation(ordData.satpoint);
 
   return new Inscription({
-    id,
-    genesis: txid,
-    creator: await getInscriptionCreator(txid),
+    id: envelope.id,
+    genesis: envelope.txid,
+    creator: await getInscriptionCreator(envelope.txid),
     owner: await getInscriptionOwner(locationTxid, locationN),
     media: {
       type: envelope.media.type ?? "",

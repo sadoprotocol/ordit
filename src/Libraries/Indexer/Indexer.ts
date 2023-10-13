@@ -99,7 +99,7 @@ export class Indexer {
     let blockHash = await rpc.blockchain.getBlockHash(height);
 
     while (blockHash !== undefined && height <= blockHeight) {
-      if (height === this.#treshold.height) {
+      if (this.#treshold.height && this.#treshold.height <= height) {
         break; // reached configured height treshold
       }
 
@@ -126,7 +126,7 @@ export class Indexer {
       height += 1;
     }
 
-    await this.#commit(blockHeight);
+    await this.#commit(height);
   }
 
   async #handleBlock(block: Block<2>) {
@@ -139,10 +139,11 @@ export class Indexer {
           this.#vins.push({
             txid,
             n,
-            witness: vin.txinwitness,
+            witness: vin.txinwitness ?? [],
             block: {
               hash: block.hash,
               height: block.height,
+              time: block.time,
             },
             vout: {
               txid: vin.txid,
@@ -164,6 +165,7 @@ export class Indexer {
           block: {
             hash: block.hash,
             height: block.height,
+            time: block.time,
           },
         });
         n += 1;
@@ -263,7 +265,7 @@ export type VinData = TxMeta & {
   vout: TxMeta;
 };
 
-type VoutData = TxMeta & {
+export type VoutData = TxMeta & {
   addresses: string[];
   value: number;
   scriptPubKey: ScriptPubKey;
@@ -278,4 +280,5 @@ type TxMeta = {
 type BlockMeta = {
   hash: string;
   height: number;
+  time: number;
 };

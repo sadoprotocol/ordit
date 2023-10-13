@@ -81,17 +81,7 @@ async function getInscriptionsForIds(ids: string[], attempts = 0) {
   if (attempts > 10) {
     return [];
   }
-  const inscriptions = await call<
-    {
-      inscription_id: string;
-      number: number;
-      genesis_height: number;
-      genesis_fee: number;
-      sat: number;
-      satpoint: string;
-      timestamp: number;
-    }[]
-  >(`/inscriptions`, { ids });
+  const inscriptions = await call<OrdInscription[]>(`/inscriptions`, { ids });
   if (inscriptions.length === 0) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return getInscriptionsForIds(ids, attempts + 1);
@@ -200,6 +190,16 @@ async function sleep(seconds: number): Promise<void> {
  | Types
  |--------------------------------------------------------------------------------
  */
+
+export type OrdInscription = {
+  inscription_id: string;
+  number: number;
+  genesis_height: number;
+  genesis_fee: number;
+  sat: number;
+  satpoint: string;
+  timestamp: number;
+};
 
 type Inscription = {
   id: string;
