@@ -126,7 +126,7 @@ export class Indexer {
       height += 1;
     }
 
-    await this.#commit(height);
+    await this.#commit(height - 1);
   }
 
   async #handleBlock(block: Block<2>) {
