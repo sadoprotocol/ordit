@@ -56,7 +56,10 @@ export class Indexer {
 
     log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
-    currentHeight = await this.#reorgCheck(currentHeight);
+    const reorgHeight = await this.#reorgCheck(currentHeight);
+    if (reorgHeight !== undefined) {
+      currentHeight = reorgHeight;
+    }
     await this.#indexBlocks(currentHeight, blockHeight);
   }
 
@@ -77,13 +80,9 @@ export class Indexer {
       }
       log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
       await Promise.all(this.#indexers.map((indexer) => indexer.reorg(reorgHeight)));
-      await indexer.setHeight(reorgHeight - 1);
-      return reorgHeight;
+      return reorgHeight - 1;
     }
-
     log("\n   💯 Chain is healthy");
-
-    return blockHeight;
   }
 
   /*

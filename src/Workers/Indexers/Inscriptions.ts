@@ -115,7 +115,6 @@ async function transferInscriptions(outpoints: string[]) {
   const cursor = db.inscriptions.collection.find({ outpoint: { $in: outpoints } });
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();
-    console.log(inscription);
     if (inscription === null) {
       continue;
     }
