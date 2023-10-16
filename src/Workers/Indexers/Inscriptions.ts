@@ -140,7 +140,7 @@ async function commitTransfers(ids: string[]) {
     ops.push({
       id: item.inscription_id,
       owner: output?.addresses[0] ?? "",
-      outpoint: item.satpoint,
+      outpoint: `${txid}:${n}`,
     });
   }
   await db.inscriptions.addTransfers(ops);

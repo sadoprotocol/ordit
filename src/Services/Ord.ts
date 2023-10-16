@@ -77,16 +77,8 @@ async function getInscription(id: string) {
   }
 }
 
-async function getInscriptionsForIds(ids: string[], attempts = 0) {
-  if (attempts > 10) {
-    return [];
-  }
-  const inscriptions = await call<OrdInscription[]>(`/inscriptions`, { ids });
-  if (inscriptions.length === 0) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return getInscriptionsForIds(ids, attempts + 1);
-  }
-  return inscriptions;
+async function getInscriptionsForIds(ids: string[]) {
+  return call<OrdInscription[]>(`/inscriptions`, { ids });
 }
 
 /**
@@ -214,7 +206,7 @@ type Inscription = {
   output: string;
 };
 
-type InscriptionData = {
+export type InscriptionData = {
   inscription_id: string;
   number: number;
   genesis_fee: number;

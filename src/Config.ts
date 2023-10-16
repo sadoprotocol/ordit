@@ -14,6 +14,9 @@ export const config = {
     host: getEnvironmentVariable("WORKER_HOST"),
     port: getEnvironmentVariable("WORKER_PORT", envToNumber),
   },
+  output: {
+    enabled: getEnvironmentVariable("OUTPUT_PARSER_ENABLED", envToBoolean),
+  },
   utxo: {
     enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
   },
