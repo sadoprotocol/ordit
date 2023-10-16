@@ -12,19 +12,22 @@ export async function index() {
   const blockHeight = await rpc.blockchain.getBlockCount();
   const indexers: IndexHandler[] = [];
 
-  if (config.utxo.enabled === true) {
+  if (config.index.outputs === true) {
     indexers.push(outputIndexer);
+  }
+
+  if (config.index.utxos === true) {
     indexers.push(utxoIndexer);
   }
 
-  if (config.ord.enabled === true) {
+  if (config.index.inscriptions === true) {
     indexers.push(inscriptionsIndexer);
-    if (config.brc20.enabled === true) {
+    if (config.index.brc20 === true) {
       indexers.push(brc20Indexer);
     }
   }
 
-  if (config.sado.enabled === true) {
+  if (config.index.sado === true) {
     indexers.push(sadoIndexer);
   }
 

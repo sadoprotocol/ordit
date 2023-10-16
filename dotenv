@@ -37,31 +37,26 @@ WORKER_URI="http://127.0.0.1:3031"
 WORKER_HOST="0.0.0.0"
 WORKER_PORT=3031
 
-# UTXO
-# Index individual vins and vouts for every block.
+# INDEXERS
 
-UTXO_PARSER_ENABLED=true
+INDEX_OUTPUTS=true
+INDEX_UTXOS=true
+INDEX_INSCRIPTIONS=true
+INDEX_BRC20=true
+INDEX_SADO=true
 
-# Ord Server
+# ORD SERVER
 # Currently used to serve our ability to track sat ranges and
 # movements of envelopes on the bitcoin network. URI is used
 # by the indexer to lookup dependent sat tracking.
 
 ORD_URI="http://127.0.0.1:3032"
-ORD_INDEXER_ENABLED=true
-
-# BRC-20
-# Index BRC-20 events and resolve said events into optimized
-# read collections for service consumption.
-
-BRC20_ENABLED=true
 
 # SADO PARSER
 # Index SADO outputs and resolve said outputs into optimized
 # read collection for service consumption.
 
 SADO_START_BLOCK=0
-SADO_PARSER_ENABLED=true
 
 #------------------------------------------------------------
 # BLOCKCHAIN

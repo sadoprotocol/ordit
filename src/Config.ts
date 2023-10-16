@@ -14,22 +14,18 @@ export const config = {
     host: getEnvironmentVariable("WORKER_HOST"),
     port: getEnvironmentVariable("WORKER_PORT", envToNumber),
   },
-  output: {
-    enabled: getEnvironmentVariable("OUTPUT_PARSER_ENABLED", envToBoolean),
-  },
-  utxo: {
-    enabled: getEnvironmentVariable("UTXO_PARSER_ENABLED", envToBoolean),
+  index: {
+    outputs: getEnvironmentVariable("INDEX_OUTPUTS", envToBoolean),
+    utxos: getEnvironmentVariable("INDEX_UTXOS", envToBoolean),
+    inscriptions: getEnvironmentVariable("INDEX_INSCRIPTIONS", envToBoolean),
+    brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
+    sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),
-    enabled: getEnvironmentVariable("ORD_INDEXER_ENABLED", envToBoolean),
-  },
-  brc20: {
-    enabled: getEnvironmentVariable("BRC20_ENABLED", envToBoolean),
   },
   sado: {
     startBlock: getEnvironmentVariable("SADO_START_BLOCK", envToNumber),
-    enabled: getEnvironmentVariable("SADO_PARSER_ENABLED", envToBoolean),
   },
   rpc: {
     uri: getEnvironmentVariable("RPC_URI"),
