@@ -6,7 +6,7 @@ import { log } from "~Libraries/Log";
 import { InscriptionData, ord } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
-const total = await db.inscriptions.collection.countDocuments();
+const total = await db.inscriptions.collection.estimatedDocumentCount();
 
 let count = 0;
 let fixed = 0;
@@ -38,8 +38,8 @@ while (await cursor.hasNext()) {
   if (output && output.vin) {
     data = await getOrdData(inscription, data);
     if (data) {
-      const [txid, n] = data.satpoint.split(":") ?? [];
-      if (`${txid}:${n}` !== inscription.outpoint) {
+      const [txid, n, offset] = data.satpoint.split(":") ?? [];
+      if (`${txid}:${n}` !== inscription.outpoint || offset !== undefined) {
         $set.outpoint = `${txid}:${n}`;
         hasChanges = true;
       }
