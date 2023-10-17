@@ -11,7 +11,7 @@ const total = await db.inscriptions.collection.estimatedDocumentCount();
 let count = 0;
 let fixed = 0;
 
-const cursor = db.inscriptions.collection.find();
+const cursor = db.inscriptions.collection.find({}, { sort: { _id: 1 } });
 while (await cursor.hasNext()) {
   const inscription = await cursor.next();
   if (inscription === null) {
@@ -72,7 +72,9 @@ while (await cursor.hasNext()) {
   count += 1;
 
   log(
-    `\rSynced ${count.toLocaleString()} / ${total.toLocaleString()} inscriptions | ${fixed.toLocaleString()} inscriptions updated`,
+    `\rSynced ${count.toLocaleString()} / ${total.toLocaleString()} inscriptions | ${fixed.toLocaleString()} inscriptions updated | ${
+      inscription._id
+    }`,
   );
 }
 

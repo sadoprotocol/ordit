@@ -109,39 +109,39 @@ async function transferInscriptions(outpoints: string[]) {
     return 0;
   }
 
-  const ids: string[] = [];
   let count = 0;
 
-  const cursor = db.inscriptions.collection.find({ outpoint: { $in: outpoints } });
-  while (await cursor.hasNext()) {
-    const inscription = await cursor.next();
-    if (inscription === null) {
-      continue;
-    }
-    ids.push(inscription.id);
-    if (ids.length === 2_500) {
-      await commitTransfers(ids);
-      count += ids.length;
-      ids.length = 0;
-    }
+  const chunkSize = 10_000;
+  for (let i = 0; i < outpoints.length; i += chunkSize) {
+    const chunk = outpoints.slice(i, i + chunkSize);
+    const docs = await db.inscriptions.collection
+      .find({ outpoint: { $in: chunk } })
+      .project({ id: 1 })
+      .toArray();
+    await commitTransfers(docs.map((doc) => doc.id));
+    count += docs.length;
   }
 
-  await commitTransfers(ids);
-
-  return count + ids.length;
+  return count;
 }
 
 async function commitTransfers(ids: string[]) {
   const ops: { id: string; owner: string; outpoint: string }[] = [];
-  const data = await ord.getInscriptionsForIds(ids);
-  for (const item of data) {
-    const [txid, n] = parseLocation(item.satpoint);
-    const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
-    ops.push({
-      id: item.inscription_id,
-      owner: output?.addresses[0] ?? "",
-      outpoint: `${txid}:${n}`,
-    });
+
+  const chunkSize = 5_000;
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const data = await ord.getInscriptionsForIds(chunk);
+    for (const item of data) {
+      const [txid, n] = parseLocation(item.satpoint);
+      const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
+      ops.push({
+        id: item.inscription_id,
+        owner: output?.addresses[0] ?? "",
+        outpoint: `${txid}:${n}`,
+      });
+    }
   }
+
   await db.inscriptions.addTransfers(ops);
 }
