@@ -38,12 +38,18 @@ while (await cursor.hasNext()) {
   if (output && output.vin) {
     data = await getOrdData(inscription, data);
     if (data) {
-      const [txid, n, offset] = data.satpoint.split(":") ?? [];
-      if (`${txid}:${n}` !== inscription.outpoint || offset !== undefined) {
+      const [txid, n] = data.satpoint.split(":") ?? [];
+      if (`${txid}:${n}` !== inscription.outpoint) {
         $set.outpoint = `${txid}:${n}`;
         hasChanges = true;
       }
     }
+  }
+
+  if (hasChanges === false && inscription.outpoint.split(":").length > 2) {
+    const [txid, n] = inscription.outpoint.split(":");
+    $set.outpoint = `${txid}:${n}`;
+    hasChanges = true;
   }
 
   // ### Sync Owner
