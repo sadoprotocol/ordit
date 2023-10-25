@@ -55,8 +55,10 @@ export const registrar: CollectionRegistrar = {
 
 export type Inscription = {
   id: string;
+  parent?: string;
+  children: string[];
   creator: string;
-  owner: string;
+  owner?: string;
   sat: number;
   mimeType: string;
   mimeSubtype: string;
@@ -69,7 +71,9 @@ export type Inscription = {
   fee: number;
   genesis: string;
   number: number;
+  sequence: number;
   outpoint: string;
+  ethereum: string;
   ometa?: any;
   meta?: any;
   verified?: boolean;

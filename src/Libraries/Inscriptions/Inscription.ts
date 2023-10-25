@@ -8,11 +8,14 @@ import { Envelope } from "./Envelope";
 
 export class Inscription {
   readonly id: string;
+  readonly parent?: string;
+  readonly children?: string[];
   readonly genesis: string;
   readonly creator: string;
   readonly owner: string;
   readonly media: InscriptionMedia;
   readonly number: number;
+  readonly sequence: number;
   readonly height: number;
   readonly fee: number;
   readonly sat: number;
@@ -23,11 +26,14 @@ export class Inscription {
 
   constructor(data: InscriptionData) {
     this.id = data.id;
+    this.parent = data.parent;
+    this.children = data.children;
     this.genesis = data.genesis;
     this.creator = data.creator;
     this.owner = data.owner;
     this.media = data.media;
     this.number = data.number;
+    this.sequence = data.sequence;
     this.height = data.height;
     this.fee = data.fee;
     this.sat = data.sat;
@@ -71,6 +77,8 @@ export async function getInscriptionFromEnvelope(
 
   return new Inscription({
     id: envelope.id,
+    parent: envelope.parent,
+    children: [],
     genesis: envelope.txid,
     creator: await getInscriptionCreator(envelope.txid),
     owner: await getInscriptionOwner(locationTxid, locationN),
@@ -85,6 +93,7 @@ export async function getInscriptionFromEnvelope(
       size: envelope.content?.size ?? 0,
     },
     number: ordData.number,
+    sequence: ordData.sequence,
     height: ordData.genesis_height,
     fee: ordData.genesis_fee,
     sat: ordData.sat,
@@ -113,11 +122,14 @@ async function getInscriptionOwner(txid: string, n: number) {
 
 type InscriptionData = {
   id: string;
+  parent?: string;
+  children?: string[];
   genesis: string;
   creator: string;
   owner: string;
   media: InscriptionMedia;
   number: number;
+  sequence: number;
   height: number;
   fee: number;
   sat: number;

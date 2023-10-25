@@ -9,7 +9,6 @@ export const ord = {
   getHeight,
   getOutputs,
   getOrdinals,
-  getBlockInscriptions,
   getInscription,
   getInscriptionsForIds,
   waitForBlock,
@@ -54,18 +53,10 @@ async function getOrdinals(outpoint: string): Promise<Ordinal[]> {
 }
 
 /**
- * Get inscriptions for a block.
+ * Get inscription data for the given id.
  *
- * @param blockHeight - Block height to get inscriptions for.
- * @param seconds     - How many seconds to wait between attempts.
+ * @param id - Inscription id.
  */
-async function getBlockInscriptions(blockHeight: number, seconds = 1): Promise<Inscription[]> {
-  return call<Inscription[]>(`/inscriptions/block/${blockHeight}`).catch((error) => {
-    console.log(error);
-    return sleep(seconds).then(() => getBlockInscriptions(blockHeight, seconds));
-  });
-}
-
 async function getInscription(id: string) {
   try {
     return await call<InscriptionData>(`/inscription/${id}`);
@@ -77,6 +68,11 @@ async function getInscription(id: string) {
   }
 }
 
+/**
+ * Get inscription data for the given ids.
+ *
+ * @param ids - Inscription ids.
+ */
 async function getInscriptionsForIds(ids: string[]) {
   return call<OrdInscription[]>(`/inscriptions`, { ids });
 }
@@ -186,37 +182,28 @@ async function sleep(seconds: number): Promise<void> {
 export type OrdInscription = {
   inscription_id: string;
   number: number;
+  sequence: number;
   genesis_height: number;
   genesis_fee: number;
   sat: number;
   satpoint: string;
   timestamp: number;
-};
-
-type Inscription = {
-  id: string;
-  address: string;
-  sat: number;
-  media: InscriptionMedia;
-  timestamp: number;
-  height: number;
-  fee: number;
-  genesis: string;
-  number: number;
-  output: string;
 };
 
 export type InscriptionData = {
-  inscription_id: string;
-  number: number;
+  address?: string;
+  children: string[];
+  content_length?: number;
+  content_type?: string;
   genesis_fee: number;
   genesis_height: number;
-  output_value: number;
-  address: string;
-  sat: number;
+  inscription_id: string;
+  inscription_number: number;
+  inscription_sequence: number;
+  output_value?: number;
+  parent?: string;
+  sat?: number;
   satpoint: string;
-  content_type: string;
-  content_length: number;
   timestamp: number;
 };
 
@@ -235,12 +222,6 @@ export type Ordinal = {
   start: number;
   end: number;
   size: number;
-};
-
-type InscriptionMedia = {
-  kind: string;
-  size: number;
-  content: string;
 };
 
 export type Rarity = (typeof rarity)[number];

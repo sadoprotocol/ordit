@@ -10,8 +10,9 @@ const ENVELOPE_END_TAG = 104;
 
 const PROTOCOL_TAG = 99;
 const TYPE_TAG = 81;
-const BODY_TAG = 0;
+const PARENT_TAG = 83;
 const META_TAG = 85;
+const BODY_TAG = 0;
 
 type EnvelopeData = number | Buffer;
 
@@ -25,6 +26,7 @@ export class Envelope {
   readonly id: string;
   readonly protocol?: string;
   readonly type?: string;
+  readonly parent?: string;
   readonly content?: {
     size: number;
     body: string;
@@ -45,6 +47,7 @@ export class Envelope {
     this.id = `${txid}i0`;
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
+    this.parent = getParent(data);
     this.content = getEnvelopeContent(data);
     this.media = getMediaMeta(this.type);
     this.meta = getEnvelopeMeta(data) ?? {};
@@ -86,10 +89,11 @@ export class Envelope {
     return {
       protocol: this.protocol,
       type: this.type,
-      body: this.body,
+      parent: this.parent,
       size: this.size,
       meta: this.meta,
       oip: this.oip,
+      body: this.body,
     };
   }
 }
@@ -141,6 +145,18 @@ function getEnvelopeContent(data: EnvelopeData[]) {
     size: buffer.length,
     body: buffer.toString("base64"),
   };
+}
+
+function getParent(data: EnvelopeData[]) {
+  const startIndex = data.indexOf(PARENT_TAG);
+  if (startIndex === -1) {
+    return undefined;
+  }
+  const parent = data[startIndex + 1];
+  if (!parent || !isBuffer(parent)) {
+    return undefined;
+  }
+  return `${parent.reverse().toString("hex")}i0`;
 }
 
 function getEnvelopeMeta(data: EnvelopeData[]) {
