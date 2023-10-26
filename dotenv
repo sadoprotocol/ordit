@@ -94,9 +94,6 @@ MONGO_DATABASE="bitcoin-regtest"
 MONGO_USERNAME=""
 MONGO_PASSWORD=""
 
-REDIS_HOSTNAME="127.0.0.1"
-REDIS_PORT=6379
-
 #------------------------------------------------------------
 # REGTEST
 #------------------------------------------------------------
