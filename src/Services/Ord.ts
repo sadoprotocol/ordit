@@ -2,6 +2,7 @@ import { NotFoundError } from "@valkyr/api";
 import fetch from "node-fetch";
 
 import { config } from "../Config";
+import { sleep } from "~Utilities/Helpers";
 
 export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
@@ -161,16 +162,6 @@ export function getSafeToSpendState(
     }
   }
   return true;
-}
-
-/*
- |--------------------------------------------------------------------------------
- | Helpers
- |--------------------------------------------------------------------------------
- */
-
-async function sleep(seconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 /*
