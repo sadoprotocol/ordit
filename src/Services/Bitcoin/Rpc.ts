@@ -1,26 +1,45 @@
 import { BadRequestError, InternalError } from "@valkyr/api";
 import fetch from "node-fetch";
+import retry from "async-retry";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
+import { sleep } from "~Utilities/Helpers";
 
 export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
   const ts = performance.now();
   try {
     const id = "trinity";
-    const response = await fetch(config.rpc.uri, {
-      method: "POST",
-      headers: {
-        Authorization: "Basic " + btoa(`${config.rpc.user}:${config.rpc.password}`),
-        "Content-Type": "text/plain",
+    let response = await retry(
+      async () => {
+        try {
+          const res = await fetch(config.rpc.uri, {
+            method: "POST",
+            headers: {
+              Authorization: "Basic " + btoa(`${config.rpc.user}:${config.rpc.password}`),
+              "Content-Type": "text/plain",
+            },
+            body: JSON.stringify({
+              jsonrpc: "1.0",
+              method: method,
+              params: args,
+              id,
+            }),
+          });
+
+          return res;
+        } catch (error) {
+          console.log("\n⛑️ RpcError", error.message, { endpoint: config.rpc.uri, method, args });
+          console.log("\n⛑️ Retrying in 5 secs..");
+          await sleep(5);
+          throw error;
+        }
       },
-      body: JSON.stringify({
-        jsonrpc: "1.0",
-        method: method,
-        params: args,
-        id,
-      }),
-    });
+      {
+        forever: true,
+      },
+    );
+    response = response!;
 
     if (response.status !== 200) {
       throw RpcError.from(await response.text());
@@ -92,7 +111,7 @@ export class RpcError {
       message: string;
     },
     readonly id: string,
-  ) {}
+  ) { }
 
   static from(text: string) {
     try {
