@@ -10,15 +10,19 @@ export default method({
   handler: async ({ ids }) => {
     const confirmations: Confirmation[] = [];
     for (const id of ids) {
-      const transaction = await rpc.transactions.getRawTransaction(id, true);
-      if (!transaction) {
-        continue;
+      try{
+        const transaction = await rpc.transactions.getRawTransaction(id, true);
+        if (!transaction) {
+          continue;
+        }
+        confirmations.push({
+          txid: transaction.txid,
+          confirmations: transaction.confirmations ?? -1,
+          timestamp: transaction.time || transaction.locktime,
+        });
+      } catch (_) {
+        // on transaction not found/error => skip
       }
-      confirmations.push({
-        txid: transaction.txid,
-        confirmations: transaction.confirmations ?? -1,
-        timestamp: transaction.time || transaction.locktime,
-      });
     }
     return confirmations;
   },
