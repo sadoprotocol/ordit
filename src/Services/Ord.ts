@@ -1,8 +1,9 @@
 import { NotFoundError } from "@valkyr/api";
 import fetch from "node-fetch";
 
-import { config } from "../Config";
 import { sleep } from "~Utilities/Helpers";
+
+import { config } from "../Config";
 
 export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 

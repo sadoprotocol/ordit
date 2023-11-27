@@ -1,11 +1,11 @@
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
+import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
 import { Block, isCoinbaseTx, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
-import { limiter } from "~Libraries/Limiter";
 
 export class Indexer {
   readonly #indexers: IndexHandler[];
