@@ -131,7 +131,7 @@ export class Indexer {
 
   async #handleBlock(block: Block<2>) {
     // set concurent limit when processing vouts, https://github.com/sindresorhus/p-limit#concurrency
-    const voutPromises = limiter<VoutData>(20);
+    const voutPromises = limiter<VoutData>(config.worker.voutPromiseLimit);
 
     for (const tx of block.tx) {
       const txid = tx.txid;
