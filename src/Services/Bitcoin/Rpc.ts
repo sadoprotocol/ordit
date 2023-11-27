@@ -1,10 +1,11 @@
 import { BadRequestError, InternalError } from "@valkyr/api";
-import fetch from "node-fetch";
 import retry from "async-retry";
+import fetch from "node-fetch";
+
+import { sleep } from "~Utilities/Helpers";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
-import { sleep } from "~Utilities/Helpers";
 
 export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
   const ts = performance.now();

@@ -1,11 +1,11 @@
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
+import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
 import { Block, isCoinbaseTx, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
-import { limiter } from "~Libraries/Limiter";
 
 export class Indexer {
   readonly #indexers: IndexHandler[];
@@ -131,7 +131,7 @@ export class Indexer {
 
   async #handleBlock(block: Block<2>) {
     // set concurent limit when processing vouts, https://github.com/sindresorhus/p-limit#concurrency
-    const voutPromises = limiter<VoutData>(20);
+    const voutPromises = limiter<VoutData>(config.worker.voutPromiseLimit);
 
     for (const tx of block.tx) {
       const txid = tx.txid;
