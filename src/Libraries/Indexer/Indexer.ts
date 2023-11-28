@@ -1,6 +1,5 @@
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
-import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
 import { Block, isCoinbaseTx, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
@@ -130,9 +129,6 @@ export class Indexer {
   }
 
   async #handleBlock(block: Block<2>) {
-    // set concurent limit when processing vouts, https://github.com/sindresorhus/p-limit#concurrency
-    const voutPromises = limiter<VoutData>(config.worker.voutPromiseLimit);
-
     for (const tx of block.tx) {
       const txid = tx.txid;
 
@@ -159,27 +155,21 @@ export class Indexer {
 
       let n = 0;
       for (const vout of tx.vout) {
-        voutPromises.push(() =>
-          (async function() {
-            return {
-              txid,
-              n,
-              addresses: await getAddressessFromVout(vout),
-              value: vout.value,
-              scriptPubKey: vout.scriptPubKey,
-              block: {
-                hash: block.hash,
-                height: block.height,
-                time: block.time,
-              },
-            };
-          })(),
-        );
+        this.#vouts.push({
+          txid,
+          n,
+          addresses: await getAddressessFromVout(vout),
+          value: vout.value,
+          scriptPubKey: vout.scriptPubKey,
+          block: {
+            hash: block.hash,
+            height: block.height,
+            time: block.time,
+          },
+        });
         n += 1;
       }
     }
-    const vouts = await voutPromises.run();
-    this.#vouts = this.#vouts.concat(vouts)
   }
 
   async #commit(height: number) {
