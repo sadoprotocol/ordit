@@ -13,7 +13,6 @@ export const config = {
     uri: getEnvironmentVariable("WORKER_URI"),
     host: getEnvironmentVariable("WORKER_HOST"),
     port: getEnvironmentVariable("WORKER_PORT", envToNumber),
-    voutPromiseLimit: getEnvironmentVariable("VOUT_PROMISE_LIMIT", envToNumber),
   },
   index: {
     outputs: getEnvironmentVariable("INDEX_OUTPUTS", envToBoolean),
