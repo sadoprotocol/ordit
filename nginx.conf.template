@@ -1,0 +1,18 @@
+user nginx;
+
+events {
+	worker_connections 1000;
+}
+
+http {
+	upstream all {
+		server api:${API_PORT};
+	}
+
+	server {
+		listen ${API_PORT};
+		location / {
+			proxy_pass http://all/;
+		}
+	}
+}

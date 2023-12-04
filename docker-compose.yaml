@@ -11,58 +11,38 @@ networks:
     external: false
 
 services:
-  traefik:
-    image: traefik
-    profiles: ["server", "traefik"]
-    restart: unless-stopped
-    command:
-      - --api.insecure=true 
-      - --providers.docker=true 
-      - --providers.docker.exposedbydefault=false 
-      - --log.level=${TRAEFIK_LOG}
-      - --entrypoints.http.address=:80 
-      - --entrypoints.https.address=:443
-      - --certificatesresolvers.${TRAEFIK_ACME_PROVIDER}.acme.tlschallenge=true
-      - --certificatesresolvers.${TRAEFIK_ACME_PROVIDER}.acme.email=${TRAEFIK_ACME_EMAIL}
-      - --certificatesresolvers.${TRAEFIK_ACME_PROVIDER}.acme.storage=acme.json
-    networks:
-      - internal
-      - web
-    ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
   api:
     build: .
     profiles: ["server", "api"]
     restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      # Default route over HTTPS
-      - traefik.http.routers.ordit.rule=Host(`${API_DOMAIN}`)
-      - traefik.http.routers.ordit.entrypoints=https
-      - traefik.http.routers.ordit.tls.certresolver=${TRAEFIK_ACME_PROVIDER}
-      # HTTP to HTTPS
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-      - traefik.http.routers.ordit-redirect.rule=hostregexp(`{host:.+}`)
-      - traefik.http.routers.ordit-redirect.entrypoints=http
-      - traefik.http.routers.ordit-redirect.middlewares=redirect-to-https
     env_file:
       - .env
     networks:
       - internal
       - web
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     deploy:
       replicas: ${API_REPLICAS}
       restart_policy:
         max_attempts: 3
         condition: on-failure
     command: npm start
+
+  nginx:
+    image: nginx:latest
+    profiles: ["server", "api"]
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/nginx.conf.template
+    depends_on:
+      - api
+    networks:
+      - internal
+      - web
+    ports:
+      - ${API_PORT}:${API_PORT}
+    command: /bin/bash -c "envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
 
   bitcoin:
     image: ruimarinho/bitcoin-core
