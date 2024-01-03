@@ -94,6 +94,14 @@ MONGO_DATABASE="bitcoin-regtest"
 MONGO_USERNAME=""
 MONGO_PASSWORD=""
 
+# deployed database, is the current database used by the public RPC (mainnet/testnet).
+# used for task script only, ex: for migration spent flag from previous active db to the new one
+DEPLOYED_MONGO_HOSTNAME="127.0.0.1"
+DEPLOYED_MONGO_PORT=27017
+DEPLOYED_MONGO_DATABASE="bitcoin-regtest"
+DEPLOYED_MONGO_USERNAME=""
+DEPLOYED_MONGO_PASSWORD=""
+
 #------------------------------------------------------------
 # REGTEST
 #------------------------------------------------------------

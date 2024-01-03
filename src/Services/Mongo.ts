@@ -2,11 +2,15 @@ import { CreateIndexesOptions, Document, IndexSpecification, MongoClient } from 
 
 import { config } from "../Config";
 
-const client = new MongoClient(getMongoUri());
+const client = new MongoClient(getMongoUri(config.mongo));
+const deployedClient = new MongoClient(getMongoUri(config.deployedMongo));
 
 export const mongo = {
   get db() {
     return client.db(config.mongo.database);
+  },
+  get deployedDb() {
+    return deployedClient.db(config.deployedMongo.database);
   },
   register,
   connect,
@@ -37,7 +41,7 @@ async function register(registrars: CollectionRegistrar[]) {
  * Establishes a connection to the mongodb server and keeps it alive.
  */
 async function connect() {
-  console.log(`connecting to mongodb server ${getMongoUri()}`);
+  console.log(`connecting to mongodb server ${getMongoUri(config.mongo)}`);
   await client
     .connect()
     .then(() => {
@@ -75,8 +79,14 @@ export function stripMongoId<T>(doc: T): Omit<T, "_id"> {
   return doc;
 }
 
-function getMongoUri() {
-  const { hostname, port, username, password } = config.mongo;
+function getMongoUri(mongoConfig: {
+  hostname: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+}) {
+  const { hostname, port, username, password } = mongoConfig;
   if (username && password) {
     return `mongodb://${username}:${password}@${hostname}:${port}`;
   }

@@ -1,6 +1,7 @@
 import { CollectionRegistrar, mongo } from "../../Services/Mongo";
 
 export const collection = mongo.db.collection<OutputDocument>("outputs");
+export const deployedCollection = mongo.deployedDb.collection<OutputDocument>("outputs");
 
 export const registrar: CollectionRegistrar = {
   name: "outputs",

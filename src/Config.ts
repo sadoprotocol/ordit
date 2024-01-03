@@ -49,6 +49,15 @@ export const config = {
     username: getEnvironmentVariable("MONGO_USERNAME"),
     password: getEnvironmentVariable("MONGO_PASSWORD"),
   },
+  // deployed database, is the current database used by the public RPC (mainnet/testnet).
+  // used for task script only, ex: for migration spent flag from previous active db to the new one
+  deployedMongo: {
+    hostname: getEnvironmentVariable("DEPLOYED_MONGO_HOSTNAME"),
+    port: getEnvironmentVariable("DEPLOYED_MONGO_PORT", envToNumber),
+    database: getEnvironmentVariable("DEPLOYED_MONGO_DATABASE"),
+    username: getEnvironmentVariable("DEPLOYED_MONGO_USERNAME"),
+    password: getEnvironmentVariable("DEPLOYED_MONGO_PASSWORD"),
+  },
   faucet: {
     seed: getEnvironmentVariable("FAUCET_SEED"),
     auth: getEnvironmentVariable("FAUCET_AUTH"),
