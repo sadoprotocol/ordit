@@ -27,7 +27,7 @@ while (await spentOutputs.hasNext()) {
   await db.outputs.addRelayed(txid, n);
   total += 1;
 
-  console.log(`Updated data: ${total}, with id: ${output._id}`);
+  console.log(`Updated data: ${total}, with txid: ${txid} n: ${n}`);
 }
 
 process.exit(0);
