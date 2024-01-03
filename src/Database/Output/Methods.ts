@@ -11,11 +11,12 @@ import {
 
 import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { getChunkSize } from "../Utilities";
-import { collection, OutputDocument, SpentOutput } from "./Collection";
+import { collection, deployedCollection, OutputDocument, SpentOutput } from "./Collection";
 import { noSpentsFilter } from "./Utilities";
 
 export const outputs = {
   collection,
+  deployedCollection,
 
   // ### Core Methods
 
