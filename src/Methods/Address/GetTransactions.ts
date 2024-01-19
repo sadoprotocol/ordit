@@ -39,7 +39,6 @@ export default method({
     const resultLimiter = limiter<any>(10);
 
     const cursor = await getSearchAggregate(address, reverse);
-    let length = 0;
     while (await cursor.hasNext()) {
       const document = await cursor.next();
       if (document === null) {
@@ -71,9 +70,8 @@ export default method({
           ...(await getExpandedTransaction(tx, options)),
         };
       });
-      length += 1;
 
-      if (length === limit) {
+      if (resultLimiter.length() === limit) {
         break;
       }
     }

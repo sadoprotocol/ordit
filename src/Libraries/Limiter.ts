@@ -10,5 +10,8 @@ export function limiter<T>(concurrency: number) {
     run: async (): Promise<T[]> => {
       return await Promise.all(input);
     },
+    length: () => {
+      return input.length
+    }
   };
 }
