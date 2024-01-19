@@ -3,6 +3,7 @@ import Schema, { array, boolean, string } from "computed-types";
 
 import { rpc } from "../../Services/Bitcoin";
 import { getExpandedTransaction } from "../../Utilities/Transaction";
+import { limiter } from "~Libraries/Limiter";
 
 const options = Schema({
   ord: boolean.optional(),
@@ -16,12 +17,14 @@ export default method({
     options: options.optional(),
   }),
   handler: async ({ txIds, options }) => {
-    const expandedTxs = await Promise.allSettled(
-      txIds.map(async (txId) => {
+    const promiseLimiter = limiter<any>(10);
+    txIds.forEach(async (txId) => {
+      promiseLimiter.push(async () => {
         const tx = await rpc.transactions.getRawTransaction(txId, true);
         return getExpandedTransaction(tx, options);
-      }),
-    );
+      });
+    });
+    const expandedTxs = await promiseLimiter.runSettled();
     // remove the failed promises
     return expandedTxs.filter((tx) => tx.status === "fulfilled").map((tx) => tx.status === "fulfilled" && tx.value);
   },

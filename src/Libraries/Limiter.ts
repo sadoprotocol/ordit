@@ -10,6 +10,9 @@ export function limiter<T>(concurrency: number) {
     run: async (): Promise<T[]> => {
       return await Promise.all(input);
     },
+    runSettled: async (): Promise<PromiseSettledResult<T>[]> => {
+      return await Promise.allSettled(input);
+    },
     length: () => {
       return input.length
     }

@@ -6,6 +6,7 @@ import { db } from "../../Database";
 import { schema } from "../../Libraries/Schema";
 import { getExpandedTransaction, parseLocation } from "../../Utilities/Transaction";
 import { rpc } from "~Services/Bitcoin";
+import { limiter } from "~Libraries/Limiter";
 
 export default method({
   params: Schema({
@@ -25,8 +26,10 @@ export default method({
       },
     });
     // get transactions
-    const inscriptionsWithTransactions = await Promise.all(
-      result.documents.map(async (inscription) => {
+    const promiseLimiter = limiter<any>(10);
+
+    result.documents.forEach((inscription) => {
+      promiseLimiter.push(async () => {
         const [txid] = parseLocation(inscription.outpoint);
         const tx = await rpc.transactions.getRawTransaction(txid, true);
         const expandedTx = await getExpandedTransaction(tx);
@@ -34,8 +37,10 @@ export default method({
           ...inscription,
           transaction: expandedTx,
         };
-      }),
-    );
+      });
+    });
+
+    const inscriptionsWithTransactions = await promiseLimiter.run();
 
     return {
       inscriptions: inscriptionsWithTransactions,
