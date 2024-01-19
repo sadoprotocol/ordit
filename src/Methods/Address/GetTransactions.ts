@@ -2,6 +2,8 @@ import { method } from "@valkyr/api";
 import Schema, { boolean, number, string, Type } from "computed-types";
 import { AggregationCursor, WithId } from "mongodb";
 
+import { limiter } from "~Libraries/Limiter";
+
 import { db } from "../../Database";
 import { isCoinbaseTx, rpc } from "../../Services/Bitcoin";
 import { btcToSat } from "../../Utilities/Bitcoin";
@@ -26,7 +28,6 @@ export default method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, options, pagination }) => {
-    let result: any[] = [];
     let cursors: string[] = [];
 
     const limit = pagination?.limit ?? 10;
@@ -34,6 +35,8 @@ export default method({
     const reverse = pagination?.prev !== undefined;
 
     let shouldSkipCursor = true;
+
+    const resultLimiter = limiter<any>(10);
 
     const cursor = await getSearchAggregate(address, reverse);
     while (await cursor.hasNext()) {
@@ -59,18 +62,21 @@ export default method({
       }
 
       cursors.push(_id.toString());
-      result.push({
-        _id: _id.toString(),
-        coinbase: isCoinbaseTx(tx),
-        blockHeight: height,
-        ...(await getExpandedTransaction(tx, options)),
+      resultLimiter.push(async () => {
+        return {
+          _id: _id.toString(),
+          coinbase: isCoinbaseTx(tx),
+          blockHeight: height,
+          ...(await getExpandedTransaction(tx, options)),
+        };
       });
 
-      if (result.length === limit) {
+      if (resultLimiter.length() === limit) {
         break;
       }
     }
 
+    let result = await resultLimiter.run();
     result = reverse ? result.reverse() : result;
     cursors = reverse ? cursors.reverse() : cursors;
 
@@ -95,7 +101,7 @@ export default method({
 
 function getSearchAggregate(
   address: string,
-  reverse = false
+  reverse = false,
 ): AggregationCursor<
   WithId<{
     txid: string;
