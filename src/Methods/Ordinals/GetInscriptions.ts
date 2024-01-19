@@ -30,7 +30,7 @@ export default method({
         inscription.mediaContent = `${config.api.uri}/content/${inscription.id}`;
       },
     });
-    if (include?.includes("value")) {
+    if (include?.includes("value") && !!result.documents && result.documents.length > 0) {
       result.documents = await includeInscriptionValue(result.documents);
     }
     return {
