@@ -114,46 +114,42 @@ function getSearchAggregate(
     },
     {
       $project: {
-        txid: {
-          $cond: {
-            if: { $ifNull: ["$vin", false] }, // Check if 'vin' field exists
-            then: "$vin.txid",
-            else: "$vout.txid",
+        txs: [
+          {
+            txid: "$vout.txid",
+            height: "$vout.block.height",
           },
-        },
-        height: {
-          $cond: {
-            if: { $ifNull: ["$vin", false] }, // Check if 'vin' field exists
-            then: "$vin.block.height",
-            else: "$vout.block.height",
+          {
+            txid: "$vin.txid",
+            height: "$vin.block.height",
           },
-        },
+        ],
       },
     },
     {
-      $sort: {
-        height: reverse ? 1 : -1,
-      },
+      $unwind: "$txs",
     },
     {
       $group: {
-        _id: "$txid",
-        doc: { $first: "$$ROOT" },
+        _id: "$txs.txid",
+        txid: {
+          $first: "$$ROOT.txs.txid",
+        },
+        height: {
+          $first: "$$ROOT.txs.height",
+        },
       },
     },
     {
-      $replaceRoot: { newRoot: "$doc" },
+      $match: {
+        _id: {
+          $ne: null,
+        },
+      },
     },
     {
       $sort: {
         height: reverse ? 1 : -1,
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        txid: 1,
-        height: 1,
       },
     },
   ]);
