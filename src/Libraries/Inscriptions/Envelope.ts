@@ -61,9 +61,9 @@ export class Envelope {
    * @param tx - Raw bitcoin transaction to search for an inscription envelope
    */
   static fromTransaction(tx: RawTransaction) {
-    const envelops = getEnvelopesDataFromTx(tx);
-    if (envelops) {
-      return envelops.map(([data, oip], index) => {
+    const envelopes = getEnvelopesDataFromTx(tx);
+    if (envelopes) {
+      return envelopes.map(([data, oip], index) => {
         if (data) {
           return new Envelope(tx.txid, data, oip, index);
         }
@@ -73,9 +73,9 @@ export class Envelope {
   }
 
   static fromTxinWitness(txid: string, txinwitness: string[]) {
-    const envelops = getEnvelopesFromTxinWitness(txinwitness);
-    if (envelops) {
-      return envelops.map(([data, oip], index) => {
+    const envelopes = getEnvelopesFromTxinWitness(txinwitness);
+    if (envelopes) {
+      return envelopes.map(([data, oip], index) => {
         if (data) {
           return new Envelope(txid, data, oip, index);
         }
@@ -213,12 +213,12 @@ function getEnvelopesFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, a
       if (data) {
         const oip = getMetaFromWitness(txinwitness);
         if (oip) {
-          return getEnvelopes(data).map((envelop) => {
-            return [envelop, oip];
+          return getEnvelopes(data).map((envelope) => {
+            return [envelope, oip];
           });
         }
-        return getEnvelopes(data).map((envelop) => {
-          return [envelop];
+        return getEnvelopes(data).map((envelope) => {
+          return [envelope];
         });
       }
     }
@@ -234,7 +234,7 @@ function getEnvelopesFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, a
  * @param data - Witness script to extract envelope from.
  */
 function getEnvelopes(data: EnvelopeData[]): EnvelopeData[][] {
-  const envelops: EnvelopeData[][] = [];
+  const envelopes: EnvelopeData[][] = [];
 
   let startIndex = -1;
   let endIndex = -1;
@@ -248,15 +248,15 @@ function getEnvelopes(data: EnvelopeData[]): EnvelopeData[][] {
     if (data[i] === ENVELOPE_END_TAG && startIndex !== -1) {
       endIndex = i;
 
-      envelops.push(data.slice(startIndex + 1, endIndex));
+      envelopes.push(data.slice(startIndex + 1, endIndex));
 
-      // reset for the next envelop
+      // reset for the next envelope
       startIndex = -1;
       endIndex = -1;
     }
   }
 
-  return envelops;
+  return envelopes;
 }
 
 /*
