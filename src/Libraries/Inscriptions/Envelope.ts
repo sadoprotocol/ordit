@@ -43,8 +43,9 @@ export class Envelope {
     readonly txid: string,
     readonly data: EnvelopeData[],
     readonly oip?: object,
+    readonly index: number = 0,
   ) {
-    this.id = `${txid}i0`;
+    this.id = `${txid}i${index}`;
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.parent = getParent(data);
@@ -60,16 +61,26 @@ export class Envelope {
    * @param tx - Raw bitcoin transaction to search for an inscription envelope
    */
   static fromTransaction(tx: RawTransaction) {
-    const [data, oip] = getEnvelopeDataFromTx(tx) ?? [];
-    if (data) {
-      return new Envelope(tx.txid, data, oip);
+    const envelops = getEnvelopesDataFromTx(tx);
+    if (envelops) {
+      return envelops.map(([data, oip], index) => {
+        if (data) {
+          return new Envelope(tx.txid, data, oip, index);
+        }
+        return null;
+      });
     }
   }
 
   static fromTxinWitness(txid: string, txinwitness: string[]) {
-    const [data, oip] = getEnvelopeFromTxinWitness(txinwitness) ?? [];
-    if (data) {
-      return new Envelope(txid, data, oip);
+    const envelops = getEnvelopesFromTxinWitness(txinwitness);
+    if (envelops) {
+      return envelops.map(([data, oip], index) => {
+        if (data) {
+          return new Envelope(txid, data, oip, index);
+        }
+        return null;
+      });
     }
   }
 
@@ -184,27 +195,31 @@ function getEnvelopeMeta(data: EnvelopeData[]) {
  |--------------------------------------------------------------------------------
  */
 
-function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | undefined {
+function getEnvelopesDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?][] | undefined {
   for (const vin of tx.vin) {
     if (isCoinbase(vin)) {
       continue;
     }
     if (vin.txinwitness) {
-      return getEnvelopeFromTxinWitness(vin.txinwitness);
+      return getEnvelopesFromTxinWitness(vin.txinwitness);
     }
   }
 }
 
-function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?] | undefined {
+function getEnvelopesFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?][] | undefined {
   for (const witness of txinwitness) {
     if (witness.includes(PROTOCOL_ID)) {
       const data = script.decompile(Buffer.from(witness, "hex"));
       if (data) {
         const oip = getMetaFromWitness(txinwitness);
         if (oip) {
-          return [getEnvelope(data), oip];
+          return getEnvelopes(data).map((envelop) => {
+            return [envelop, oip];
+          });
         }
-        return [getEnvelope(data)];
+        return getEnvelopes(data).map((envelop) => {
+          return [envelop];
+        });
       }
     }
   }
@@ -218,28 +233,30 @@ function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, an
  *
  * @param data - Witness script to extract envelope from.
  */
-function getEnvelope(data: EnvelopeData[]): EnvelopeData[] | undefined {
+function getEnvelopes(data: EnvelopeData[]): EnvelopeData[][] {
+  const envelops: EnvelopeData[][] = [];
+
   let startIndex = -1;
   let endIndex = -1;
 
-  let index = 0;
-  for (const op of data) {
-    const started = startIndex !== -1;
-    if (started === false && op === ENVELOPE_START_TAG) {
-      startIndex = index;
+  for (let i = 0; i < data.length; i += 1) {
+    if (data[i] === ENVELOPE_START_TAG && startIndex === -1) {
+      startIndex = i;
       continue;
     }
-    if (op === ENVELOPE_END_TAG) {
-      if (started === false) {
-        return [];
-      }
-      endIndex = index;
-      break;
+
+    if (data[i] === ENVELOPE_END_TAG && startIndex !== -1) {
+      endIndex = i;
+
+      envelops.push(data.slice(startIndex + 1, endIndex));
+
+      // reset for the next envelop
+      startIndex = -1;
+      endIndex = -1;
     }
-    index += 1;
   }
 
-  return data.slice(startIndex + 1, endIndex + 1);
+  return envelops;
 }
 
 /*
