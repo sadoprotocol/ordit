@@ -73,7 +73,7 @@ async function getInscriptions(vins: VinData[]) {
   return inscriptions;
 }
 
-async function insertInscriptions(rawInscriptions: RawInscription[]) {
+export async function insertInscriptions(rawInscriptions: RawInscription[]) {
   const inscriptions: Inscription[] = [];
 
   for (const inscription of rawInscriptions) {
