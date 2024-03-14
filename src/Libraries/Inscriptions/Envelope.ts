@@ -67,7 +67,7 @@ export class Envelope {
         if (data) {
           return new Envelope(tx.txid, data, oip, index);
         }
-        return null;
+        return undefined;
       });
     }
   }
@@ -79,7 +79,7 @@ export class Envelope {
         if (data) {
           return new Envelope(txid, data, oip, index);
         }
-        return null;
+        return undefined;
       });
     }
   }

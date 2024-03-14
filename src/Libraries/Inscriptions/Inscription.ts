@@ -44,16 +44,26 @@ export class Inscription {
   }
 
   static async fromTransaction(tx: RawTransaction) {
-    const envelope = Envelope.fromTransaction(tx);
-    if (envelope && envelope.isValid) {
-      return envelope;
+    const envelopes = Envelope.fromTransaction(tx);
+    if (envelopes) {
+      return envelopes.map((envelope) => {
+        if (envelope?.isValid) {
+          return envelope;
+        }
+        return undefined;
+      });
     }
   }
 
   static async fromVin(vin: VinData) {
-    const envelope = Envelope.fromTxinWitness(vin.txid, vin.witness);
-    if (envelope && envelope.isValid) {
-      return envelope;
+    const envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness);
+    if (envelopes) {
+      return envelopes.map((envelope) => {
+        if (envelope?.isValid) {
+          return envelope;
+        }
+        return undefined;
+      });
     }
   }
 }
