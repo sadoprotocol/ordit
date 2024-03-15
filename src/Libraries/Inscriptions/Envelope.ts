@@ -62,7 +62,7 @@ export class Envelope {
    */
   static fromTransaction(tx: RawTransaction) {
     const envelopes = getEnvelopesDataFromTx(tx);
-    if (envelopes) {
+    if (envelopes && envelopes.length > 0) {
       return envelopes.map(([data, oip], index) => {
         if (data) {
           return new Envelope(tx.txid, data, oip, index);
@@ -74,7 +74,7 @@ export class Envelope {
 
   static fromTxinWitness(txid: string, txinwitness: string[]) {
     const envelopes = getEnvelopesFromTxinWitness(txinwitness);
-    if (envelopes) {
+    if (envelopes && envelopes.length > 0) {
       return envelopes.map(([data, oip], index) => {
         if (data) {
           return new Envelope(txid, data, oip, index);

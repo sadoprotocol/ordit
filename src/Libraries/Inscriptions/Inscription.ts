@@ -45,7 +45,7 @@ export class Inscription {
 
   static async fromTransaction(tx: RawTransaction) {
     const envelopes = Envelope.fromTransaction(tx);
-    if (envelopes) {
+    if (envelopes && envelopes.length > 0) {
       return envelopes.map((envelope) => {
         if (envelope?.isValid) {
           return envelope;
@@ -57,7 +57,7 @@ export class Inscription {
 
   static async fromVin(vin: VinData) {
     const envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness);
-    if (envelopes) {
+    if (envelopes && envelopes.length > 0) {
       return envelopes.map((envelope) => {
         if (envelope?.isValid) {
           return envelope;
