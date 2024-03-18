@@ -43,9 +43,13 @@ export const inscriptionsIndexer: IndexHandler = {
 async function getInscriptions(vins: VinData[]) {
   const envelopes: Envelope[] = [];
   for (const vin of vins) {
-    const envelope = Envelope.fromTxinWitness(vin.txid, vin.witness);
-    if (envelope && envelope.isValid) {
-      envelopes.push(envelope);
+    const _envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness);
+    if (_envelopes) {
+      for (const envelope of _envelopes) {
+        if (envelope && envelope.isValid) {
+          envelopes.push(envelope);
+        }
+      }
     }
   }
 
@@ -69,12 +73,13 @@ async function getInscriptions(vins: VinData[]) {
   return inscriptions;
 }
 
-async function insertInscriptions(rawInscriptions: RawInscription[]) {
+export async function insertInscriptions(rawInscriptions: RawInscription[]) {
   const inscriptions: Inscription[] = [];
 
   for (const inscription of rawInscriptions) {
     const entry: Partial<Inscription> = {
       id: inscription.id,
+      delegate: inscription.delegate,
       creator: inscription.creator,
       owner: inscription.owner,
       sat: inscription.sat,

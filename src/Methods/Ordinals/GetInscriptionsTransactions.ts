@@ -1,12 +1,13 @@
 import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
+import { limiter } from "~Libraries/Limiter";
+import { rpc } from "~Services/Bitcoin";
+
 import { config } from "../../Config";
 import { db } from "../../Database";
 import { schema } from "../../Libraries/Schema";
 import { getExpandedTransaction, parseLocation } from "../../Utilities/Transaction";
-import { rpc } from "~Services/Bitcoin";
-import { limiter } from "~Libraries/Limiter";
 
 export default method({
   params: Schema({
@@ -28,6 +29,7 @@ export default method({
     // get transactions
     const promiseLimiter = limiter<any>(10);
 
+    result.documents = await db.inscriptions.fillDelegateInscriptions(result.documents)
     result.documents.forEach((inscription) => {
       promiseLimiter.push(async () => {
         const [txid] = parseLocation(inscription.outpoint);

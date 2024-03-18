@@ -194,6 +194,7 @@ export type InscriptionData = {
   inscription_sequence: number;
   output_value?: number;
   parent?: string;
+  delegate?: string;
   sat?: number;
   satpoint: string;
   timestamp: number;

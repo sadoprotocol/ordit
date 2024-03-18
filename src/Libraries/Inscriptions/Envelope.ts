@@ -13,6 +13,7 @@ const TYPE_TAG = 81;
 const PARENT_TAG = 83;
 const META_TAG = 85;
 const BODY_TAG = 0;
+const DELEGATE_TAG = 91;
 
 type EnvelopeData = number | Buffer;
 
@@ -27,6 +28,7 @@ export class Envelope {
   readonly protocol?: string;
   readonly type?: string;
   readonly parent?: string;
+  readonly delegate?: string;
   readonly content?: {
     size: number;
     body: string;
@@ -43,11 +45,13 @@ export class Envelope {
     readonly txid: string,
     readonly data: EnvelopeData[],
     readonly oip?: object,
+    readonly index: number = 0,
   ) {
-    this.id = `${txid}i0`;
+    this.id = `${txid}i${index}`;
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.parent = getParent(data);
+    this.delegate = getDelegateTag(data);
     this.content = getEnvelopeContent(data);
     this.media = getMediaMeta(this.type);
     this.meta = getEnvelopeMeta(data) ?? {};
@@ -60,16 +64,26 @@ export class Envelope {
    * @param tx - Raw bitcoin transaction to search for an inscription envelope
    */
   static fromTransaction(tx: RawTransaction) {
-    const [data, oip] = getEnvelopeDataFromTx(tx) ?? [];
-    if (data) {
-      return new Envelope(tx.txid, data, oip);
+    const envelopes = getEnvelopesDataFromTx(tx);
+    if (envelopes && envelopes.length > 0) {
+      return envelopes.map(([data, oip], index) => {
+        if (data) {
+          return new Envelope(tx.txid, data, oip, index);
+        }
+        return undefined;
+      });
     }
   }
 
   static fromTxinWitness(txid: string, txinwitness: string[]) {
-    const [data, oip] = getEnvelopeFromTxinWitness(txinwitness) ?? [];
-    if (data) {
-      return new Envelope(txid, data, oip);
+    const envelopes = getEnvelopesFromTxinWitness(txinwitness);
+    if (envelopes && envelopes.length > 0) {
+      return envelopes.map(([data, oip], index) => {
+        if (data) {
+          return new Envelope(txid, data, oip, index);
+        }
+        return undefined;
+      });
     }
   }
 
@@ -159,6 +173,18 @@ function getParent(data: EnvelopeData[]) {
   return `${parent.reverse().toString("hex")}i0`;
 }
 
+function getDelegateTag(data: EnvelopeData[]) {
+  const startIndex = data.indexOf(DELEGATE_TAG);
+  if (startIndex === -1) {
+    return undefined;
+  }
+  const delegate = data[startIndex + 1];
+  if (!delegate || !isBuffer(delegate)) {
+    return undefined;
+  }
+  return `${delegate.reverse().toString("hex")}i0`;
+}
+
 function getEnvelopeMeta(data: EnvelopeData[]) {
   const startIndex = data.indexOf(META_TAG);
   if (startIndex === -1) {
@@ -184,27 +210,31 @@ function getEnvelopeMeta(data: EnvelopeData[]) {
  |--------------------------------------------------------------------------------
  */
 
-function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | undefined {
+function getEnvelopesDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?][] | undefined {
   for (const vin of tx.vin) {
     if (isCoinbase(vin)) {
       continue;
     }
     if (vin.txinwitness) {
-      return getEnvelopeFromTxinWitness(vin.txinwitness);
+      return getEnvelopesFromTxinWitness(vin.txinwitness);
     }
   }
 }
 
-function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?] | undefined {
+function getEnvelopesFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?][] | undefined {
   for (const witness of txinwitness) {
     if (witness.includes(PROTOCOL_ID)) {
       const data = script.decompile(Buffer.from(witness, "hex"));
       if (data) {
         const oip = getMetaFromWitness(txinwitness);
         if (oip) {
-          return [getEnvelope(data), oip];
+          return getEnvelopes(data).map((envelope) => {
+            return [envelope, oip];
+          });
         }
-        return [getEnvelope(data)];
+        return getEnvelopes(data).map((envelope) => {
+          return [envelope];
+        });
       }
     }
   }
@@ -218,28 +248,30 @@ function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, an
  *
  * @param data - Witness script to extract envelope from.
  */
-function getEnvelope(data: EnvelopeData[]): EnvelopeData[] | undefined {
+function getEnvelopes(data: EnvelopeData[]): EnvelopeData[][] {
+  const envelopes: EnvelopeData[][] = [];
+
   let startIndex = -1;
   let endIndex = -1;
 
-  let index = 0;
-  for (const op of data) {
-    const started = startIndex !== -1;
-    if (started === false && op === ENVELOPE_START_TAG) {
-      startIndex = index;
+  for (let i = 0; i < data.length; i += 1) {
+    if (data[i] === ENVELOPE_START_TAG && startIndex === -1) {
+      startIndex = i;
       continue;
     }
-    if (op === ENVELOPE_END_TAG) {
-      if (started === false) {
-        return [];
-      }
-      endIndex = index;
-      break;
+
+    if (data[i] === ENVELOPE_END_TAG && startIndex !== -1) {
+      endIndex = i;
+
+      envelopes.push(data.slice(startIndex + 1, endIndex));
+
+      // reset for the next envelope
+      startIndex = -1;
+      endIndex = -1;
     }
-    index += 1;
   }
 
-  return data.slice(startIndex + 1, endIndex + 1);
+  return envelopes;
 }
 
 /*

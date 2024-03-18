@@ -9,6 +9,7 @@ import { Envelope } from "./Envelope";
 export class Inscription {
   readonly id: string;
   readonly parent?: string;
+  readonly delegate?: string;
   readonly children?: string[];
   readonly genesis: string;
   readonly creator: string;
@@ -27,6 +28,7 @@ export class Inscription {
   constructor(data: InscriptionData) {
     this.id = data.id;
     this.parent = data.parent;
+    this.delegate = data.delegate;
     this.children = data.children;
     this.genesis = data.genesis;
     this.creator = data.creator;
@@ -44,16 +46,26 @@ export class Inscription {
   }
 
   static async fromTransaction(tx: RawTransaction) {
-    const envelope = Envelope.fromTransaction(tx);
-    if (envelope && envelope.isValid) {
-      return envelope;
+    const envelopes = Envelope.fromTransaction(tx);
+    if (envelopes && envelopes.length > 0) {
+      return envelopes.map((envelope) => {
+        if (envelope?.isValid) {
+          return envelope;
+        }
+        return undefined;
+      });
     }
   }
 
   static async fromVin(vin: VinData) {
-    const envelope = Envelope.fromTxinWitness(vin.txid, vin.witness);
-    if (envelope && envelope.isValid) {
-      return envelope;
+    const envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness);
+    if (envelopes && envelopes.length > 0) {
+      return envelopes.map((envelope) => {
+        if (envelope?.isValid) {
+          return envelope;
+        }
+        return undefined;
+      });
     }
   }
 }
@@ -78,6 +90,7 @@ export async function getInscriptionFromEnvelope(
   return new Inscription({
     id: envelope.id,
     parent: envelope.parent,
+    delegate: envelope.delegate,
     children: [],
     genesis: envelope.txid,
     creator: await getInscriptionCreator(envelope.txid),
@@ -123,6 +136,7 @@ async function getInscriptionOwner(txid: string, n: number) {
 type InscriptionData = {
   id: string;
   parent?: string;
+  delegate?: string;
   children?: string[];
   genesis: string;
   creator: string;
