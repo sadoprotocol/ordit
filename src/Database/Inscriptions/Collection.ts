@@ -56,6 +56,7 @@ export const registrar: CollectionRegistrar = {
 export type Inscription = {
   id: string;
   parent?: string;
+  delegate?: string;
   children: string[];
   creator: string;
   owner?: string;

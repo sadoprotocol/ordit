@@ -34,7 +34,7 @@ export default method({
       result.documents = await includeInscriptionValue(result.documents);
     }
     return {
-      inscriptions: result.documents,
+      inscriptions: await db.inscriptions.fillDelegateInscriptions(result.documents),
       pagination: result.pagination,
     };
   },

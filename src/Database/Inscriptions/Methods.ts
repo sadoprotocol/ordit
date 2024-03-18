@@ -26,6 +26,7 @@ export const inscriptions = {
   hasInscriptions,
   getInscriptionById,
   getInscriptionsByOutpoint,
+  fillDelegateInscriptions,
 
   // ### Indexer Methods
 
@@ -107,7 +108,7 @@ async function getInscriptionById(id: string) {
     return undefined;
   }
   inscription.mediaContent = `${config.api.uri}/content/${inscription.id}`;
-  return inscription;
+  return (await fillDelegateInscriptions([inscription]))[0];
 }
 
 async function getInscriptionsByOutpoint(outpoint: string) {
@@ -115,6 +116,45 @@ async function getInscriptionsByOutpoint(outpoint: string) {
   for (const inscription of inscriptions) {
     inscription.mediaContent = `${config.api.uri}/content/${inscription.id}`;
   }
+  return await fillDelegateInscriptions(inscriptions);
+}
+
+async function fillDelegateInscriptions<T>(inscriptions: T & Inscription[]) {
+  const delegateIds = inscriptions
+    .filter((inscription) => inscription.delegate)
+    .map((inscription) => inscription.delegate!);
+
+  if (delegateIds.length < 1) {
+    return inscriptions;
+  }
+
+  const delegateInscriptions = await collection
+    .find({ id: { $in: delegateIds } })
+    .limit(delegateIds.length)
+    .toArray();
+
+  if (delegateInscriptions.length < 1) {
+    return inscriptions;
+  }
+
+  const inscriptionMap = new Map(delegateInscriptions.map((inscription) => [inscription.id, inscription]));
+
+  for (let i = 0; i < inscriptions.length; i += 1) {
+    if (!inscriptions[i].delegate) {
+      continue;
+    }
+
+    const data = inscriptionMap.get(inscriptions[i].delegate!);
+    if (data) {
+      inscriptions[i].mimeType = data.mimeType;
+      inscriptions[i].mimeSubtype = data.mimeSubtype;
+      inscriptions[i].mediaType = data.mediaType;
+      inscriptions[i].mediaCharset = data.mediaCharset;
+      inscriptions[i].mediaSize = data.mediaSize;
+      inscriptions[i].mediaContent = data.mediaContent;
+    }
+  }
+
   return inscriptions;
 }
 

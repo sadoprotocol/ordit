@@ -79,6 +79,7 @@ export async function insertInscriptions(rawInscriptions: RawInscription[]) {
   for (const inscription of rawInscriptions) {
     const entry: Partial<Inscription> = {
       id: inscription.id,
+      delegate: inscription.delegate,
       creator: inscription.creator,
       owner: inscription.owner,
       sat: inscription.sat,

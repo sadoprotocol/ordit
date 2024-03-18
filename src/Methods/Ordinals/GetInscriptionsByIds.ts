@@ -9,12 +9,14 @@ export default method({
     ids: array.of(string),
   }),
   handler: async ({ ids }) => {
-    return db.inscriptions.find({ id: { $in: ids } }).then((inscriptions) => {
+    const inscriptions = await db.inscriptions.find({ id: { $in: ids } }).then((inscriptions) => {
       return inscriptions.map((inscription) => {
         delete (inscription as any)._id;
         inscription.mediaContent = `${config.api.uri}/content/${inscription.id}`;
         return inscription;
       });
     });
+
+    return db.inscriptions.fillDelegateInscriptions(inscriptions)
   },
 });

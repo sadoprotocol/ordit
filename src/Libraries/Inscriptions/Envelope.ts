@@ -13,6 +13,7 @@ const TYPE_TAG = 81;
 const PARENT_TAG = 83;
 const META_TAG = 85;
 const BODY_TAG = 0;
+const DELEGATE_TAG = 91;
 
 type EnvelopeData = number | Buffer;
 
@@ -27,6 +28,7 @@ export class Envelope {
   readonly protocol?: string;
   readonly type?: string;
   readonly parent?: string;
+  readonly delegate?: string;
   readonly content?: {
     size: number;
     body: string;
@@ -49,6 +51,7 @@ export class Envelope {
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.parent = getParent(data);
+    this.delegate = getDelegateTag(data);
     this.content = getEnvelopeContent(data);
     this.media = getMediaMeta(this.type);
     this.meta = getEnvelopeMeta(data) ?? {};
@@ -168,6 +171,18 @@ function getParent(data: EnvelopeData[]) {
     return undefined;
   }
   return `${parent.reverse().toString("hex")}i0`;
+}
+
+function getDelegateTag(data: EnvelopeData[]) {
+  const startIndex = data.indexOf(DELEGATE_TAG);
+  if (startIndex === -1) {
+    return undefined;
+  }
+  const delegate = data[startIndex + 1];
+  if (!delegate || !isBuffer(delegate)) {
+    return undefined;
+  }
+  return `${delegate.reverse().toString("hex")}i0`;
 }
 
 function getEnvelopeMeta(data: EnvelopeData[]) {
