@@ -58,7 +58,7 @@ async function main() {
     // try to reindex the transaction if the index 1 exist
     let ordData: InscriptionData | undefined;
     try {
-      ordData = await ord.getInscription(`${inscription.genesis}i1 \n`);
+      ordData = await ord.getInscription(`${inscription.genesis}i1`);
     } catch (error) {
       if (error?.message !== "Not found") {
         log(error);
