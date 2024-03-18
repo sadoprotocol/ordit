@@ -85,12 +85,14 @@ function getMongoUri(mongoConfig: {
   database: string;
   username: string;
   password: string;
+  directConnection: boolean;
 }) {
-  const { hostname, port, username, password } = mongoConfig;
+  const { hostname, port, username, password, directConnection } = mongoConfig;
+  const options = directConnection ? "?directConnection=true" : "";
   if (username && password) {
-    return `mongodb://${username}:${password}@${hostname}:${port}`;
+    return `mongodb://${username}:${password}@${hostname}:${port}${options}`;
   }
-  return `mongodb://${hostname}:${port}`;
+  return `mongodb://${hostname}:${port}${options}`;
 }
 
 async function getCollectionsSet() {
