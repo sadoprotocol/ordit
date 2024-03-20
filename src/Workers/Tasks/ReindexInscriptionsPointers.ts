@@ -66,7 +66,11 @@ async function main() {
     }
     if (ordData) {
       log(`index 1 exist for inscription id: ${inscription.id}, try to reindex txid: ${inscription.genesis} \n`);
-      await reIndexInscriptionsTx(inscription.genesis);
+      try {
+        await reIndexInscriptionsTx(inscription.genesis);
+      } catch (e) {
+        log(e);
+      }
     }
     count += 1;
   }
