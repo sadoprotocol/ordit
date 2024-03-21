@@ -26,18 +26,23 @@ async function main() {
           log(error);
         }
       }
-      if (ordData) {
-        if (ordData.delegate) {
-          log(`found delegate inscription: ${ordData.delegate}, update inscription data: ${inscription.id} \n`);
-          await db.inscriptions.updateOne(
-            { _id: inscription._id },
-            {
-              $set: {
-                delegate: ordData.delegate,
+
+      try {
+        if (ordData) {
+          if (ordData.delegate) {
+            log(`found delegate inscription: ${ordData.delegate}, update inscription data: ${inscription.id} \n`);
+            await db.inscriptions.updateOne(
+              { _id: inscription._id },
+              {
+                $set: {
+                  delegate: ordData.delegate,
+                },
               },
-            },
-          );
+            );
+          }
         }
+      } catch (e) {
+        log(e);
       }
     }
     count += 1;
