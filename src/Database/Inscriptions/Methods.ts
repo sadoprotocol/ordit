@@ -151,7 +151,6 @@ async function fillDelegateInscriptions<T>(inscriptions: T & Inscription[]) {
       inscriptions[i].mediaType = data.mediaType;
       inscriptions[i].mediaCharset = data.mediaCharset;
       inscriptions[i].mediaSize = data.mediaSize;
-      inscriptions[i].mediaContent = data.mediaContent;
     }
   }
 

@@ -30,6 +30,17 @@ async function getByInscriptionId(inscriptionId: string): Promise<WithId<MediaDo
     timestamp: inscription.timestamp,
   };
 
+  if (inscription.delegate) {
+    const delegateInscription = await inscriptions.findOne({ id: inscription.delegate });
+    if (delegateInscription === undefined) {
+      throw new Error(`No delegate inscription found for ${inscription.delegate}.`);
+    }
+
+    document.type = delegateInscription.mediaType;
+    document.size = delegateInscription.mediaSize;
+    document.content = delegateInscription.mediaContent;
+  }
+
   const result = await collection.insertOne(document);
   return {
     _id: result.insertedId,
