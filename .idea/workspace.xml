@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="fix(indexing): multiple witness">
+      <change beforePath="$PROJECT_DIR$/src/Routes/Content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Routes/Content.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="jj/dont_include_txt_pointers" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="5" />
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="main" />
+                    <option name="lastUsedInstant" value="1711099501" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="jj/dont_include_txt_pointers" />
+                    <option name="lastUsedInstant" value="1711093051" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="jj/envvv" />
+                    <option name="lastUsedInstant" value="1711084457" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="jj/envelope_update" />
+                    <option name="lastUsedInstant" value="1711083527" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2dx7fvSdUjohSm3cr0y6joghB2B" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="openDirectoriesWithSingleClick" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/josejaimeadonis/Documents/repos/sado-protocol/ordit",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-impl/jsLanguageServicesImpl/external",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="" />
+      <created>1710937981855</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1710937981855</updated>
+      <workItem from="1710937983433" duration="720000" />
+      <workItem from="1711009896304" duration="1261000" />
+      <workItem from="1711012251054" duration="14000" />
+      <workItem from="1711082863517" duration="1636000" />
+      <workItem from="1711084521327" duration="5917000" />
+    </task>
+    <task id="LOCAL-00001" summary="chore(ops): add try catch for indexers">
+      <option name="closed" value="true" />
+      <created>1710938085334</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1710938085334</updated>
+    </task>
+    <task id="LOCAL-00002" summary="fix(indexing): multiple witness">
+      <option name="closed" value="true" />
+      <created>1711083725905</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1711083725905</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fix(indexing): multiple witness">
+      <option name="closed" value="true" />
+      <created>1711084135528</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1711084135528</updated>
+    </task>
+    <task id="LOCAL-00004" summary="fix(indexing): multiple witness">
+      <option name="closed" value="true" />
+      <created>1711084987625</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1711084987625</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="chore(ops): add try catch for indexers" />
+    <MESSAGE value="fix(indexing): multiple witness" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(indexing): multiple witness" />
+  </component>
+</project>
