@@ -187,6 +187,7 @@ export type InscriptionData = {
   children: string[];
   content_length?: number;
   content_type?: string;
+  content_encoding?: string;
   genesis_fee: number;
   genesis_height: number;
   inscription_id: string;
