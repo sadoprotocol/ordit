@@ -16,6 +16,7 @@ export const registrar: CollectionRegistrar = {
 export type MediaDocument = {
   outpoint: string;
   type: string;
+  encoding: string;
   size: number;
   content: string;
   number: number;

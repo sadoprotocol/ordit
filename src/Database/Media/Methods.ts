@@ -24,6 +24,7 @@ async function getByInscriptionId(inscriptionId: string): Promise<WithId<MediaDo
   const document: MediaDocument = {
     outpoint,
     type: inscription.mediaType,
+    encoding: inscription.mediaEncoding,
     size: inscription.mediaSize,
     content: inscription.mediaContent,
     number: inscription.number,
