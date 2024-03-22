@@ -32,8 +32,11 @@ fastify.get(
         "default-src *:*/content/ *:*/blockheight *:*/blockhash *:*/blockhash/ *:*/blocktime 'unsafe-eval' 'unsafe-inline' data: blob:",
       )
       .header("Content-Type", media.type)
-      .header("Content-Length", buffer.length)
-      .header("Content-Encoding", media.encoding);
+      .header("Content-Length", buffer.length);
+    if (media.encoding) {
+      rep.header("Content-Encoding", media.encoding);
+    }
+
     rep.send(buffer);
   },
 );

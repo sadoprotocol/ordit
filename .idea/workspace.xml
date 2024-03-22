@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="fix(indexing): multiple witness">
+    <list default="true" id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="chore(api): update content">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Routes/Content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Routes/Content.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,7 +102,7 @@
       <workItem from="1711009896304" duration="1261000" />
       <workItem from="1711012251054" duration="14000" />
       <workItem from="1711082863517" duration="1636000" />
-      <workItem from="1711084521327" duration="5917000" />
+      <workItem from="1711084521327" duration="6445000" />
     </task>
     <task id="LOCAL-00001" summary="chore(ops): add try catch for indexers">
       <option name="closed" value="true" />
@@ -136,7 +136,15 @@
       <option name="project" value="LOCAL" />
       <updated>1711084987625</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="chore(api): update content">
+      <option name="closed" value="true" />
+      <created>1711100946797</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1711100946797</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -167,6 +175,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="chore(ops): add try catch for indexers" />
     <MESSAGE value="fix(indexing): multiple witness" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix(indexing): multiple witness" />
+    <MESSAGE value="chore(api): update content" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore(api): update content" />
   </component>
 </project>
