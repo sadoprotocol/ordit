@@ -211,19 +211,14 @@ function getEnvelopeMeta(data: EnvelopeData[]) {
  */
 
 function getEnvelopesDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?][] | undefined {
-  const envelopes = [];
   for (const vin of tx.vin) {
     if (isCoinbase(vin)) {
       continue;
     }
     if (vin.txinwitness) {
-      const envelope =  getEnvelopesFromTxinWitness(vin.txinwitness);
-      if (envelope) {
-        envelopes.push(...envelope);
-      }
+      return getEnvelopesFromTxinWitness(vin.txinwitness);
     }
   }
-  return envelopes;
 }
 
 function getEnvelopesFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?][] | undefined {
