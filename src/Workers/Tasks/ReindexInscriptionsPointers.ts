@@ -12,6 +12,7 @@ async function reIndexInscriptionsTx(txid: string) {
   const envelopes: Envelope[] = [];
   const _envelopes = Envelope.fromTransaction(rawTx);
   if (_envelopes) {
+    console.log(_envelopes.length);
     for (const envelope of _envelopes) {
       if (envelope && envelope.isValid) {
         envelopes.push(envelope);
@@ -46,7 +47,7 @@ async function main() {
 
   let count = 0;
 
-  const cursor = db.inscriptions.collection.find({}, { sort: { _id: -1 } });
+  const cursor = db.inscriptions.collection.find({ id: { $eq: 'a36f1b708e83f9dae5f27be1a35d31b571caf3e917045803e85079e75014dd4di0' }});
   while (await cursor.hasNext()) {
     const inscription = await cursor.next();
     if (inscription === null) {
