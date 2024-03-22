@@ -64,6 +64,7 @@ export type Inscription = {
   mimeType: string;
   mimeSubtype: string;
   mediaType: string;
+  mediaEncoding: string;
   mediaCharset: string;
   mediaSize: number;
   mediaContent: string;

@@ -21,7 +21,7 @@ fastify.get(
   async (request: MediaRequest, reply) => {
     const media = await db.media.getByInscriptionId(request.params.inscription);
     const buffer = Buffer.from(media.content, "base64");
-    reply
+    const rep = reply
       .code(200)
       .header("X-Frame-Options", "ALLOWALL")
       .header("Access-Control-Allow-Origin", "*")
@@ -32,7 +32,11 @@ fastify.get(
         "default-src *:*/content/ *:*/blockheight *:*/blockhash *:*/blockhash/ *:*/blocktime 'unsafe-eval' 'unsafe-inline' data: blob:",
       )
       .header("Content-Type", media.type)
-      .header("Content-Length", buffer.length)
-      .send(buffer);
+      .header("Content-Length", buffer.length);
+    if (media.encoding) {
+      rep.header("Content-Encoding", media.encoding);
+    }
+
+    rep.send(buffer);
   },
 );

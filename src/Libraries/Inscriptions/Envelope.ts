@@ -10,6 +10,7 @@ const ENVELOPE_END_TAG = 104;
 
 const PROTOCOL_TAG = 99;
 const TYPE_TAG = 81;
+const ENCODING_TAG = 89;
 const PARENT_TAG = 83;
 const META_TAG = 85;
 const BODY_TAG = 0;
@@ -27,6 +28,7 @@ export class Envelope {
   readonly id: string;
   readonly protocol?: string;
   readonly type?: string;
+  readonly encoding?: string;
   readonly parent?: string;
   readonly delegate?: string;
   readonly content?: {
@@ -35,6 +37,7 @@ export class Envelope {
   };
   readonly media: {
     type: string;
+    encoding: string;
     charset: string;
     mimeType: string;
     mimeSubtype: string;
@@ -50,10 +53,11 @@ export class Envelope {
     this.id = `${txid}i${index}`;
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
+    this.encoding = getEnvelopeEncoding(data);
     this.parent = getParent(data);
     this.delegate = getDelegateTag(data);
     this.content = getEnvelopeContent(data);
-    this.media = getMediaMeta(this.type);
+    this.media = getMediaMeta(this.type, this.encoding);
     this.meta = getEnvelopeMeta(data) ?? {};
   }
 
@@ -142,6 +146,18 @@ function getEnvelopeType(data: EnvelopeData[]) {
   return type.toString("utf-8");
 }
 
+function getEnvelopeEncoding(data: EnvelopeData[]) {
+  const startIndex = data.indexOf(ENCODING_TAG);
+  if (startIndex === -1) {
+    return undefined;
+  }
+  const encoding = data[startIndex + 1];
+  if (!encoding || !isBuffer(encoding)) {
+    return undefined;
+  }
+  return encoding.toString("utf-8");
+}
+
 function getEnvelopeContent(data: EnvelopeData[]) {
   const startIndex = data.indexOf(BODY_TAG);
   if (startIndex === -1) {
@@ -217,7 +233,7 @@ function getEnvelopesDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?][] |
       continue;
     }
     if (vin.txinwitness) {
-      const envelope =  getEnvelopesFromTxinWitness(vin.txinwitness);
+      const envelope = getEnvelopesFromTxinWitness(vin.txinwitness);
       if (envelope) {
         envelopes.push(...envelope);
       }
@@ -285,12 +301,13 @@ function getEnvelopes(data: EnvelopeData[]): EnvelopeData[][] {
  |--------------------------------------------------------------------------------
  */
 
-function getMediaMeta(data: string = "") {
-  const [type, format = ""] = data.split(";");
+function getMediaMeta(dataType: string = "", dataEncoding: string = "") {
+  const [type, format = ""] = dataType.split(";");
   const [mimeType, mimeSubtype] = type.split("/");
   const [, charset = ""] = format.split("=");
   return {
     type,
+    encoding: dataEncoding,
     charset,
     mimeType,
     mimeSubtype,

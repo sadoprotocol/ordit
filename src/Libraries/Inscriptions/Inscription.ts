@@ -97,6 +97,7 @@ export async function getInscriptionFromEnvelope(
     owner: await getInscriptionOwner(locationTxid, locationN),
     media: {
       type: envelope.media.type ?? "",
+      encoding: envelope.media.encoding ?? "",
       charset: envelope.media.charset,
       mime: {
         type: envelope.media.mimeType,
@@ -155,6 +156,7 @@ type InscriptionData = {
 
 type InscriptionMedia = {
   type: string;
+  encoding: string;
   charset: string;
   mime: {
     type: string;

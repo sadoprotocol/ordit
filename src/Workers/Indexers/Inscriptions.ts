@@ -86,6 +86,7 @@ export async function insertInscriptions(rawInscriptions: RawInscription[]) {
       mimeType: inscription.media.mime.type,
       mimeSubtype: inscription.media.mime.subtype,
       mediaType: inscription.media.type,
+      mediaEncoding: inscription.media.encoding,
       mediaCharset: inscription.media.charset,
       mediaSize: inscription.media.size,
       mediaContent: inscription.media.content,
