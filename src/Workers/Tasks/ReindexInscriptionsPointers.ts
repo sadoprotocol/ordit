@@ -12,7 +12,7 @@ async function reIndexInscriptionsTx(txid: string) {
   const envelopes: Envelope[] = [];
   const _envelopes = Envelope.fromTransaction(rawTx);
   if (_envelopes) {
-    console.log(_envelopes.length);
+    console.log(`Length; ` + _envelopes.length);
     for (const envelope of _envelopes) {
       if (envelope && envelope.isValid) {
         envelopes.push(envelope);
