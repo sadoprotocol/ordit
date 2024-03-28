@@ -6,7 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="chore(api): update content">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Routes/Content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Routes/Content.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.nvmrc" beforeDir="false" afterPath="$PROJECT_DIR$/.nvmrc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,7 +90,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-impl/jsLanguageServicesImpl/external",
+    "ts.external.directory.path": "/Users/josejaimeadonis/Documents/repos/sado-protocol/ordit/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -103,6 +107,10 @@
       <workItem from="1711012251054" duration="14000" />
       <workItem from="1711082863517" duration="1636000" />
       <workItem from="1711084521327" duration="6445000" />
+      <workItem from="1711431921580" duration="613000" />
+      <workItem from="1711433414172" duration="599000" />
+      <workItem from="1711459229303" duration="635000" />
+      <workItem from="1711522343014" duration="2157000" />
     </task>
     <task id="LOCAL-00001" summary="chore(ops): add try catch for indexers">
       <option name="closed" value="true" />
