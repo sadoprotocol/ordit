@@ -94,7 +94,7 @@ MONGO_DATABASE="bitcoin-regtest"
 MONGO_USERNAME=""
 MONGO_PASSWORD=""
 MONGO_SRV_CONNECTION=false              # Set to true if using MongoDB Atlas
-MONGO_DIRECTION_CONNECTION=false
+MONGO_DIRECT_CONNECTION=false
 
 # deployed database, is the current database used by the public RPC (mainnet/testnet).
 # used for task script only, ex: for migration spent flag from previous active db to the new one
@@ -104,7 +104,7 @@ DEPLOYED_MONGO_DATABASE="bitcoin-regtest"
 DEPLOYED_MONGO_USERNAME=""
 DEPLOYED_MONGO_PASSWORD=""
 DEPLOYED_MONGO_SRV_CONNECTION=false     # Set to true if using MongoDB Atlas
-DEPLOYED_MONGO_DIRECTION_CONNECTION=false
+DEPLOYED_MONGO_DIRECT_CONNECTION=false
 
 #------------------------------------------------------------
 # REGTEST

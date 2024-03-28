@@ -48,6 +48,7 @@ export const config = {
     database: getEnvironmentVariable("MONGO_DATABASE"),
     username: getEnvironmentVariable("MONGO_USERNAME"),
     password: getEnvironmentVariable("MONGO_PASSWORD"),
+    srvConnection: getEnvironmentVariable("MONGO_SRV_CONNECTION", envToBoolean),
     directConnection: getEnvironmentVariable("MONGO_DIRECT_CONNECTION", envToBoolean),
   },
   // deployed database, is the current database used by the public RPC (mainnet/testnet).
@@ -58,6 +59,7 @@ export const config = {
     database: getEnvironmentVariable("DEPLOYED_MONGO_DATABASE"),
     username: getEnvironmentVariable("DEPLOYED_MONGO_USERNAME"),
     password: getEnvironmentVariable("DEPLOYED_MONGO_PASSWORD"),
+    srvConnection: getEnvironmentVariable("DEPLOYED_MONGO_SRV_CONNECTION", envToBoolean),
     directConnection: getEnvironmentVariable("DEPLOYED_MONGO_DIRECT_CONNECTION", envToBoolean),
   },
   faucet: {
