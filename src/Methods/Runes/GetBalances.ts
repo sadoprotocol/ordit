@@ -9,9 +9,9 @@ import { noSpentsFilter } from "../../Database/Output/Utilities";
 export default method({
   params: Schema({
     address: string,
-    showOutpoint: boolean.optional(),
+    showOutpoints: boolean.optional(),
   }),
-  handler: async ({ address, showOutpoint }) => {
+  handler: async ({ address, showOutpoints }) => {
     const outputs = await db.outputs.find({ addresses: address, ...noSpentsFilter });
     if (!outputs) {
       return [];
@@ -35,7 +35,7 @@ export default method({
         let outpoints: [string, string][] | undefined;
 
         if (runeMap) {
-          if (showOutpoint) {
+          if (showOutpoints) {
             outpoints = [...runeMap.outpoints!, [outpoint, runeOutput.amount]];
           }
 
@@ -48,7 +48,7 @@ export default method({
           continue;
         }
 
-        if (showOutpoint) {
+        if (showOutpoints) {
           outpoints = [[outpoint, runeOutput.amount]];
         }
 
