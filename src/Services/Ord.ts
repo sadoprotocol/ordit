@@ -245,13 +245,14 @@ export type RuneDetailMint = {
 
 export type RuneDetail = {
   rune_id: string;
+  rune: string;
+  rune_spaced: string;
   burned?: string;
   divisibility: number;
   etching: string;
   mint?: RuneDetailMint;
   mints: string;
   number: string;
-  rune: string;
   spacers: number;
   supply: string;
   symbol?: string;
@@ -259,7 +260,7 @@ export type RuneDetail = {
 };
 
 export type RuneOutputBalance = {
-  rune: string;
+  rune_spaced: string;
   amount: string;
   divisibility: number;
   symbol?: string;
