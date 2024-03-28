@@ -53,7 +53,7 @@ export default method({
         }
 
         runeBalancesMap.set(runeOutput.rune, {
-          name: runeOutput.rune,
+          rune: runeOutput.rune,
           amount: runeOutput.amount,
           divisibility: runeOutput.divisibility,
           symbol: runeOutput.symbol,
@@ -67,7 +67,7 @@ export default method({
 });
 
 type RuneBalance = {
-  name: string;
+  rune: string;
   amount: string;
   divisibility: number;
   symbol?: string;
