@@ -258,7 +258,7 @@ export type RuneDetail = {
   terms?: RuneDetailTerms;
   symbol?: string;
   burned?: string;
-  timestamp: number;
+  timestamp: string;
 };
 
 export type RuneOutputBalance = {
