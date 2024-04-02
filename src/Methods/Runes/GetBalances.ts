@@ -31,7 +31,7 @@ export default method({
       for (let j = 0; j < runeOutputBalances.length; j += 1) {
         const runeOutput = runeOutputBalances[j];
 
-        const runeMap = runeBalancesMap.get(runeOutput.rune_spaced);
+        const runeMap = runeBalancesMap.get(runeOutput.spaced_rune);
         let outpoints: [string, string][] | undefined;
 
         if (runeMap) {
@@ -39,7 +39,7 @@ export default method({
             outpoints = [...runeMap.outpoints!, [outpoint, runeOutput.amount]];
           }
 
-          runeBalancesMap.set(runeOutput.rune_spaced, {
+          runeBalancesMap.set(runeOutput.spaced_rune, {
             ...runeMap,
             amount: (BigInt(runeMap.amount) + BigInt(runeOutput.amount)).toString(),
             outpoints,
@@ -52,8 +52,8 @@ export default method({
           outpoints = [[outpoint, runeOutput.amount]];
         }
 
-        runeBalancesMap.set(runeOutput.rune_spaced, {
-          rune_spaced: runeOutput.rune_spaced,
+        runeBalancesMap.set(runeOutput.spaced_rune, {
+          spaced_rune: runeOutput.spaced_rune,
           amount: runeOutput.amount,
           divisibility: runeOutput.divisibility,
           symbol: runeOutput.symbol,
@@ -67,7 +67,7 @@ export default method({
 });
 
 type RuneBalance = {
-  rune_spaced: string;
+  spaced_rune: string;
   amount: string;
   divisibility: number;
   symbol?: string;

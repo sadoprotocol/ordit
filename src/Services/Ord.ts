@@ -237,30 +237,32 @@ export type Ordinal = {
   size: number;
 };
 
-export type RuneDetailMint = {
-  deadline?: number;
-  end?: number;
-  limit?: string;
+export type RuneDetailTerms = {
+  amount?: string;
+  cap?: string;
+  height?: [string | null, string | null];
+  offset?: [string | null, string | null];
 };
 
 export type RuneDetail = {
   rune_id: string;
   rune: string;
-  rune_spaced: string;
-  burned?: string;
+  spaced_rune: string;
+  mintable: boolean;
+  block: string;
   divisibility: number;
   etching: string;
-  mint?: RuneDetailMint;
   mints: string;
   number: string;
-  spacers: number;
-  supply: string;
+  premine: string;
+  terms?: RuneDetailTerms;
   symbol?: string;
+  burned?: string;
   timestamp: number;
 };
 
 export type RuneOutputBalance = {
-  rune_spaced: string;
+  spaced_rune: string;
   amount: string;
   divisibility: number;
   symbol?: string;
