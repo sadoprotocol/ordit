@@ -9,12 +9,13 @@ export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythi
 
 export const ord = {
   getHeight,
-  getOutputs,
   getOrdinals,
   getInscription,
   getInscriptionsForIds,
   waitForBlock,
   waitForInscriptions,
+  getRuneDetail,
+  getRuneOutputsBalancesByOutpoints,
 };
 
 class OrdError extends Error {
@@ -41,12 +42,9 @@ async function getHeight(): Promise<number> {
   return call<number>("/blockheight");
 }
 
-async function getOutputs(outpoints: string[]): Promise<any[]> {
-  return call<any[]>(`/outputs`, { outpoints });
-}
-
 /**
  * Get all ordinals listed for the given outpoint.
+ * Ordzaar ord custom api
  *
  * @param outpoint - Outpoint to get ordinals for.
  */
@@ -72,6 +70,7 @@ async function getInscription(id: string) {
 
 /**
  * Get inscription data for the given ids.
+ *  Ordzaar ord custom api
  *
  * @param ids - Inscription ids.
  */
@@ -111,6 +110,26 @@ async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<vo
     console.log(error);
   }
   return sleep(seconds).then(() => waitForInscriptions(blockHeight, seconds));
+}
+
+/**
+ * Get rune detail data for the given rune id or name.
+ * Ordzaar ord custom api
+ *
+ * @param runeQuery - Rune id or name, example: "INDOMIE.GORENG" or "2581611:1558".
+ */
+async function getRuneDetail(runeQuery: string) {
+  return call<RuneDetail>(`/ordzaar/rune/${runeQuery}`);
+}
+
+/**
+ * Get rune balance data for the given outpoints.
+ * Ordzaar ord custom api
+ *
+ * @param outpoints - Outpoints, example: ["dd454c47c4a57867e48bc063e2feba8b3ce54cb4dc17c294a12b13cb48382d51:2"]
+ */
+async function getRuneOutputsBalancesByOutpoints(outpoints: string[]) {
+  return call<{ [key: string]: RuneOutputBalance[] }>(`/ordzaar/rune/outputs/bulk?outpoints=${outpoints.join(",")}`);
 }
 
 /*
@@ -216,6 +235,37 @@ export type Ordinal = {
   start: number;
   end: number;
   size: number;
+};
+
+export type RuneDetailTerms = {
+  amount?: string;
+  cap?: string;
+  height?: [string | null, string | null];
+  offset?: [string | null, string | null];
+};
+
+export type RuneDetail = {
+  rune_id: string;
+  rune: string;
+  spaced_rune: string;
+  mintable: boolean;
+  block: string;
+  divisibility: number;
+  etching: string;
+  mints: string;
+  number: string;
+  premine: string;
+  terms?: RuneDetailTerms;
+  symbol?: string;
+  burned?: string;
+  timestamp: string;
+};
+
+export type RuneOutputBalance = {
+  spaced_rune: string;
+  amount: string;
+  divisibility: number;
+  symbol?: string;
 };
 
 export type Rarity = (typeof rarity)[number];
