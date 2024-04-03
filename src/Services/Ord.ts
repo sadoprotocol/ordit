@@ -16,6 +16,7 @@ export const ord = {
   waitForInscriptions,
   getRuneDetail,
   getRuneOutputsBalancesByOutpoints,
+  getRuneOutputsBalancesByOutpoint,
 };
 
 class OrdError extends Error {
@@ -132,6 +133,16 @@ async function getRuneOutputsBalancesByOutpoints(outpoints: string[]) {
   return call<{ [key: string]: RuneOutputBalance[] }>(`/ordzaar/rune/outputs/bulk?outpoints=${outpoints.join(",")}`);
 }
 
+/**
+ * Get rune balance data for the given outpoint.
+ * Ordzaar ord custom api
+ *
+ * @param outpoints - Outpoints, example: "dd454c47c4a57867e48bc063e2feba8b3ce54cb4dc17c294a12b13cb48382d51:2"
+ */
+async function getRuneOutputsBalancesByOutpoint(outpoint: string) {
+  return call<{ [key: string]: RuneOutputBalance }>(`/ordzaar/rune/output/${outpoint}`);
+}
+
 /*
  |--------------------------------------------------------------------------------
  | Methods
@@ -171,6 +182,7 @@ async function call<R>(path: string, data?: any): Promise<R> {
 export function getSafeToSpendState(
   ordinals: any[],
   inscriptions: any[],
+  runeBalances: { [key: string]: RuneOutputBalance },
   allowedRarity: Rarity[] = ["common", "uncommon"],
 ): boolean {
   if (inscriptions.length > 0 || ordinals.length === 0) {
@@ -180,6 +192,9 @@ export function getSafeToSpendState(
     if (allowedRarity.includes(ordinal.rarity) === false) {
       return false;
     }
+  }
+  if (Object.keys(runeBalances).length > 0) {
+    return false;
   }
   return true;
 }

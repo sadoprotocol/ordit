@@ -38,6 +38,7 @@ export default method({
 
     const entries = Object.entries(runeOutputsBalances);
 
+    // TODO: select the proper output based on the nearest amount
     for (let i = 0; i < entries.length; i += 1) {
       if (totalAmount >= amountBigint) {
         break;

@@ -43,9 +43,13 @@ export default method({
 
       if (safetospend === true) {
         const outpoint = `${output.vout.txid}:${output.vout.n}`;
-        const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
-        const ordinals = await ord.getOrdinals(`${output.vout.txid}:${output.vout.n}`);
-        if (getSafeToSpendState(ordinals, inscriptions) === false) {
+        const [inscriptions, ordinals, runeBalances] = await Promise.all([
+          db.inscriptions.getInscriptionsByOutpoint(outpoint),
+          ord.getOrdinals(outpoint),
+          ord.getRuneOutputsBalancesByOutpoint(outpoint),
+        ]);
+
+        if (getSafeToSpendState(ordinals, inscriptions, runeBalances) === false) {
           continue;
         }
         safeToSpend += 1;
