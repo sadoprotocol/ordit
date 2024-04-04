@@ -29,7 +29,7 @@ fastify.get(
       .header("Content-Security-Policy", "default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob:")
       .header(
         "Content-Security-Policy",
-        "default-src *:*/content/ *:*/blockheight *:*/blockhash *:*/blockhash/ *:*/blocktime 'unsafe-eval' 'unsafe-inline' data: blob:",
+        "default-src 'self' *:*/content/ *:*/blockheight *:*/blockhash *:*/blockhash/ *:*/blocktime 'unsafe-eval' 'unsafe-inline' data: blob:",
       )
       .header("Content-Type", media.type)
       .header("Content-Length", buffer.length);

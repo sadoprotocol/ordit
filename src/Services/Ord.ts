@@ -142,7 +142,6 @@ async function getRuneOutputsBalancesByOutpoints(outpoints: string[]) {
 async function getRuneOutputsBalancesByOutpoint(outpoint: string) {
   return call<{ [key: string]: RuneOutputBalance }>(`/ordzaar/rune/output/${outpoint}`);
 }
-
 /*
  |--------------------------------------------------------------------------------
  | Methods
