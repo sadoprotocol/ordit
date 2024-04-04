@@ -17,7 +17,7 @@ export default method({
   }),
   handler: async ({ address, showOutpoints, utxo }) => {
     const outputs = await db.outputs.find({ addresses: address, ...noSpentsFilter });
-    if (!outputs) {
+    if (!outputs.length) {
       return [];
     }
 
