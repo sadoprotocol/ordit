@@ -12,10 +12,10 @@ import { btcToSat } from "../../Utilities/Bitcoin";
 export default method({
   params: Schema({
     address: string,
-    spaced_rune: string,
+    spacedRune: string,
     amount: string,
   }),
-  handler: async ({ address, spaced_rune, amount }) => {
+  handler: async ({ address, spacedRune, amount }) => {
     if (isNaN(amount as any)) {
       throw new BadRequestError("Amount is not a valid number / bigint");
     }
@@ -38,14 +38,14 @@ export default method({
 
     const entries = Object.entries(runeOutputsBalances);
 
-    // TODO: select the proper output based on the nearest amount
+    // TODO: select the proper output based on the sum of nearest amount
     for (let i = 0; i < entries.length; i += 1) {
       if (totalAmount >= amountBigint) {
         break;
       }
       for (let j = 0; j < entries[i][1].length; j++) {
         const outputBalance = entries[i][1][j];
-        if (outputBalance.spaced_rune === spaced_rune) {
+        if (outputBalance.spaced_rune === spacedRune) {
           totalAmount += BigInt(outputBalance.amount);
           // 1 output only possible to has 1 kind of rune
           // TODO: check if it is possible 1 output has multiple rune?
