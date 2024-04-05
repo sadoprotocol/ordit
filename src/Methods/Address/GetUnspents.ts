@@ -82,14 +82,19 @@ export default method({
       }
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
-      const ordinals = await ord.getOrdinals(outpoint);
-      const inscriptions = await db.inscriptions.getInscriptionsByOutpoint(outpoint);
+
+      const [inscriptions, ordinals, runeBalances] = await Promise.all([
+        db.inscriptions.getInscriptionsByOutpoint(outpoint),
+        ord.getOrdinals(outpoint),
+        ord.getRuneOutputsBalancesByOutpoint(outpoint),
+      ]);
 
       // DEPRECATED, REMOVE WHEN CLIENT CATCHES UP
       utxo.ordinals = ordinals;
       utxo.inscriptions = inscriptions;
+      utxo.runes = runeBalances;
 
-      utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, options?.allowedrarity);
+      utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, runeBalances, options?.allowedrarity);
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {
