@@ -50,6 +50,25 @@ export const registrar: CollectionRegistrar = {
         mediaType: 1,
       },
     ],
+    [
+      {
+        owner: 1,
+      },
+    ],
+    [
+      {
+        outpoint: 1,
+        number: 1,
+        _id: 1,
+      },
+    ],
+    [
+      {
+        mimeType: 1,
+        height: -1,
+        _id: 1,
+      },
+    ],
   ],
 };
 

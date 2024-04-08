@@ -20,6 +20,22 @@ export const registrar: CollectionRegistrar = {
         "vout.block.height": 1,
       },
     ],
+    [
+      {
+        addresses: 1,
+      },
+    ],
+    [
+      {
+        spent: 1,
+      },
+    ],
+    [
+      {
+        "vout.block.height": -1,
+        "vin.block.height": -1,
+      },
+    ],
   ],
 };
 
