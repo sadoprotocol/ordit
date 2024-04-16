@@ -1,3 +1,3 @@
 export * from "./Collection";
 export * from "./Methods";
-export * from "./Utilities";
+export * from "../Inscriptions/Utilities";

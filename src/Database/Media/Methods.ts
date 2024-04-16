@@ -1,8 +1,8 @@
 import { WithId } from "mongodb";
 
 import { inscriptions } from "../Inscriptions";
+import { getOutpointFromId } from "../Inscriptions/Utilities";
 import { collection, MediaDocument } from "./Collection";
-import { getOutpointFromId } from "./Utilities";
 
 export const media = {
   getByInscriptionId,
