@@ -1,15 +1,7 @@
-import { parseLocation } from "../../Utilities/Transaction";
+import { getOutpointFromId } from "~Database/Inscriptions/Utilities";
 
-export function getIdFromOutpoint(outpoint: string) {
-  return outpoint.replace(":", "i");
-}
+import { parseLocation } from "../../Utilities/Transaction";
 
 export function getLocationFromId(id: string) {
   return parseLocation(getOutpointFromId(id));
-}
-
-export function getOutpointFromId(id: string) {
-  const outpoint = id.split("");
-  outpoint[id.length - 2] = ":";
-  return outpoint.join("");
 }
