@@ -10,6 +10,7 @@ export function getLocationFromId(id: string) {
 
 export function getOutpointFromId(id: string) {
   const outpoint = id.split("");
-  outpoint[id.length - 2] = ":";
+  // Replace 65th character (i) with a colon (:)
+  outpoint[64] = ":";
   return outpoint.join("");
 }
