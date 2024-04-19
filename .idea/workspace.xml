@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="chore(api): update content">
+    <list default="true" id="a1005aae-4ed1-4bb5-9bfa-318e3611afa6" name="Changes" comment="chore(api): add self csp">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.nvmrc" beforeDir="false" afterPath="$PROJECT_DIR$/.nvmrc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Workers/Tasks/ReindexInscriptionsPointers.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Routes/Content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/Routes/Content.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +27,12 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;thedoublejay&quot;
+  }
+}</component>
   <component name="GitToolBoxStore">
     <option name="projectConfigVersion" value="5" />
     <option name="recentBranches">
@@ -65,6 +67,12 @@
       </RecentBranches>
     </option>
   </component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/sadoprotocol/ordit.git&quot;,
+    &quot;accountId&quot;: &quot;f71c4b1f-826f-4633-b6b7-5a9cdae62412&quot;
+  }
+}</component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -90,10 +98,18 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "ts.external.directory.path": "/Users/josejaimeadonis/Documents/repos/sado-protocol/ordit/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-74d2a5396914-JavaScript-WS-241.14494.235" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -110,7 +126,12 @@
       <workItem from="1711431921580" duration="613000" />
       <workItem from="1711433414172" duration="599000" />
       <workItem from="1711459229303" duration="635000" />
-      <workItem from="1711522343014" duration="2157000" />
+      <workItem from="1711522343014" duration="4086000" />
+      <workItem from="1712190221355" duration="1240000" />
+      <workItem from="1712221019043" duration="1301000" />
+      <workItem from="1712223095643" duration="1651000" />
+      <workItem from="1712633361672" duration="65000" />
+      <workItem from="1713519754088" duration="1152000" />
     </task>
     <task id="LOCAL-00001" summary="chore(ops): add try catch for indexers">
       <option name="closed" value="true" />
@@ -152,7 +173,23 @@
       <option name="project" value="LOCAL" />
       <updated>1711100946797</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="chore(api): update deps">
+      <option name="closed" value="true" />
+      <created>1711597424517</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1711597424517</updated>
+    </task>
+    <task id="LOCAL-00007" summary="chore(api): add self csp">
+      <option name="closed" value="true" />
+      <created>1712229936656</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1712229936656</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -184,6 +221,8 @@
     <MESSAGE value="chore(ops): add try catch for indexers" />
     <MESSAGE value="fix(indexing): multiple witness" />
     <MESSAGE value="chore(api): update content" />
-    <option name="LAST_COMMIT_MESSAGE" value="chore(api): update content" />
+    <MESSAGE value="chore(api): update deps" />
+    <MESSAGE value="chore(api): add self csp" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore(api): add self csp" />
   </component>
 </project>
