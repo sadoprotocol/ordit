@@ -10,6 +10,7 @@ export const transactions = {
     TRANSACTION_NOT_FOUND,
   },
   getRawTransaction,
+  getTxOut,
   decodeScript,
   sendRawTransaction,
   decodeRawTransaction,
@@ -44,6 +45,19 @@ async function getRawTransaction(txid: string, verbose?: false): Promise<string>
 async function getRawTransaction(txid: string, verbose: true): Promise<RawTransaction>;
 async function getRawTransaction(txid: string, verbose = false): Promise<RawTransaction | string> {
   return rpc<RawTransaction>("getrawtransaction", [txid, verbose]);
+}
+
+/**
+ * Get an unspent transaction output set by txid and index.
+ * If output is spent or does not exist, return null.
+ * If includeMempool is true, return null if output is in mempool.
+ *
+ * @param txid              - The transaction id.
+ * @param n                 - The transaction index.
+ * @param indcludeMempool   - Whether to include the mempool.
+ */
+async function getTxOut(txid: string, n: number, indcludeMempool: boolean = true): Promise<TxOut | undefined> {
+  return rpc("gettxout", [txid, n, indcludeMempool]);
 }
 
 /**
@@ -129,6 +143,14 @@ export type RawTransaction = {
   confirmations: number;
   blocktime: number;
   time: number;
+};
+
+export type TxOut = {
+  bestblock: string;
+  confirmations: number;
+  value: number;
+  scriptPubKey: ScriptPubKey;
+  coinbase: boolean;
 };
 
 export type DecodedTransaction = {

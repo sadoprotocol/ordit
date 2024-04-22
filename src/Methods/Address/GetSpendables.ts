@@ -59,8 +59,8 @@ export default method({
       // We need to pull the raw transaction here to get the scriptPubKey.
       // [TODO] We can potentially add this to the output index.
 
-      const tx = await rpc.transactions.getRawTransaction(output.vout.txid, true);
-      if (tx === undefined) {
+      const vout = await rpc.transactions.getTxOut(output.vout.txid, output.vout.n, true);
+      if (vout === undefined) {
         continue;
       }
 
@@ -70,7 +70,7 @@ export default method({
         txid: output.vout.txid,
         n: output.vout.n,
         sats: btcToSat(output.value),
-        scriptPubKey: tx.vout[output.vout.n].scriptPubKey,
+        scriptPubKey: vout.scriptPubKey,
       });
 
       totalValue += output.value;
