@@ -56,11 +56,11 @@ export default method({
       }
 
       // ### Transaction
-      // We need to pull the raw transaction here to get the scriptPubKey.
-      // [TODO] We can potentially add this to the output index.
-
+      // We need to pull the transaction here to get the scriptPubKey.
+      // This also checks if the transaction has been spent or is in the mempool.
       const vout = await rpc.transactions.getTxOut(output.vout.txid, output.vout.n, true);
       if (vout === undefined) {
+        // if vout is undefined, then the output has been spent or is in the mempool (or is invalid for some reason)
         continue;
       }
 
