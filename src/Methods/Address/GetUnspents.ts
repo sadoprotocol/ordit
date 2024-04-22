@@ -64,12 +64,14 @@ export default method({
         }
       }
 
-      const tx = await rpc.transactions.getRawTransaction(output.vout.txid, true);
-      if (tx === undefined) {
+      // ### Transaction
+      // We need to pull the transaction here to get the scriptPubKey.
+      // This also checks if the transaction has been spent or is in the mempool.
+      const vout = await rpc.transactions.getTxOut(output.vout.txid, output.vout.n, true);
+      if (vout === undefined) {
         continue;
       }
 
-      const vout = tx.vout[output.vout.n];
       const utxo: any = {
         txid: output.vout.txid,
         n: output.vout.n,
@@ -78,6 +80,8 @@ export default method({
       };
 
       if (vout.scriptPubKey.type === "pubkeyhash") {
+        // We need to pull the raw transaction here to get the scriptPubKey.
+        const tx = await rpc.transactions.getRawTransaction(output.vout.txid, true);
         utxo.txhex = tx.hex;
       }
 
