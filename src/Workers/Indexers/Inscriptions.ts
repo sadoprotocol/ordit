@@ -43,20 +43,20 @@ export const inscriptionsIndexer: IndexHandler = {
 async function getInscriptions(vins: VinData[]) {
   const envelopes: Envelope[] = [];
   let currentTxid = "";
-  let currentEnelopeIndex = 0;
+  let currentEnvelopeIndex = 0;
   for (const vin of vins) {
     if (vin.txid !== currentTxid) {
       currentTxid = vin.txid;
-      currentEnelopeIndex = 0;
+      currentEnvelopeIndex = 0;
     }
-    const _envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness, currentEnelopeIndex);
+    const _envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness, currentEnvelopeIndex);
     if (_envelopes) {
       for (const envelope of _envelopes) {
         if (envelope && envelope.isValid) {
           envelopes.push(envelope);
         }
       }
-      currentEnelopeIndex += _envelopes.length;
+      currentEnvelopeIndex += _envelopes.length;
     }
   }
 
