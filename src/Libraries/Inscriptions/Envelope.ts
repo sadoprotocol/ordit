@@ -2,6 +2,7 @@ import { script } from "bitcoinjs-lib";
 
 import { isCoinbase, RawTransaction } from "../../Services/Bitcoin";
 import { getMetaFromWitness } from "./Oip";
+import { log } from "~Libraries/Log";
 
 const PROTOCOL_ID = "6f7264";
 
@@ -69,9 +70,11 @@ export class Envelope {
    */
   static fromTransaction(tx: RawTransaction) {
     const envelopes = getEnvelopesDataFromTx(tx);
+    log(`Found ${envelopes?.length} envelopes in tx: ${tx.txid}\n`);
     if (envelopes && envelopes.length > 0) {
       return envelopes.map(([data, oip], index) => {
         if (data) {
+          log(`Extracting envelope: ${tx.txid}i${index}\n`);
           return new Envelope(tx.txid, data, oip, index);
         }
         return undefined;
@@ -79,12 +82,15 @@ export class Envelope {
     }
   }
 
-  static fromTxinWitness(txid: string, txinwitness: string[]) {
+  static fromTxinWitness(txid: string, txinwitness: string[], currentEnelopeIndex: number) {
     const envelopes = getEnvelopesFromTxinWitness(txinwitness);
+    log(`Found ${envelopes?.length} envelopes in tx: ${txid}\n`);
     if (envelopes && envelopes.length > 0) {
       return envelopes.map(([data, oip], index) => {
+        const envelopeIndex = index + currentEnelopeIndex;
         if (data) {
-          return new Envelope(txid, data, oip, index);
+          log(`Extracting envelope: ${txid}i${envelopeIndex}\n`);
+          return new Envelope(txid, data, oip, envelopeIndex);
         }
         return undefined;
       });
@@ -232,6 +238,7 @@ function getEnvelopesDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?][] |
     if (isCoinbase(vin)) {
       continue;
     }
+    log(`Extracting envelope from vin: ${vin.txid}i${vin.vout}\n`);
     if (vin.txinwitness) {
       const envelope = getEnvelopesFromTxinWitness(vin.txinwitness);
       if (envelope) {

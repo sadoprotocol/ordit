@@ -42,14 +42,21 @@ export const inscriptionsIndexer: IndexHandler = {
 
 async function getInscriptions(vins: VinData[]) {
   const envelopes: Envelope[] = [];
+  let currentTxid = "";
+  let currentEnelopeIndex = 0;
   for (const vin of vins) {
-    const _envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness);
+    if (vin.txid !== currentTxid) {
+      currentTxid = vin.txid;
+      currentEnelopeIndex = 0;
+    }
+    const _envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness, currentEnelopeIndex);
     if (_envelopes) {
       for (const envelope of _envelopes) {
         if (envelope && envelope.isValid) {
           envelopes.push(envelope);
         }
       }
+      currentEnelopeIndex += _envelopes.length;
     }
   }
 
