@@ -60,7 +60,10 @@ fastify.get(
   },
   async (request: SatIndexRequest, reply) => {
     const isNegative = request.params.index < 0;
-    const inscriptions = await db.inscriptions.find({ sat: request.params.satNumber }, { sort: { id: isNegative ? -1 : 1 }});
+    const inscriptions = await db.inscriptions.find(
+      { sat: request.params.satNumber },
+      { sort: { number: isNegative ? -1 : 1 } },
+    );
     const inscription = inscriptions[isNegative ? Math.abs(request.params.index) - 1 : request.params.index];
 
     const rep = reply
@@ -75,7 +78,7 @@ fastify.get(
       );
 
     rep.send({
-      id: inscription.id
+      id: inscription.id,
     });
   },
 );
