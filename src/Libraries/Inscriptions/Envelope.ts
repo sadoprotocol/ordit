@@ -79,12 +79,13 @@ export class Envelope {
     }
   }
 
-  static fromTxinWitness(txid: string, txinwitness: string[]) {
+  static fromTxinWitness(txid: string, txinwitness: string[], currentEnvelopeIndex: number) {
     const envelopes = getEnvelopesFromTxinWitness(txinwitness);
     if (envelopes && envelopes.length > 0) {
       return envelopes.map(([data, oip], index) => {
+        const envelopeIndex = index + currentEnvelopeIndex;
         if (data) {
-          return new Envelope(txid, data, oip, index);
+          return new Envelope(txid, data, oip, envelopeIndex);
         }
         return undefined;
       });

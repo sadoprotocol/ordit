@@ -44,30 +44,6 @@ export class Inscription {
     this.meta = data.meta;
     this.oip = data.oip;
   }
-
-  static async fromTransaction(tx: RawTransaction) {
-    const envelopes = Envelope.fromTransaction(tx);
-    if (envelopes && envelopes.length > 0) {
-      return envelopes.map((envelope) => {
-        if (envelope?.isValid) {
-          return envelope;
-        }
-        return undefined;
-      });
-    }
-  }
-
-  static async fromVin(vin: VinData) {
-    const envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness);
-    if (envelopes && envelopes.length > 0) {
-      return envelopes.map((envelope) => {
-        if (envelope?.isValid) {
-          return envelope;
-        }
-        return undefined;
-      });
-    }
-  }
 }
 
 /*
