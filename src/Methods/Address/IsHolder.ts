@@ -4,6 +4,7 @@ import Schema, { array, string } from "computed-types";
 import { db } from "../../Database";
 
 /**
+ * @deprecated use IsHolderV2 instead
  * Returns true if the address owns any one of the inscriptions from inscriptionIds
  */
 export default method({
