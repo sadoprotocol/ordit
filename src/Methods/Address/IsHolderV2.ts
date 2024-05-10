@@ -8,7 +8,8 @@ import { getOrdzaarPassIds } from "~Database/Data/OrdzaarPass.ts";
 /**
  * Returns true if the address owns any one of the inscriptions from the collection.
  * Currently, supports:
- * - ordzaar-pass
+ * - ordzaarpass
+ * - genesis
  */
 export default method({
   params: Schema({
