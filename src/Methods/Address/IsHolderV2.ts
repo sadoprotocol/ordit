@@ -2,6 +2,7 @@ import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "~Database";
+import { getGeniiGenesisIds } from "~Database/Data/GeniiGenesis.ts";
 import { getOrdzaarPassIds } from "~Database/Data/OrdzaarPass.ts";
 
 /**
@@ -17,8 +18,12 @@ export default method({
   handler: async ({ address, collectionId }) => {
     let inscriptionIds: string[] = []
     switch (collectionId) {
-      case "ordzaar-pass":
+      case "ordzaarpass":
         inscriptionIds = getOrdzaarPassIds()
+        break
+      case "genesis":
+        inscriptionIds = getGeniiGenesisIds()
+        break
     }
     if (inscriptionIds.length === 0) {
       throw new Error(`Collection ${collectionId} not found`)
