@@ -4,6 +4,8 @@ import Schema, { string } from "computed-types";
 import { db } from "~Database";
 import { getGeniiGenesisIds } from "~Database/Data/GeniiGenesis.ts";
 import { getOrdzaarPassIds } from "~Database/Data/OrdzaarPass.ts";
+import { getFeelingGood } from "~Database/Data/FeelingGood.ts";
+import { getUnisatOGPass } from "~Database/Data/UnisatOGPass.ts";
 
 /**
  * Returns true if the address owns any one of the inscriptions from the collection.
@@ -24,6 +26,12 @@ export default method({
         break
       case "genesis":
         inscriptionIds = getGeniiGenesisIds()
+        break
+      case "feeling-good":
+        inscriptionIds = getFeelingGood()
+        break
+      case "unisat-og-pass":
+        inscriptionIds = getUnisatOGPass()
         break
     }
     if (inscriptionIds.length === 0) {
