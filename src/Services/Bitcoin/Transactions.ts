@@ -56,7 +56,7 @@ async function getRawTransaction(txid: string, verbose = false): Promise<RawTran
  * @param n                 - The transaction index.
  * @param indcludeMempool   - Whether to include the mempool.
  */
-async function getTxOut(txid: string, n: number, indcludeMempool: boolean = true): Promise<TxOut | undefined> {
+async function getTxOut(txid: string, n: number, indcludeMempool: boolean = true): Promise<TxOut | null> {
   return rpc("gettxout", [txid, n, indcludeMempool]);
 }
 
