@@ -1,11 +1,11 @@
-import { address as addr, networks, payments } from "bitcoinjs-lib";
+import { address as addr, payments } from "bitcoinjs-lib";
 
+import { getBitcoinNetwork } from "~Libraries/Network";
 import { rpc } from "~Services/Bitcoin";
 
-import { config } from "../Config";
 import { Vout } from "../Services/Bitcoin";
 
-const network = config.network === "mainnet" ? networks.bitcoin : networks[config.network];
+const network = getBitcoinNetwork();
 if (network === undefined) {
   throw new Error("invalid network", network);
 }
