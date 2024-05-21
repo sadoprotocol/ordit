@@ -2,7 +2,7 @@ import { networks } from "bitcoinjs-lib";
 
 import { config } from "../Config";
 
-export const VALID_NETWORK = ["mainnet", "testnet", "regtest"] as const;
+export const VALID_NETWORK = ["mainnet", "testnet", "signet", "regtest"] as const;
 
 export type Network = (typeof VALID_NETWORK)[number];
 
@@ -23,6 +23,9 @@ export function getBitcoinNetwork(): networks.Network {
       return networks.bitcoin;
     }
     case "testnet": {
+      return networks.testnet;
+    }
+    case "signet": {
       return networks.testnet;
     }
     case "regtest": {
