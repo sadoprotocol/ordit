@@ -12,6 +12,9 @@ export function getNetworkPath(path: string) {
     case "testnet": {
       return `${path}/testnet3`;
     }
+    case "signet": {
+      return `${path}/signet`;
+    }
     case "regtest": {
       return `${path}/regtest`;
     }

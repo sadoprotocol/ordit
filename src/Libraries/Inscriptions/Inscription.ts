@@ -1,6 +1,4 @@
 import { db } from "~Database";
-import { VinData } from "~Libraries/Indexer";
-import { RawTransaction } from "~Services/Bitcoin";
 import { OrdInscription } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 

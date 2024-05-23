@@ -51,7 +51,7 @@ services:
     labels:
       - traefik.enable=false
     ports:
-      - ${RPC_PORT}:${RPC_PORT} # regtest:18443 testnet:18332 mainnet:8332
+      - ${RPC_PORT}:${RPC_PORT} # regtest:18443 testnet:18332 signet:38332 mainnet:8332
     volumes:
       - ./.data/bitcoin:/home/bitcoin/.bitcoin
     networks:
