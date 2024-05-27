@@ -76,7 +76,7 @@ async function getInscription(id: string) {
  * @param ids - Inscription ids.
  */
 async function getInscriptionsForIds(ids: string[]) {
-  return call<OrdInscription[]>(`/inscriptions`, { ids });
+  return call<OrdInscription[]>(`/ordzaar/inscriptions`, { ids });
 }
 
 /**
