@@ -199,8 +199,7 @@ function getParent(parentData: EnvelopeData) {
   }
   const txid = parentData.reverse().toString("hex").slice(0, 64);
   const inscription_index = parseInt(parentData.reverse().toString("hex").slice(64), 16);
-
-  return `${txid}i${inscription_index}`;
+  return `${txid}i${inscription_index ?? 0}`;
 }
 
 function getDelegateTag(data: EnvelopeData[]) {
