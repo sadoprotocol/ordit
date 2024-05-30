@@ -227,7 +227,7 @@ export type InscriptionData = {
   inscription_number: number;
   inscription_sequence: number;
   output_value?: number;
-  parent?: string;
+  parents?: string;
   delegate?: string;
   sat?: number;
   satpoint: string;

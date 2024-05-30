@@ -6,7 +6,7 @@ import { Envelope } from "./Envelope";
 
 export class Inscription {
   readonly id: string;
-  readonly parent?: string;
+  readonly parents?: string[];
   readonly delegate?: string;
   readonly children?: string[];
   readonly genesis: string;
@@ -25,7 +25,7 @@ export class Inscription {
 
   constructor(data: InscriptionData) {
     this.id = data.id;
-    this.parent = data.parent;
+    this.parents = data.parents;
     this.delegate = data.delegate;
     this.children = data.children;
     this.genesis = data.genesis;
@@ -63,7 +63,7 @@ export async function getInscriptionFromEnvelope(
 
   return new Inscription({
     id: envelope.id,
-    parent: envelope.parent,
+    parents: envelope.parents ?? [],
     delegate: envelope.delegate,
     children: [],
     genesis: envelope.txid,
@@ -110,7 +110,7 @@ async function getInscriptionOwner(txid: string, n: number) {
 
 type InscriptionData = {
   id: string;
-  parent?: string;
+  parents?: string[];
   delegate?: string;
   children?: string[];
   genesis: string;

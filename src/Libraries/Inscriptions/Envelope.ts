@@ -29,7 +29,7 @@ export class Envelope {
   readonly protocol?: string;
   readonly type?: string;
   readonly encoding?: string;
-  readonly parent?: string;
+  readonly parents?: string[];
   readonly delegate?: string;
   readonly content?: {
     size: number;
@@ -54,7 +54,7 @@ export class Envelope {
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.encoding = getEnvelopeEncoding(data);
-    this.parent = getParent(data);
+    this.parents = getParents(data);
     this.delegate = getDelegateTag(data);
     this.content = getEnvelopeContent(data);
     this.media = getMediaMeta(this.type, this.encoding);
@@ -108,7 +108,7 @@ export class Envelope {
     return {
       protocol: this.protocol,
       type: this.type,
-      parent: this.parent,
+      parents: this.parents,
       size: this.size,
       meta: this.meta,
       oip: this.oip,
@@ -178,16 +178,29 @@ function getEnvelopeContent(data: EnvelopeData[]) {
   };
 }
 
-function getParent(data: EnvelopeData[]) {
-  const startIndex = data.indexOf(PARENT_TAG);
-  if (startIndex === -1) {
+function getParents(data: EnvelopeData[]) {
+  const parents = [];
+  let scanIndex = 0;
+
+  while (data.indexOf(PARENT_TAG, scanIndex) !== -1) {
+    const parentIndex = data.indexOf(PARENT_TAG, scanIndex);
+    const parent = getParent(data[parentIndex + 1]);
+    if (parent) {
+      parents.push(parent);
+    }
+    scanIndex += 1;
+  }
+  return parents;
+}
+
+function getParent(parentData: EnvelopeData) {
+  if (!isBuffer(parentData)) {
     return undefined;
   }
-  const parent = data[startIndex + 1];
-  if (!parent || !isBuffer(parent)) {
-    return undefined;
-  }
-  return `${parent.reverse().toString("hex")}i0`;
+  const txid = parentData.reverse().toString("hex").slice(0, 64);
+  const inscription_index = parseInt(parentData.reverse().toString("hex").slice(64), 16);
+
+  return `${txid}i${inscription_index}`;
 }
 
 function getDelegateTag(data: EnvelopeData[]) {
