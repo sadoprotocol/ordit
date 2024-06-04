@@ -1,5 +1,5 @@
 import { db } from "~Database";
-import { OrdInscription } from "~Services/Ord";
+import { OrdInscriptionData } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 import { Envelope } from "./Envelope";
@@ -52,7 +52,7 @@ export class Inscription {
 
 export async function getInscriptionFromEnvelope(
   envelope: Envelope,
-  ord: Map<string, OrdInscription>,
+  ord: Map<string, OrdInscriptionData>,
 ): Promise<Inscription | undefined> {
   const ordData = ord.get(envelope.id);
   if (ordData === undefined) {
@@ -80,8 +80,8 @@ export async function getInscriptionFromEnvelope(
       content: envelope.content?.body ?? "",
       size: envelope.content?.size ?? 0,
     },
-    number: ordData.number,
-    sequence: ordData.sequence,
+    number: ordData.inscription_number,
+    sequence: ordData.inscription_sequence,
     height: ordData.genesis_height,
     fee: ordData.genesis_fee,
     sat: ordData.sat,

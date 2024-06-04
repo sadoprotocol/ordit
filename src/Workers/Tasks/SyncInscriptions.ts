@@ -3,7 +3,7 @@ import { WithId } from "mongodb";
 import { db } from "~Database";
 import { Inscription } from "~Database/Inscriptions";
 import { log } from "~Libraries/Log";
-import { InscriptionData, ord } from "~Services/Ord";
+import { ord, OrdInscriptionData } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 const total = await db.inscriptions.collection.estimatedDocumentCount();
@@ -20,11 +20,13 @@ while (await cursor.hasNext()) {
 
   const [txid, n] = parseLocation(inscription.outpoint);
 
-  let data: InscriptionData | undefined;
+  let data: OrdInscriptionData | undefined;
 
   const $set = {
     owner: inscription.owner,
     outpoint: inscription.outpoint,
+    parents: inscription.parents,
+    children: inscription.children,
   };
 
   let hasChanges = false;
@@ -78,7 +80,7 @@ while (await cursor.hasNext()) {
   );
 }
 
-async function getOrdData(inscription: WithId<Inscription>, ordData?: InscriptionData) {
+async function getOrdData(inscription: WithId<Inscription>, ordData?: OrdInscriptionData) {
   if (ordData) {
     return ordData;
   }
