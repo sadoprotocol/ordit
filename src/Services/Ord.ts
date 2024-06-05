@@ -232,7 +232,7 @@ export type OrdInscriptionData = {
   inscription_number: number;
   inscription_sequence: number;
   output_value?: number;
-  parents?: string;
+  parents?: string[];
   delegate?: string;
   sat: number;
   satpoint: string;

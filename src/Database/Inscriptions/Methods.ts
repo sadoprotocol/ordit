@@ -48,11 +48,26 @@ async function insertMany(inscriptions: Inscription[], chunkSize = getChunkSize(
   for (let i = 0; i < inscriptions.length; i += chunkSize) {
     const chunk = inscriptions.slice(i, i + chunkSize);
     promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
+
+    // Check for parents in Inscriptions and update children
+    for (const inscription of chunk) {
+      if (inscription.parents) {
+        for (const parent of inscription.parents) {
+          promises.push(collection.updateOne({ id: parent }, { $addToSet: { children: inscription.id } }));
+        }
+      }
+    }
   }
   await Promise.all(promises);
 }
 
 async function insertOne(inscription: Inscription) {
+  // Check for parents in Inscriptions and update children
+  if (inscription.parents) {
+    for (const parent of inscription.parents) {
+      await collection.updateOne({ id: parent }, { $addToSet: { children: inscription.id } });
+    }
+  }
   return collection.updateOne({ id: inscription.id }, { $set: inscription }, { upsert: true });
 }
 

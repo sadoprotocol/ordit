@@ -65,7 +65,7 @@ export async function getInscriptionFromEnvelope(
     id: envelope.id,
     parents: envelope.parents ?? [],
     delegate: envelope.delegate,
-    children: [],
+    children: ordData.children ?? [],
     genesis: envelope.txid,
     creator: await getInscriptionCreator(envelope.txid),
     owner: await getInscriptionOwner(locationTxid, locationN),
