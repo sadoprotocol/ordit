@@ -197,8 +197,8 @@ function getParent(parentData: EnvelopeData) {
   if (!isBuffer(parentData)) {
     return undefined;
   }
-  const txid = parentData.reverse().toString("hex").slice(0, 64);
-  const inscription_index = parseInt(parentData.reverse().toString("hex").slice(64), 16);
+  const txid = parentData.subarray(0, 32).reverse().toString("hex");
+  const inscription_index = parseInt(parentData.subarray(32).reverse().toString("hex"), 16);
   return `${txid}i${inscription_index ?? 0}`;
 }
 
