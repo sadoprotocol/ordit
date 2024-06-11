@@ -197,9 +197,10 @@ function getParent(parentData: EnvelopeData) {
   if (!isBuffer(parentData)) {
     return undefined;
   }
-  const txid = parentData.subarray(0, 32).reverse().toString("hex");
-  const inscription_index = parseInt(parentData.subarray(32).reverse().toString("hex"), 16);
-  return `${txid}i${inscription_index ?? 0}`;
+  const parent_txid = parentData.subarray(0, 32).reverse().toString("hex");
+  const parent_index_buffer = ensureFourBytesLE(parentData.subarray(32, 36));
+  const parent_index = parent_index_buffer.readInt32LE(0);
+  return `${parent_txid}i${parent_index ?? 0}`;
 }
 
 function getDelegateTag(data: EnvelopeData[]) {
@@ -329,4 +330,12 @@ function getMediaMeta(dataType: string = "", dataEncoding: string = "") {
 
 function isBuffer(value: unknown): value is Buffer {
   return Buffer.isBuffer(value);
+}
+
+function ensureFourBytesLE(buffer: Buffer) {
+  if (buffer.length < 4) {
+    const padding = Buffer.alloc(4 - buffer.length, 0);
+    return Buffer.concat([buffer, padding]);
+  }
+  return buffer;
 }
