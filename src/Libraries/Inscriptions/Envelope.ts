@@ -183,12 +183,12 @@ function getParents(data: EnvelopeData[]) {
   let scanIndex = 0;
 
   while (data.indexOf(PARENT_TAG, scanIndex) !== -1) {
-    const parentIndex = data.indexOf(PARENT_TAG, scanIndex);
-    const parent = getParent(data[parentIndex + 1]);
+    const parentIndex = data.indexOf(PARENT_TAG, scanIndex) + 1;
+    const parent = getParent(data[parentIndex]);
     if (parent) {
       parents.push(parent);
     }
-    scanIndex += 1;
+    scanIndex = parentIndex;
   }
   return parents;
 }
