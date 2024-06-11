@@ -147,12 +147,12 @@ async function commitTransfers(ids: string[]) {
   const chunkSize = 5_000;
   for (let i = 0; i < ids.length; i += chunkSize) {
     const chunk = ids.slice(i, i + chunkSize);
-    const data = await ord.getInscriptionsForIds(chunk);
+    const data = await ord.getInscriptions(chunk);
     for (const item of data) {
       const [txid, n] = parseLocation(item.satpoint);
       const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
       ops.push({
-        id: item.inscription_id,
+        id: item.id,
         owner: output?.addresses[0] ?? "",
         outpoint: `${txid}:${n}`,
       });
