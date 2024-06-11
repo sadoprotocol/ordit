@@ -66,7 +66,7 @@ async function getInscriptions(vins: VinData[]) {
     const chunk = envelopes.slice(i, i + chunkSize);
     const data = await ord.getInscriptions(chunk.map((item) => item.id));
     for (const item of data) {
-      ordData.set(item.inscription_id, item);
+      ordData.set(item.id, item);
     }
   }
 

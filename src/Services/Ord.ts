@@ -228,8 +228,8 @@ export type OrdInscriptionData = {
   content_encoding?: string;
   genesis_fee: number;
   genesis_height: number;
-  inscription_id: string;
-  inscription_number: number;
+  id: string;
+  number: number;
   inscription_sequence: number;
   output_value?: number;
   parents?: string[];

@@ -22,7 +22,7 @@ async function reIndexInscriptionsTx(txid: string) {
   const ordData = new Map<string, OrdInscriptionData>();
   const data = await ord.getInscriptions(envelopes.map((item) => item.id));
   for (const item of data) {
-    ordData.set(item.inscription_id, item);
+    ordData.set(item.id, item);
   }
 
   const inscriptions: Inscription[] = [];
