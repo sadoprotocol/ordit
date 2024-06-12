@@ -197,9 +197,9 @@ function getParent(parentData: EnvelopeData) {
   if (!isBuffer(parentData)) {
     return undefined;
   }
-  const parent_txid = parentData.subarray(0, 32).reverse().toString("hex");
   const parent_index_buffer = ensureFourBytesLE(parentData.subarray(32, 36));
   const parent_index = parent_index_buffer.readInt32LE(0);
+  const parent_txid = parentData.subarray(0, 32).reverse().toString("hex");
   return `${parent_txid}i${parent_index ?? 0}`;
 }
 
