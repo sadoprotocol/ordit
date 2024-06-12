@@ -121,12 +121,11 @@ fastify.get(
   },
   async (request: InscriptionIdPageRequest) => {
     const inscription = await db.inscriptions.getInscriptionById(request.params.inscriptionId);
+    const pageIndex = request.params.page - 1;
     if (inscription === undefined) {
       throw new Error("Inscription not found");
     }
-    return inscription.children
-      ? inscription.children.slice(request.params.page * 100, (request.params.page + 1) * 100)
-      : [];
+    return inscription.children ? inscription.children.slice(pageIndex * 100, (pageIndex + 1) * 100) : [];
   },
 );
 
@@ -192,12 +191,11 @@ fastify.get(
   },
   async (request: InscriptionIdPageRequest) => {
     const inscription = await db.inscriptions.getInscriptionById(request.params.inscriptionId);
+    const pageIndex = request.params.page - 1;
     if (inscription === undefined) {
       throw new Error("Inscription not found");
     }
-    return inscription.parents
-      ? inscription.parents.slice(request.params.page * 100, (request.params.page + 1) * 100)
-      : [];
+    return inscription.parents ? inscription.parents.slice(pageIndex * 100, (pageIndex + 1) * 100) : [];
   },
 );
 
