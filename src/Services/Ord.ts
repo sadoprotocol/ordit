@@ -11,6 +11,7 @@ export const ord = {
   getHeight,
   getOrdinals,
   getInscription,
+  getInscriptions,
   getInscriptionsForIds,
   waitForBlock,
   waitForInscriptions,
@@ -60,13 +61,17 @@ async function getOrdinals(outpoint: string): Promise<Ordinal[]> {
  */
 async function getInscription(id: string) {
   try {
-    return await call<InscriptionData>(`/inscription/${id}`);
+    return await call<OrdInscriptionData>(`/inscription/${id}`);
   } catch (error) {
     if (error instanceof OrdError && error.status === 404) {
       return undefined;
     }
     throw error;
   }
+}
+
+async function getInscriptions(ids: string[]) {
+  return call<OrdInscriptionData[]>(`/inscriptions`, ids);
 }
 
 /**
@@ -215,7 +220,7 @@ export type OrdInscription = {
   timestamp: number;
 };
 
-export type InscriptionData = {
+export type OrdInscriptionData = {
   address?: string;
   children: string[];
   content_length?: number;
@@ -223,13 +228,13 @@ export type InscriptionData = {
   content_encoding?: string;
   genesis_fee: number;
   genesis_height: number;
-  inscription_id: string;
-  inscription_number: number;
+  id: string;
+  number: number;
   inscription_sequence: number;
   output_value?: number;
-  parent?: string;
+  parents?: string[];
   delegate?: string;
-  sat?: number;
+  sat: number;
   satpoint: string;
   timestamp: number;
 };

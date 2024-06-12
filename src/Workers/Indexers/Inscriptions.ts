@@ -6,7 +6,7 @@ import { Envelope } from "~Libraries/Inscriptions/Envelope";
 import { getInscriptionFromEnvelope, Inscription as RawInscription } from "~Libraries/Inscriptions/Inscription";
 import { isOIP2Meta, validateOIP2Meta } from "~Libraries/Inscriptions/Oip";
 import { perf } from "~Libraries/Log";
-import { ord, OrdInscription } from "~Services/Ord";
+import { ord, OrdInscriptionData } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 export const inscriptionsIndexer: IndexHandler = {
@@ -60,13 +60,13 @@ async function getInscriptions(vins: VinData[]) {
     }
   }
 
-  const ordData = new Map<string, OrdInscription>();
+  const ordData = new Map<string, OrdInscriptionData>();
   const chunkSize = 5_000;
   for (let i = 0; i < envelopes.length; i += chunkSize) {
     const chunk = envelopes.slice(i, i + chunkSize);
-    const data = await ord.getInscriptionsForIds(chunk.map((item) => item.id));
+    const data = await ord.getInscriptions(chunk.map((item) => item.id));
     for (const item of data) {
-      ordData.set(item.inscription_id, item);
+      ordData.set(item.id, item);
     }
   }
 
@@ -111,6 +111,9 @@ export async function insertInscriptions(rawInscriptions: RawInscription[]) {
         entry.verified = await validateOIP2Meta(inscription.oip);
       }
     }
+    if (inscription.parents) {
+      entry.parents = inscription.parents;
+    }
     inscriptions.push(entry as Inscription);
   }
 
@@ -144,12 +147,12 @@ async function commitTransfers(ids: string[]) {
   const chunkSize = 5_000;
   for (let i = 0; i < ids.length; i += chunkSize) {
     const chunk = ids.slice(i, i + chunkSize);
-    const data = await ord.getInscriptionsForIds(chunk);
+    const data = await ord.getInscriptions(chunk);
     for (const item of data) {
       const [txid, n] = parseLocation(item.satpoint);
       const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
       ops.push({
-        id: item.inscription_id,
+        id: item.id,
         owner: output?.addresses[0] ?? "",
         outpoint: `${txid}:${n}`,
       });

@@ -17,7 +17,7 @@ async function main() {
 
     log(`count: ${count}, inscription id: ${inscription.id} \n`);
 
-    if (!inscription.mediaEncoding) {
+    if (!inscription.parents) {
       let ordData: OrdInscriptionData | undefined;
       try {
         ordData = await ord.getInscription(inscription.id);
@@ -29,15 +29,13 @@ async function main() {
 
       try {
         if (ordData) {
-          if (ordData.content_encoding) {
-            log(
-              `found content_encoding inscription: ${ordData.content_encoding}, update inscription data: ${inscription.id}, document id: ${inscription._id} \n`,
-            );
+          if (ordData.parents) {
+            log(`found parent inscriptions: ${ordData.parents}, update inscription data: ${inscription.id} \n`);
             await db.inscriptions.updateOne(
               { _id: inscription._id },
               {
                 $set: {
-                  mediaEncoding: ordData.content_encoding,
+                  parents: ordData.parents,
                 },
               },
             );

@@ -1,6 +1,6 @@
 import { db } from "~Database";
 import { log } from "~Libraries/Log";
-import { InscriptionData, ord } from "~Services/Ord";
+import { ord, OrdInscriptionData } from "~Services/Ord";
 
 async function main() {
   const total = await db.inscriptions.collection.estimatedDocumentCount();
@@ -18,7 +18,7 @@ async function main() {
     log(`count: ${count}, inscription id: ${inscription.id} \n`);
 
     if (!inscription.delegate) {
-      let ordData: InscriptionData | undefined;
+      let ordData: OrdInscriptionData | undefined;
       try {
         ordData = await ord.getInscription(inscription.id);
       } catch (error) {

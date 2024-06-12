@@ -1,12 +1,12 @@
 import { db } from "~Database";
-import { OrdInscription } from "~Services/Ord";
+import { OrdInscriptionData } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 import { Envelope } from "./Envelope";
 
 export class Inscription {
   readonly id: string;
-  readonly parent?: string;
+  readonly parents?: string[];
   readonly delegate?: string;
   readonly children?: string[];
   readonly genesis: string;
@@ -25,7 +25,7 @@ export class Inscription {
 
   constructor(data: InscriptionData) {
     this.id = data.id;
-    this.parent = data.parent;
+    this.parents = data.parents;
     this.delegate = data.delegate;
     this.children = data.children;
     this.genesis = data.genesis;
@@ -52,7 +52,7 @@ export class Inscription {
 
 export async function getInscriptionFromEnvelope(
   envelope: Envelope,
-  ord: Map<string, OrdInscription>,
+  ord: Map<string, OrdInscriptionData>,
 ): Promise<Inscription | undefined> {
   const ordData = ord.get(envelope.id);
   if (ordData === undefined) {
@@ -63,9 +63,9 @@ export async function getInscriptionFromEnvelope(
 
   return new Inscription({
     id: envelope.id,
-    parent: envelope.parent,
+    parents: envelope.parents ?? [],
     delegate: envelope.delegate,
-    children: [],
+    children: ordData.children ?? [],
     genesis: envelope.txid,
     creator: await getInscriptionCreator(envelope.txid),
     owner: await getInscriptionOwner(locationTxid, locationN),
@@ -80,8 +80,8 @@ export async function getInscriptionFromEnvelope(
       content: envelope.content?.body ?? "",
       size: envelope.content?.size ?? 0,
     },
-    number: ordData.number,
-    sequence: ordData.sequence,
+    number: ordData.inscription_number,
+    sequence: ordData.inscription_sequence,
     height: ordData.genesis_height,
     fee: ordData.genesis_fee,
     sat: ordData.sat,
@@ -110,7 +110,7 @@ async function getInscriptionOwner(txid: string, n: number) {
 
 type InscriptionData = {
   id: string;
-  parent?: string;
+  parents?: string[];
   delegate?: string;
   children?: string[];
   genesis: string;

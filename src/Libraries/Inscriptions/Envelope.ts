@@ -29,7 +29,7 @@ export class Envelope {
   readonly protocol?: string;
   readonly type?: string;
   readonly encoding?: string;
-  readonly parent?: string;
+  readonly parents?: string[];
   readonly delegate?: string;
   readonly content?: {
     size: number;
@@ -54,7 +54,7 @@ export class Envelope {
     this.protocol = getEnvelopeProtocol(data);
     this.type = getEnvelopeType(data);
     this.encoding = getEnvelopeEncoding(data);
-    this.parent = getParent(data);
+    this.parents = getParents(data);
     this.delegate = getDelegateTag(data);
     this.content = getEnvelopeContent(data);
     this.media = getMediaMeta(this.type, this.encoding);
@@ -108,7 +108,7 @@ export class Envelope {
     return {
       protocol: this.protocol,
       type: this.type,
-      parent: this.parent,
+      parents: this.parents,
       size: this.size,
       meta: this.meta,
       oip: this.oip,
@@ -178,16 +178,29 @@ function getEnvelopeContent(data: EnvelopeData[]) {
   };
 }
 
-function getParent(data: EnvelopeData[]) {
-  const startIndex = data.indexOf(PARENT_TAG);
-  if (startIndex === -1) {
+function getParents(data: EnvelopeData[]) {
+  const parents = [];
+  let scanIndex = 0;
+
+  while (data.indexOf(PARENT_TAG, scanIndex) !== -1) {
+    const parentIndex = data.indexOf(PARENT_TAG, scanIndex) + 1;
+    const parent = getParent(data[parentIndex]);
+    if (parent) {
+      parents.push(parent);
+    }
+    scanIndex = parentIndex;
+  }
+  return parents;
+}
+
+function getParent(parentData: EnvelopeData) {
+  if (!isBuffer(parentData)) {
     return undefined;
   }
-  const parent = data[startIndex + 1];
-  if (!parent || !isBuffer(parent)) {
-    return undefined;
-  }
-  return `${parent.reverse().toString("hex")}i0`;
+  const parent_index_buffer = ensureFourBytesLE(parentData.subarray(32, 36));
+  const parent_index = parent_index_buffer.readInt32LE(0);
+  const parent_txid = parentData.subarray(0, 32).reverse().toString("hex");
+  return `${parent_txid}i${parent_index ?? 0}`;
 }
 
 function getDelegateTag(data: EnvelopeData[]) {
@@ -317,4 +330,12 @@ function getMediaMeta(dataType: string = "", dataEncoding: string = "") {
 
 function isBuffer(value: unknown): value is Buffer {
   return Buffer.isBuffer(value);
+}
+
+function ensureFourBytesLE(buffer: Buffer) {
+  if (buffer.length < 4) {
+    const padding = Buffer.alloc(4 - buffer.length, 0);
+    return Buffer.concat([buffer, padding]);
+  }
+  return buffer;
 }

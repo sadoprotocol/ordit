@@ -2,7 +2,7 @@ import { db } from "~Database";
 import { Envelope } from "~Libraries/Inscriptions/Envelope";
 import { getInscriptionFromEnvelope, Inscription } from "~Libraries/Inscriptions/Inscription";
 import { log } from "~Libraries/Log";
-import { InscriptionData, ord, OrdInscription } from "~Services/Ord";
+import { ord, OrdInscriptionData } from "~Services/Ord";
 
 import { rpc } from "../../Services/Bitcoin";
 import { insertInscriptions } from "../Indexers/Inscriptions";
@@ -19,10 +19,10 @@ async function reIndexInscriptionsTx(txid: string) {
     }
   }
 
-  const ordData = new Map<string, OrdInscription>();
-  const data = await ord.getInscriptionsForIds(envelopes.map((item) => item.id));
+  const ordData = new Map<string, OrdInscriptionData>();
+  const data = await ord.getInscriptions(envelopes.map((item) => item.id));
   for (const item of data) {
-    ordData.set(item.inscription_id, item);
+    ordData.set(item.id, item);
   }
 
   const inscriptions: Inscription[] = [];
@@ -56,7 +56,7 @@ async function main() {
     log(`count: ${count}, inscription id: ${inscription.id} \n`);
 
     // try to reindex the transaction if the index 1 exist
-    let ordData: InscriptionData | undefined;
+    let ordData: OrdInscriptionData | undefined;
     try {
       ordData = await ord.getInscription(`${inscription.genesis}i1`);
     } catch (error) {
