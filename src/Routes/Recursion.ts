@@ -228,9 +228,10 @@ fastify.get(
     },
   },
   async (request: SatPageRequest) => {
+    const pageIndex = request.params.page - 1 || 0;
     const inscriptions = await db.inscriptions.find(
       { sat: request.params.satNumber },
-      { sort: { number: 1 }, skip: request.params.page * 100, limit: 100 },
+      { sort: { number: 1 }, skip: pageIndex * 100, limit: 100 },
     );
     return inscriptions.map((inscription) => inscription.id);
   },
