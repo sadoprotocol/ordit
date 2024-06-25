@@ -71,7 +71,14 @@ async function getInscription(id: string) {
 }
 
 async function getInscriptions(ids: string[]) {
-  return call<OrdInscriptionData[]>(`/inscriptions`, ids);
+  try {
+    return call<OrdInscriptionData[]>(`/inscriptions`, ids);
+  } catch (error) {
+    if (error instanceof OrdError && error.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 /**
@@ -81,7 +88,14 @@ async function getInscriptions(ids: string[]) {
  * @param ids - Inscription ids.
  */
 async function getInscriptionsForIds(ids: string[]) {
-  return call<OrdInscription[]>(`/inscriptions`, { ids });
+  try {
+    return call<OrdInscription[]>(`/inscriptions`, { ids });
+  } catch (error) {
+    if (error instanceof OrdError && error.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 /**
