@@ -168,27 +168,32 @@ async function getRuneOutputsBalancesByOutpoint(outpoint: string) {
  */
 
 async function call<R>(path: string, data?: any): Promise<R> {
-  const options: any = {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  };
+  try {
+    const options: any = {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    };
 
-  if (data !== undefined) {
-    options.method = "POST";
-    options.body = JSON.stringify(data);
-    options.headers["Content-Type"] = "application/json";
-  }
+    if (data !== undefined) {
+      options.method = "POST";
+      options.body = JSON.stringify(data);
+      options.headers["Content-Type"] = "application/json";
+    }
 
-  const response = await fetch(`${config.ord.uri}${path}`, options);
-  if (response.status === 404) {
-    throw new NotFoundError(await response.text());
+    const response = await fetch(`${config.ord.uri}${path}`, options);
+    if (response.status === 404) {
+      throw new NotFoundError(await response.text());
+    }
+    if (response.status !== 200) {
+      throw new OrdError(response.status, response.statusText, await response.text(), response.url);
+    }
+    return response.json() as R;
+  } catch (e) {
+    console.error(e);
+    throw new NotFoundError(e);
   }
-  if (response.status !== 200) {
-    throw new OrdError(response.status, response.statusText, await response.text(), response.url);
-  }
-  return response.json() as R;
 }
 
 /*
