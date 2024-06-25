@@ -74,7 +74,7 @@ async function getInscriptions(ids: string[]) {
   try {
     return call<OrdInscriptionData[]>(`/inscriptions`, ids);
   } catch (error) {
-    if (error instanceof OrdError && error.status === 404) {
+    if (error instanceof OrdError) {
       return [];
     }
     throw error;
@@ -91,7 +91,7 @@ async function getInscriptionsForIds(ids: string[]) {
   try {
     return call<OrdInscription[]>(`/inscriptions`, { ids });
   } catch (error) {
-    if (error instanceof OrdError && error.status === 404) {
+    if (error instanceof OrdError) {
       return [];
     }
     throw error;
@@ -177,11 +177,7 @@ async function call<R>(path: string, data?: any): Promise<R> {
 
   if (data !== undefined) {
     options.method = "POST";
-    try {
-      options.body = JSON.stringify(data);
-    } catch (e) {
-      console.error(e);
-    }
+    options.body = JSON.stringify(data);
     options.headers["Content-Type"] = "application/json";
   }
 
