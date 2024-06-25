@@ -192,7 +192,8 @@ async function call<R>(path: string, data?: any): Promise<R> {
     return response.json() as R;
   } catch (e) {
     console.error(e);
-    throw new NotFoundError(e);
+    return null as R;
+    // throw new NotFoundError(e);
   }
 }
 
