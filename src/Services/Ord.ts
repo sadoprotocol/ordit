@@ -186,8 +186,7 @@ async function call<R>(path: string, data?: any): Promise<R> {
     throw new NotFoundError(await response.text());
   }
   if (response.status !== 200) {
-    return [] as R;
-    // throw new OrdError(response.status, response.statusText, await response.text(), response.url);
+    throw new OrdError(response.status, response.statusText, await response.text(), response.url);
   }
   return response.json() as R;
 }
