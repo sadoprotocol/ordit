@@ -179,8 +179,8 @@ async function call<R>(path: string, data?: any): Promise<R> {
 
   if (data !== undefined) {
     options.method = "POST";
-    options.body = JSON.stringify(data);
     options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(data);
   }
 
   const response = await fetch(`${config.ord.uri}${path}`, options);
@@ -190,6 +190,7 @@ async function call<R>(path: string, data?: any): Promise<R> {
   if (response.status !== 200) {
     console.log(response.statusText);
     console.log(await response.text());
+    console.log(JSON.stringify(data));
     throw new OrdError(response.status, response.statusText, await response.text(), response.url);
   }
   return response.json() as R;
