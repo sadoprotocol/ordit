@@ -72,6 +72,7 @@ async function getInscription(id: string) {
 
 async function getInscriptions(ids: string[]) {
   try {
+    console.log('NORMAL API CALL');
     return call<OrdInscriptionData[]>(`/inscriptions`, ids);
   } catch (error) {
     if (error instanceof OrdError) {
@@ -89,6 +90,7 @@ async function getInscriptions(ids: string[]) {
  */
 async function getInscriptionsForIds(ids: string[]) {
   try {
+    console.log('CUSTOM API CALL');
     return call<OrdInscription[]>(`/inscriptions`, { ids });
   } catch (error) {
     if (error instanceof OrdError) {
