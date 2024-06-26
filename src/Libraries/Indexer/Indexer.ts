@@ -105,7 +105,7 @@ export class Indexer {
       const ts = perf();
       const block = await rpc.blockchain.getBlock(blockHash, 2);
 
-      log(`\n   💽 Reading block ${block.height.toLocaleString()} [${ts.now} seconds]`);
+      // log(`\n   💽 Reading block ${block.height.toLocaleString()} [${ts.now} seconds]`);
 
       // ### Block
       // Process the block and extract all the vin and vout information required
