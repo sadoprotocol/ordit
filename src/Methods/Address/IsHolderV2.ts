@@ -6,6 +6,8 @@ import { getGeniiGenesisIds } from "~Database/Data/GeniiGenesis.ts";
 import { getOrdzaarPassIds } from "~Database/Data/OrdzaarPass.ts";
 import { getFeelingGood } from "~Database/Data/FeelingGood.ts";
 import { getUnisatOGPass } from "~Database/Data/UnisatOGPass.ts";
+import { getFomojiGenesisIds } from "~Database/Data/FomojiGenesis.ts";
+import { getFomoji_2Ids } from "~Database/Data/Fomoji2.ts";
 
 /**
  * Returns true if the address owns any one of the inscriptions from the collection.
@@ -32,6 +34,12 @@ export default method({
         break
       case "unisat-og-pass":
         inscriptionIds = getUnisatOGPass()
+        break
+      case "ordinal-fomojis":
+        inscriptionIds = getFomojiGenesisIds()
+        break
+      case "fomojis_2":
+        inscriptionIds = getFomoji_2Ids()
         break
     }
     if (inscriptionIds.length === 0) {
