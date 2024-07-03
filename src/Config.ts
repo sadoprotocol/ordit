@@ -20,6 +20,7 @@ export const config = {
     inscriptions: getEnvironmentVariable("INDEX_INSCRIPTIONS", envToBoolean),
     brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
+    maxheight: getEnvironmentVariable("MAXHEIGHT", envToNumber, true),
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),
