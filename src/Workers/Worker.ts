@@ -137,6 +137,10 @@ function getWorkerStatus() {
 const start = async () => {
   await bootstrap();
   lastHeight = await db.outputs.getHeighestBlock();
+  if (config.index.maxheight && config.index.maxheight >= lastHeight) {
+    console.log(`Already at maxheight ${lastHeight}`);
+    return;
+  }
   await fastify
     .listen({ host: config.worker.host, port: config.worker.port })
     .then((address) => {
