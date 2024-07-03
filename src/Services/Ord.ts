@@ -236,12 +236,13 @@ export type OrdInscription = {
 
 export type OrdInscriptionData = {
   address?: string;
-  children: string[];
+  charms?: string[];
+  children?: string[];
   content_length?: number;
   content_type?: string;
   content_encoding?: string;
-  genesis_fee: number;
-  genesis_height: number;
+  fee: number;
+  height: number;
   id: string;
   number: number;
   inscription_sequence: number;
