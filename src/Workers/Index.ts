@@ -32,7 +32,7 @@ export async function index() {
     indexers.push(sadoIndexer);
   }
 
-  if (config.index.maxheight && config.index.maxheight >= blockHeight) {
+  if (config.index.maxheight && blockHeight >= config.index.maxheight) {
     log(`Already at maxheight ${blockHeight}`);
     return blockHeight;
   }

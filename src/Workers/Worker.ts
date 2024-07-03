@@ -137,7 +137,7 @@ function getWorkerStatus() {
 const start = async () => {
   await bootstrap();
   lastHeight = await db.outputs.getHeighestBlock();
-  if (config.index.maxheight && config.index.maxheight >= lastHeight) {
+  if (config.index.maxheight && lastHeight >= config.index.maxheight) {
     console.log(`Already at maxheight ${lastHeight}`);
     return;
   }
