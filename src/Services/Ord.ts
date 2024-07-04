@@ -74,8 +74,11 @@ async function getInscriptions(ids: string[]) {
   try {
     return call<OrdInscriptionData[]>(`/inscriptions`, ids);
   } catch (error) {
-    if (error instanceof OrdError) {
-      return [];
+    if (error instanceof NotFoundError) {
+      const errorMessage = error.data as string;
+      const missingId = errorMessage.slice(13, -10);
+      ids.splice(ids.indexOf(missingId), 1);
+      return getInscriptions(ids);
     }
     throw error;
   }
