@@ -60,14 +60,13 @@ export class Indexer {
         log(`Already at maxheight ${currentHeight}`);
         return;
       }
-      log(`\n ---------- indexing to block ${maxheight.toLocaleString()} ----------`);
-    } else {
-      if (currentHeight === blockHeight) {
-        return; // indexer has latest outputs
-      }
-
-      log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
     }
+
+    if (currentHeight === blockHeight) {
+      return; // indexer has latest outputs
+    }
+
+    log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
     if (reorgHeight !== undefined) {
