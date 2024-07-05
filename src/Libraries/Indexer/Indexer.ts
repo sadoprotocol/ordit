@@ -1,3 +1,5 @@
+import { assert } from "console";
+
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
@@ -50,15 +52,22 @@ export class Indexer {
 
   async run(blockHeight: number) {
     let currentHeight = await this.#getCurrentHeight();
-    if (config.index.maxheight && currentHeight >= config.index.maxheight) {
-      log(`Already at maxheight ${currentHeight}`);
-      return;
-    }
-    if (currentHeight === blockHeight) {
-      return; // indexer has latest outputs
-    }
 
-    log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
+    if (config.index.maxheight) {
+      const maxheight = config.index.maxheight;
+      assert(blockHeight === maxheight);
+      if (currentHeight >= maxheight) {
+        log(`Already at maxheight ${currentHeight}`);
+        return;
+      }
+      log(`\n ---------- indexing to block ${maxheight.toLocaleString()} ----------`);
+    } else {
+      if (currentHeight === blockHeight) {
+        return; // indexer has latest outputs
+      }
+
+      log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
+    }
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
     if (reorgHeight !== undefined) {

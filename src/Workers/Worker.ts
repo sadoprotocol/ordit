@@ -139,7 +139,7 @@ const start = async () => {
   lastHeight = await db.outputs.getHeighestBlock();
   if (config.index.maxheight && lastHeight >= config.index.maxheight) {
     console.log(`Already at maxheight ${lastHeight}`);
-    return;
+    process.exit(0);
   }
   await fastify
     .listen({ host: config.worker.host, port: config.worker.port })
