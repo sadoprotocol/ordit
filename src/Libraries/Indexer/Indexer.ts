@@ -50,6 +50,10 @@ export class Indexer {
 
   async run(blockHeight: number) {
     let currentHeight = await this.#getCurrentHeight();
+    if (config.index.maxheight && currentHeight >= config.index.maxheight) {
+      log(`Already at maxheight ${currentHeight}`);
+      return;
+    }
     if (currentHeight === blockHeight) {
       return; // indexer has latest outputs
     }
