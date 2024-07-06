@@ -33,7 +33,7 @@ export async function index() {
 
   const indexer = new Indexer({ indexers });
 
-  if (config.index.maxheight) {
+  if (config.index.maxheight && blockHeight > config.index.maxheight) {
     await indexer.run(config.index.maxheight);
 
     return config.index.maxheight;

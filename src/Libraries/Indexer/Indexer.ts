@@ -55,11 +55,12 @@ export class Indexer {
 
     if (config.index.maxheight) {
       const maxheight = config.index.maxheight;
-      assert(blockHeight === maxheight);
       if (currentHeight >= maxheight) {
-        log(`Already at maxheight ${currentHeight}`);
+        log(`Current height ${currentHeight} is already at or past maxheight ${maxheight}`);
         return;
       }
+      // If we are not yet at maxheight, we should index up to maxheight or blockheight, whichever is lower.
+      assert(blockHeight <= maxheight);
     }
 
     if (currentHeight === blockHeight) {
