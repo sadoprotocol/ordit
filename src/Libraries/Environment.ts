@@ -19,6 +19,9 @@ export function getEnvironmentVariable<T extends EnvParser>(key: string, parse?:
   if (value === undefined && optional !== true) {
     throw new Error(`Config Exception: Missing ${key} variable in configuration`);
   }
+  if (value === undefined && optional === true) {
+    return undefined as any;
+  }
   return parse ? parse(value) : envToString(value);
 }
 
