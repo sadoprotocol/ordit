@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "tsx watch ./src/main.ts",
     "start": "tsx ./src/main.ts",
-    "worker": "bun ./src/Workers/Worker.ts",
-    "indexer": "bun ./src/Workers/Indexer.ts",
+    "worker": "tsx ./src/Workers/Worker.ts",
+    "indexer": "tsx ./src/Workers/Indexer.ts",
     "reorg": "tsx ./src/Workers/Reorg.ts",
     "server:start": "docker compose --profile server up -d",
     "server:stop": "docker compose --profile server down",
@@ -38,6 +38,7 @@
     "mongodb": "^6.5.0",
     "node-fetch": "^3.3.2",
     "p-limit": "^4.0.0",
+    "runestone-lib": "git+https://github.com/dcorral/runestone-lib.git",
     "tiny-secp256k1": "^2.2.3"
   },
   "devDependencies": {

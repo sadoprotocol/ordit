@@ -31,7 +31,7 @@ API_REPLICAS=1
 # Configuration for the worker instance handling indexing and
 # related operations. URI defines the global endpoint that
 # can access the read layer. HOST and PORT settings defines
-# the instance configuration. 
+# the instance configuration.
 
 WORKER_URI="http://127.0.0.1:3031"
 WORKER_HOST="0.0.0.0"
@@ -44,7 +44,12 @@ INDEX_UTXOS=true
 INDEX_INSCRIPTIONS=true
 INDEX_BRC20=true
 INDEX_SADO=true
+<<<<<<< HEAD
 # MAXHEIGHT=767430
+||||||| parent of f6fa717 ((Wip) Runestone indexer)
+=======
+INDEX_RUNES=true
+>>>>>>> f6fa717 ((Wip) Runestone indexer)
 
 # ORD SERVER
 # Currently used to serve our ability to track sat ranges and
@@ -70,8 +75,8 @@ RPC_PASSWORD="bitcoin"
 RPC_NOTIFY="http://host.docker.internal:3031"
 
 # REORG
-# For every new block we want to reverse lookup previous 
-# block hashes against local indexes to check for reorg 
+# For every new block we want to reverse lookup previous
+# block hashes against local indexes to check for reorg
 # events.
 
 REORG_SCAN_LENGTH=10

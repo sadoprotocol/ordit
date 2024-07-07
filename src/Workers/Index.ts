@@ -5,6 +5,7 @@ import { rpc } from "~Services/Bitcoin";
 import { brc20Indexer } from "./Indexers/Brc20";
 import { inscriptionsIndexer } from "./Indexers/Inscriptions";
 import { outputIndexer } from "./Indexers/Outputs";
+import { runesIndexer } from "./Indexers/Runes";
 import { sadoIndexer } from "./Indexers/Sado";
 import { utxoIndexer } from "./Indexers/Utxos";
 
@@ -29,6 +30,10 @@ export async function index() {
 
   if (config.index.sado === true) {
     indexers.push(sadoIndexer);
+  }
+
+  if (config.index.runes === true) {
+    indexers.push(runesIndexer);
   }
 
   const indexer = new Indexer({ indexers });
