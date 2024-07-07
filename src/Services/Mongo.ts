@@ -97,7 +97,7 @@ function getMongoUri(mongoConfig: {
     srv = "+srv";
     portStr = "";
   }
-  
+
   if (username && password) {
     return `mongodb${srv}://${username}:${password}@${hostname}${portStr}${options}`;
   }
