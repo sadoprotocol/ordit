@@ -1,6 +1,5 @@
 import { config } from "~Config";
 import { Indexer, IndexHandler } from "~Libraries/Indexer";
-import { log } from "~Libraries/Log";
 import { rpc } from "~Services/Bitcoin";
 
 import { brc20Indexer } from "./Indexers/Brc20";
@@ -32,12 +31,14 @@ export async function index() {
     indexers.push(sadoIndexer);
   }
 
-  if (config.index.maxheight && blockHeight >= config.index.maxheight) {
-    log(`Already at maxheight ${blockHeight}`);
-    return blockHeight;
+  const indexer = new Indexer({ indexers });
+
+  if (config.index.maxheight && blockHeight > config.index.maxheight) {
+    await indexer.run(config.index.maxheight);
+
+    return config.index.maxheight;
   }
 
-  const indexer = new Indexer({ indexers });
   await indexer.run(blockHeight);
 
   return blockHeight;

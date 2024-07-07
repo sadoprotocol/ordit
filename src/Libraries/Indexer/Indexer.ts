@@ -1,3 +1,5 @@
+import { assert } from "console";
+
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
@@ -50,6 +52,17 @@ export class Indexer {
 
   async run(blockHeight: number) {
     let currentHeight = await this.#getCurrentHeight();
+
+    if (config.index.maxheight) {
+      const maxheight = config.index.maxheight;
+      if (currentHeight >= maxheight) {
+        log(`Current height ${currentHeight} is already at or past maxheight ${maxheight}`);
+        return;
+      }
+      // If we are not yet at maxheight, we should index up to maxheight or blockheight, whichever is lower.
+      assert(blockHeight <= maxheight);
+    }
+
     if (currentHeight === blockHeight) {
       return; // indexer has latest outputs
     }
