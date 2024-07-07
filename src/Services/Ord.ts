@@ -72,10 +72,15 @@ async function getInscription(id: string) {
 
 async function getInscriptions(ids: string[]) {
   try {
-    return call<OrdInscriptionData[]>(`/inscriptions`, ids);
+    const ordData = await call<OrdInscriptionData[]>(`/inscriptions`, ids);
+    return ordData;
   } catch (error) {
-    if (error instanceof OrdError) {
-      return [];
+    if (error instanceof NotFoundError) {
+      const errorMessage = error.data as string;
+      // Sample errorMessage: "inscription 861c74973a4ab6be4f4c40690210d9095eab234f56173cfa82bfd07f4278febci0 not found"
+      const missingId = errorMessage.slice(12, -10); // Slice from front and back as inscription number is variable length
+      ids.splice(ids.indexOf(missingId), 1);
+      return getInscriptions(ids);
     }
     throw error;
   }
