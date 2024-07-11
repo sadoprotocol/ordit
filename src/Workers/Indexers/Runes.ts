@@ -1,10 +1,10 @@
 import { isRunestone, RunestoneSpec, tryDecodeRunestone } from "runestone-lib";
+
 import { db } from "~Database";
 import { Indexer, IndexHandler, VoutData } from "~Libraries/Indexer/Indexer";
-import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
 import { perf } from "~Libraries/Log";
+import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
 import { ord } from "~Services/Ord";
-import { parseLocation } from "~Utilities/Transaction";
 
 export const runesIndexer: IndexHandler = {
   name: "runes",
@@ -36,9 +36,11 @@ export const runesIndexer: IndexHandler = {
 async function getRunestones(vouts: VoutData[]): Promise<RunestoneSpec[]> {
   const runestones: RunestoneSpec[] = [];
   for (const vout of vouts) {
-    const decodedRunestones = tryDecodeRunestone({ vout: [{ scriptPubKey: { hex: vout.scriptPubKey.hex } }] });
-    if (decodedRunestones === null) continue;
-    if (isRunestone(decodedRunestones)) runestones.push(decodedRunestones);
+    const decodedRunestone = tryDecodeRunestone({ vout: [{ scriptPubKey: { hex: vout.scriptPubKey.hex } }] });
+    if (decodedRunestone === null) {
+      continue;
+    }
+    if (isRunestone(decodedRunestone)) runestones.push(decodedRunestone);
   }
   return runestones;
 }
