@@ -44,12 +44,8 @@ INDEX_UTXOS=true
 INDEX_INSCRIPTIONS=true
 INDEX_BRC20=true
 INDEX_SADO=true
-<<<<<<< HEAD
 # MAXHEIGHT=767430
-||||||| parent of f6fa717 ((Wip) Runestone indexer)
-=======
 INDEX_RUNES=true
->>>>>>> f6fa717 ((Wip) Runestone indexer)
 
 # ORD SERVER
 # Currently used to serve our ability to track sat ranges and
