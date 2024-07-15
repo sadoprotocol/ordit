@@ -20,12 +20,8 @@ export const config = {
     inscriptions: getEnvironmentVariable("INDEX_INSCRIPTIONS", envToBoolean),
     brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
-<<<<<<< HEAD
     maxheight: getEnvironmentVariable("MAXHEIGHT", envToNumber, true),
-||||||| parent of f6fa717 ((Wip) Runestone indexer)
-=======
     runes: getEnvironmentVariable("INDEX_RUNES", envToBoolean),
->>>>>>> f6fa717 ((Wip) Runestone indexer)
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),
