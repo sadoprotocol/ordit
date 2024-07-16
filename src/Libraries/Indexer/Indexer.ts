@@ -3,7 +3,7 @@ import { assert } from "console";
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
-import { Block, isCoinbaseTx, rpc, ScriptPubKey } from "~Services/Bitcoin";
+import { Block, isCoinbaseTx, RawTransaction, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
@@ -19,6 +19,7 @@ export class Indexer {
 
   #vins: VinData[] = [];
   #vouts: VoutData[] = [];
+  #txs: RawTransaction[] = [];
 
   constructor(options: IndexerOptions) {
     this.#indexers = options.indexers;
@@ -42,6 +43,10 @@ export class Indexer {
 
   get vouts() {
     return this.#vouts;
+  }
+
+  get txs() {
+    return this.#txs;
   }
 
   /*
@@ -143,6 +148,7 @@ export class Indexer {
 
   async #handleBlock(block: Block<2>) {
     for (const tx of block.tx) {
+      this.#txs.push(tx);
       const txid = tx.txid;
 
       if (isCoinbaseTx(tx) === false) {
@@ -211,6 +217,7 @@ export class Indexer {
 
     this.#vins = [];
     this.#vouts = [];
+    this.#txs = [];
 
     log(`\n`);
   }

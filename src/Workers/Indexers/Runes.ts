@@ -1,4 +1,5 @@
 import { isRunestone, RunestoneSpec, tryDecodeRunestone } from "runestone-lib";
+import { RunestoneTx } from "runestone-lib/src/runestone";
 
 import { db } from "~Database";
 import { Indexer, IndexHandler, VoutData } from "~Libraries/Indexer/Indexer";
@@ -20,7 +21,7 @@ export const runesIndexer: IndexHandler = {
     log(`  ⌛ Resolved [${ts.now} seconds]`);
 
     ts = perf();
-    const runes = await getRunestones(indexer.vouts);
+    const runes = await getRunestones(indexer.txs);
     log(`🚚 Delivering ${runes.length.toLocaleString()} runestones [${ts.now} seconds]`);
 
     ts = perf();
@@ -33,13 +34,11 @@ export const runesIndexer: IndexHandler = {
   },
 };
 
-async function getRunestones(vouts: VoutData[]): Promise<RunestoneSpec[]> {
+async function getRunestones(txs: RunestoneTx[]): Promise<RunestoneSpec[]> {
   const runestones: RunestoneSpec[] = [];
-  for (const vout of vouts) {
-    const decodedRunestone = tryDecodeRunestone({ vout: [{ scriptPubKey: { hex: vout.scriptPubKey.hex } }] });
-    if (decodedRunestone === null) {
-      continue;
-    }
+  for (const tx of txs) {
+    const decodedRunestone = tryDecodeRunestone(tx);
+    if (decodedRunestone === null) continue;
     if (isRunestone(decodedRunestone)) runestones.push(decodedRunestone);
   }
   return runestones;
