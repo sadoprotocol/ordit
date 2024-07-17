@@ -268,14 +268,14 @@ type IndexerOptions = {
 
 export type IndexHandler = {
   name: string;
-  run(
+  run?: (
     indexer: Indexer,
     props: {
       height: number;
       log: (message: string) => void;
     },
-  ): Promise<void>;
-  reorg(height: number): Promise<void>;
+  ) => Promise<void>;
+  reorg?: (height: number) => Promise<void>;
 };
 
 export type VinData = TxMeta & {

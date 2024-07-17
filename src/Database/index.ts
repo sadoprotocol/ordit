@@ -4,7 +4,6 @@ import { inscriptions } from "./Inscriptions";
 import { ipfs } from "./IPFS";
 import { media } from "./Media";
 import { outputs } from "./Output";
-import { runestones } from "./Runes";
 import { sado } from "./Sado";
 import { utxos } from "./Utxos";
 
@@ -17,5 +16,4 @@ export const db = {
   outputs,
   sado,
   utxos,
-  runestones,
 };

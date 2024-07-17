@@ -7,7 +7,6 @@ import { registrar as inscriptions } from "./Database/Inscriptions/Collection";
 import { registrar as ipfs } from "./Database/IPFS/Collection";
 import { registrar as media } from "./Database/Media/Collection";
 import { registrar as output } from "./Database/Output/Collection";
-import { registrar as runes } from "./Database/Runes/Collection";
 import { registrar as sadoEvents } from "./Database/Sado/Events/Collection";
 import { registrar as sadoOrders } from "./Database/Sado/Orders/Collection";
 import { registrar as utxos } from "./Database/Utxos/Collection";
@@ -26,7 +25,6 @@ async function database() {
     brc20Tokens,
     brc20Transfers,
     inscriptions,
-    runes,
     ipfs,
     media,
     output,
