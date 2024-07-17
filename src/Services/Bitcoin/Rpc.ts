@@ -1,11 +1,70 @@
 import { BadRequestError, InternalError } from "@valkyr/api";
 import retry from "async-retry";
 import fetch from "node-fetch";
+import { RpcResponse } from "runestone-lib";
 
 import { sleep } from "~Utilities/Helpers";
 
 import { config } from "../../Config";
 import { logger } from "../../Logger";
+
+export async function rpcRequest<T>(method: string, params: any[]): Promise<RpcResponse<T>> {
+  try {
+    const response = await fetch(config.rpc.uri, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(`${config.rpc.user}:${config.rpc.password}`).toString("base64")}`,
+      },
+      body: JSON.stringify({
+        jsonrpc: "1.0",
+        id: "curltest",
+        method,
+        params,
+      }),
+    });
+
+    if (!response.ok) {
+      return {
+        result: null,
+        error: {
+          status: response.status,
+          message: `RPC request failed with status ${response.status}, method ${method}, params ${params}`,
+        },
+      };
+    }
+
+    const data = (await response.json()) as RpcResponse<T>;
+    if (data.error) {
+      return {
+        result: null,
+        error: data.error,
+      };
+    }
+
+    if (data.result === null) {
+      return {
+        result: null,
+        error: {
+          message: "RPC request returned null result",
+        },
+      };
+    }
+
+    return {
+      result: data.result,
+      error: null,
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      result: null,
+      error: {
+        message: `RPC request failed with error: ${error.message}`,
+      },
+    };
+  }
+}
 
 export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
   const ts = performance.now();
@@ -116,7 +175,7 @@ export class RpcError {
       message: string;
     },
     readonly id: string,
-  ) { }
+  ) {}
 
   static from(text: string) {
     try {
