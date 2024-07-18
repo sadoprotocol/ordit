@@ -20,6 +20,7 @@ export class Indexer {
   #vins: VinData[] = [];
   #vouts: VoutData[] = [];
   #txs: RawTransaction[] = [];
+  #blocks: Block<2>[] = [];
 
   constructor(options: IndexerOptions) {
     this.#indexers = options.indexers;
@@ -47,6 +48,10 @@ export class Indexer {
 
   get txs() {
     return this.#txs;
+  }
+
+  get blocks() {
+    return this.#blocks;
   }
 
   /*
@@ -189,6 +194,7 @@ export class Indexer {
         n += 1;
       }
     }
+    this.#blocks.push(block);
   }
 
   async #commit(height: number) {
@@ -218,6 +224,7 @@ export class Indexer {
     this.#vins = [];
     this.#vouts = [];
     this.#txs = [];
+    this.#blocks = [];
 
     log(`\n`);
   }
@@ -268,14 +275,14 @@ type IndexerOptions = {
 
 export type IndexHandler = {
   name: string;
-  run?: (
+  run: (
     indexer: Indexer,
     props: {
       height: number;
       log: (message: string) => void;
     },
   ) => Promise<void>;
-  reorg?: (height: number) => Promise<void>;
+  reorg: (height: number) => Promise<void>;
 };
 
 export type VinData = TxMeta & {

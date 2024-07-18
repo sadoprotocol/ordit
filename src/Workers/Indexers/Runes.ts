@@ -1,5 +1,5 @@
 import { Db } from "mongodb";
-import { Network, RunestoneIndexer, RunestoneIndexerOptions } from "runestone-lib";
+import { Network, RuneUpdater } from "runestone-lib";
 import {
   BitcoinRpcClient,
   GetBlockhashParams,
@@ -18,7 +18,10 @@ import {
   RuneUtxoBalance,
 } from "runestone-lib";
 
-import { IndexHandler } from "~Libraries/Indexer/Indexer";
+import { config } from "~Config";
+import { Indexer, IndexHandler } from "~Libraries/Indexer/Indexer";
+import { perf } from "~Libraries/Log";
+import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
 import { rpcRequest } from "~Services/Bitcoin/Rpc";
 import { client, mongo } from "~Services/Mongo";
 
@@ -56,25 +59,34 @@ class MongoRunestoneStorage implements RunestoneStorage {
   async getBlockhash(blockHeight: number): Promise<string | null> {
     if (!this.db) throw new Error("Database not connected");
 
-    const block = await this.db.collection("blocks").findOne({ height: blockHeight });
+    const block = await this.db.collection("runes_blocks").findOne({ height: blockHeight });
     return block ? block.hash : null;
   }
 
   async getCurrentBlock(): Promise<BlockIdentifier | null> {
     if (!this.db) throw new Error("Database not connected");
 
-    const block = await this.db.collection("blocks").find().sort({ height: -1 }).limit(1).next();
+    const block = await this.db.collection("runes_blocks").find().sort({ height: -1 }).limit(1).next();
     return block ? { height: block.height, hash: block.hash } : null;
   }
 
   async resetCurrentBlock(block: BlockIdentifier): Promise<void> {
     if (!this.db) throw new Error("Database not connected");
 
-    await this.db.collection("blocks").deleteMany({ height: { $gt: block.height } });
+    await this.db.collection("runes_blocks").deleteMany({ height: { $gt: block.height } });
 
     await this.db
-      .collection("blocks")
+      .collection("runes_blocks")
       .updateOne({ height: block.height }, { $set: { hash: block.hash } }, { upsert: true });
+  }
+
+  async resetCurrentBlockHeight(height: number): Promise<void> {
+    if (!this.db) throw new Error("Database not connected");
+
+    await this.db.collection("runes_blocks").deleteMany({ height: { $gt: height } });
+    const hash = this.getBlockhash(height);
+
+    await this.db.collection("runes_blocks").updateOne({ height }, { $set: { hash } }, { upsert: true });
   }
 
   async seedEtchings(runes_etchings: RuneEtching[]): Promise<void> {
@@ -94,7 +106,7 @@ class MongoRunestoneStorage implements RunestoneStorage {
   async saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
     if (!this.db) throw new Error("Database not connected");
 
-    await this.db.collection("blocks").insertOne(runeBlockIndex.block);
+    await this.db.collection("runes_blocks").insertOne(runeBlockIndex.block);
 
     const bulkEtchings = runeBlockIndex.etchings.map((etching) => ({
       updateOne: {
@@ -172,16 +184,53 @@ class MongoRunestoneStorage implements RunestoneStorage {
   }
 }
 
+function getNetwork(): Network {
+  const _net =
+    config.network === "regtest"
+      ? Network.REGTEST
+      : config.network === "signet"
+      ? Network.SIGNET
+      : config.network === "testnet"
+      ? Network.TESTNET
+      : Network.MAINNET;
+  return _net;
+}
+
 export const runesIndexer: IndexHandler = {
   name: "runes",
 
-  async run() {
-    const bitcoinRpcClient: BitcoinRpcClientImpl = new BitcoinRpcClientImpl();
-    const network: Network = Network.REGTEST;
+  async run(idx: Indexer, { height, log }) {
+    if (height < RUNES_BLOCK) {
+      return log(`🚫 Runes indexer has not passed epoch block`);
+    }
+    const rpc: BitcoinRpcClientImpl = new BitcoinRpcClientImpl();
     const storage: MongoRunestoneStorage = new MongoRunestoneStorage();
-    const options: RunestoneIndexerOptions = { bitcoinRpcClient, network, storage };
-    const indexer = new RunestoneIndexer(options);
-    await indexer.start();
-    await indexer.updateRuneUtxoBalances();
+    storage.connect();
+
+    const network = getNetwork();
+    log(`⏳ Looking for runestones in blocks: [${idx.blocks[0].height} - ${idx.blocks.at(-1)?.height}]`);
+    for (const block of idx.blocks) {
+      const ts = perf();
+      const runeUpdater = new RuneUpdater(network, block, true, storage, rpc);
+
+      for (const [txIndex, tx] of block.tx.entries()) {
+        await runeUpdater.indexRunes(tx, txIndex);
+      }
+      const etchingsLength = runeUpdater.etchings.length.toLocaleString();
+      const utxoBalancesLength = runeUpdater.utxoBalances.length.toLocaleString();
+
+      const foundRunestone = etchingsLength !== "0" || utxoBalancesLength !== "0";
+      if (foundRunestone) {
+        log(`💾 Block ${block.height}: ${etchingsLength} etchings and ${utxoBalancesLength} rune balance UTXO`);
+      }
+
+      await storage.saveBlockIndex(runeUpdater);
+      if (foundRunestone) log(`⏳ [${ts.now} seconds]`);
+    }
+  },
+  async reorg(height: number) {
+    const storage: MongoRunestoneStorage = new MongoRunestoneStorage();
+    storage.connect();
+    await storage.resetCurrentBlockHeight(height);
   },
 };
