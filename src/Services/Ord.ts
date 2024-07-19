@@ -15,8 +15,6 @@ export const ord = {
   getInscriptionsForIds,
   waitForBlock,
   waitForInscriptions,
-  getRune,
-  getRunes,
   getRuneDetail,
   getRuneOutputsBalancesByOutpoints,
   getRuneOutputsBalancesByOutpoint,
@@ -137,29 +135,6 @@ async function waitForInscriptions(blockHeight: number, seconds = 1): Promise<vo
     console.log(error);
   }
   return sleep(seconds).then(() => waitForInscriptions(blockHeight, seconds));
-}
-
-async function getRune(id: string) {
-  try {
-    const rune = await call<OrdRuneData>(`/rune/${id}`);
-    console.log(rune);
-  } catch (error) {
-    if (error instanceof OrdError && error.status === 404) {
-      return undefined;
-    }
-    throw error;
-  }
-}
-
-async function getRunes(ids: string[]) {
-  try {
-    return call<OrdRuneData[]>(`/runes`, ids);
-  } catch (error) {
-    if (error instanceof OrdError) {
-      return [];
-    }
-    throw error;
-  }
 }
 
 /**
