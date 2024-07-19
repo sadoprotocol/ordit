@@ -38,7 +38,7 @@ export const inscriptions = {
  | Core Methods
  |--------------------------------------------------------------------------------
  |
- | Flexible core mongodb methods for the collection. These methods provides a 
+ | Flexible core mongodb methods for the collection. These methods provides a
  | unified passthrough to the collection directly for querying.
  |
  */
@@ -107,8 +107,8 @@ async function deleteMany(filter: Filter<Inscription>, options?: DeleteOptions) 
  | Helper Methods
  |--------------------------------------------------------------------------------
  |
- | List of helper methods for querying more complex data from the collection. 
- | These methods provides a wrapper around core functionality and produces results 
+ | List of helper methods for querying more complex data from the collection.
+ | These methods provides a wrapper around core functionality and produces results
  | under deterministic filters.
  |
  */

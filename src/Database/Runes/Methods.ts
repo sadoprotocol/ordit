@@ -13,6 +13,7 @@ export const runes = {
   findRune,
   countBlocks,
   addressBalances,
+  addressRunesUTXOs,
 };
 
 async function findBlock(height: number): Promise<BlockInfo | null> {
@@ -33,6 +34,19 @@ async function findRune(runeTicker: string): Promise<RuneEtching | null> {
 
 async function addressBalances(address: string): Promise<RuneUtxoBalance[] | null> {
   const filter: Filter<RuneUtxoBalance> = { address };
+  const cursor = collectionUtxoBalances.find<RuneUtxoBalance>(filter);
+
+  const balances: RuneUtxoBalance[] = await cursor.toArray();
+
+  if (balances.length === 0) {
+    return null;
+  }
+
+  return balances;
+}
+
+async function addressRunesUTXOs(address: string, runeTicker: string): Promise<RuneUtxoBalance[] | null> {
+  const filter: Filter<RuneUtxoBalance> = { address, runeTicker };
   const cursor = collectionUtxoBalances.find<RuneUtxoBalance>(filter);
 
   const balances: RuneUtxoBalance[] = await cursor.toArray();
