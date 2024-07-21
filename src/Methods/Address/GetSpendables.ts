@@ -39,7 +39,7 @@ export default method({
 
       // ### Safe To Spend
       // Any output that has an inscription or ordinal of rarity higher than
-      // configured treshold is not safe to spend.
+      // configured threshold is not safe to spend.
 
       if (safetospend === true) {
         const outpoint = `${output.vout.txid}:${output.vout.n}`;

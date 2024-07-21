@@ -11,7 +11,7 @@ export const events = {
 
 async function addEvents(events: Brc20Event[]) {
   const promises = [];
-  const chunkSize = getChunkSize(events.length);
+  const chunkSize = getChunkSize();
   for (let i = 0; i < events.length; i += chunkSize) {
     const chunk = events.slice(i, i + chunkSize);
     promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));

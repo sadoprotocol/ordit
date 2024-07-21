@@ -24,6 +24,4 @@ export type Utxo = {
   scriptPubKey: ScriptPubKey;
   address: string;
   location: string;
-  satRanges: number[] | null;
-  inscriptions: string[];
 };

@@ -36,7 +36,7 @@ export const config = {
   },
   reorg: {
     scanLength: getEnvironmentVariable("REORG_SCAN_LENGTH", envToNumber),
-    treshold: getEnvironmentVariable("REORG_MANUAL_TRESHOLD", envToNumber),
+    threshold: getEnvironmentVariable("REORG_MANUAL_THRESHOLD", envToNumber),
     debug: getEnvironmentVariable("REORG_DEBUG", envToBoolean),
   },
   ipfs: {
@@ -66,5 +66,10 @@ export const config = {
   faucet: {
     seed: getEnvironmentVariable("FAUCET_SEED"),
     auth: getEnvironmentVariable("FAUCET_AUTH"),
+  },
+  indexer: {
+    height_threshold: getEnvironmentVariable("INDEXER_HEIGHT", envToNumber, true),
+    blocks_threshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
+    chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
   },
 };

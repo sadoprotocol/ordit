@@ -38,7 +38,7 @@ export default method({
 
     const resultLimiter = limiter<any>(10);
 
-    const cursor = await getSearchAggregate(address, reverse);
+    const cursor = getSearchAggregate(address, reverse);
     while (await cursor.hasNext()) {
       const document = await cursor.next();
       if (document === null) {

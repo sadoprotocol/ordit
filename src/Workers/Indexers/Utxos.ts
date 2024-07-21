@@ -12,9 +12,7 @@ export const utxoIndexer: IndexHandler = {
 
     const utxos: Utxo[] = [];
     const spents: string[] = [];
-    const outputMap = new Map<string, number>();
 
-    let i = 0;
     for (const vout of indexer.vouts) {
       const address = vout.addresses[0];
       if (address !== undefined) {
@@ -25,34 +23,18 @@ export const utxoIndexer: IndexHandler = {
           scriptPubKey: vout.scriptPubKey,
           address,
           location: `${vout.txid}:${vout.n}`,
-          satRanges: [],
-          inscriptions: [],
         });
-        outputMap.set(`${vout.txid}:${vout.n}`, i);
-        i += 1;
       }
     }
 
     for (const vin of indexer.vins) {
       spents.push(`${vin.vout.txid}:${vin.vout.n}`);
     }
-
-    log(
-      `🚚 Delivering ${utxos.length.toLocaleString()} utxos and ${spents.length.toLocaleString()} spents [${
-        ts.now
-      } seconds]`,
-    );
-
     ts = perf();
-
-    await Promise.all([
-      db.utxos.insertMany(utxos).then(() => {
-        log(`💾 Created ${utxos.length.toLocaleString()} utxos [${ts.now} seconds]`);
-      }),
-      db.utxos.deleteSpents(spents).then(() => {
-        log(`💾 Removed ${spents.length.toLocaleString()} utxos [${ts.now} seconds]`);
-      }),
-    ]);
+    await db.utxos.insertMany(utxos);
+    log(`💾 Created ${indexer.vouts.length.toLocaleString()} utxos [${ts.now} seconds]`);
+    await db.utxos.deleteSpents(spents);
+    log(`💾 Removed ${spents.length.toLocaleString()} utxos [${ts.now} seconds]`);
   },
 
   async reorg() {

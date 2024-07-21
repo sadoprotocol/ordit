@@ -71,9 +71,6 @@ export async function rpc<R>(method: string, args: any[] = []): Promise<R> {
     throw new BadRequestError(error.message, { code: error.code, method });
   } finally {
     const time = performance.now() - ts;
-    if (time / 1000 > 1) {
-      console.log("\n⏲️ rpc call %s args [%s] took %s seconds", method, args.join(", "), (time / 1000).toFixed(3));
-    }
     logger.addRpc(method, time);
   }
 }
@@ -116,7 +113,7 @@ export class RpcError {
       message: string;
     },
     readonly id: string,
-  ) { }
+  ) {}
 
   static from(text: string) {
     try {

@@ -14,7 +14,7 @@ export function log(message: string, padding = 0): void {
   if (pre.length > 0) {
     message = message.slice(pre.length);
   }
-  process.stdout.write(pre.join("") + message.padStart(message.length + padding));
+  process.stdout.write(pre.join("") + message.padStart(message.length + padding) + "\n");
 }
 
 export function perf() {
