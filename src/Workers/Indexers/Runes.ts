@@ -95,7 +95,7 @@ class MongoRunestoneStorage implements RunestoneStorage {
     const bulkOps = runes_etchings.map((etching) => ({
       updateOne: {
         filter: { runeId: etching.runeId },
-        update: { $set: etching },
+        update: { $set: convertBigIntToString(etching) },
         upsert: true,
       },
     }));
@@ -111,7 +111,7 @@ class MongoRunestoneStorage implements RunestoneStorage {
     const bulkEtchings = runeBlockIndex.etchings.map((etching) => ({
       updateOne: {
         filter: { runeId: etching.runeId },
-        update: { $set: etching },
+        update: { $set: convertBigIntToString(etching) },
         upsert: true,
       },
     }));
@@ -142,6 +142,7 @@ class MongoRunestoneStorage implements RunestoneStorage {
       tx: Number(runeLocSplit[1]),
     };
     const etching = await this.db.collection("runes_etchings").findOne({ runeId: _runeLocation });
+    convertStringToBigInt(etching);
     return etching ? (etching as unknown as RuneEtching) : null;
   }
 
@@ -165,6 +166,7 @@ class MongoRunestoneStorage implements RunestoneStorage {
     if (!this.db) throw new Error("Database not connected");
 
     const etching = await this.db.collection("runes_etchings").findOne({ runeTicker });
+    convertStringToBigInt(etching);
     return etching ? (etching.runeId as RuneLocation) : null;
   }
 
@@ -178,6 +180,7 @@ class MongoRunestoneStorage implements RunestoneStorage {
       address: balance.address,
       scriptPubKey: balance.scriptPubKey,
       runeId: balance.runeId,
+      satValue: balance.satValue,
       runeTicker: balance.runeTicker,
       amount: BigInt(balance.amount),
     }));
@@ -201,7 +204,7 @@ export const runesIndexer: IndexHandler = {
 
   async run(idx: Indexer, { height, log }) {
     if (height < RUNES_BLOCK) {
-      return log(`🚫 Runes indexer has not passed epoch block`);
+      return;
     }
     const rpc: BitcoinRpcClientImpl = new BitcoinRpcClientImpl();
     const storage: MongoRunestoneStorage = new MongoRunestoneStorage();
@@ -234,3 +237,66 @@ export const runesIndexer: IndexHandler = {
     await storage.resetCurrentBlockHeight(height);
   },
 };
+
+// ------------------------------------------
+// UTILS
+// ------------------------------------------
+
+function convertStringToBigInt(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "string") {
+    // Check if the string represents a large integer and convert it to BigInt
+    if (!isNaN(Number(obj)) && /^-?\d+$/.test(obj)) {
+      try {
+        return BigInt(obj);
+      } catch (e) {
+        return obj;
+      }
+    }
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertStringToBigInt);
+  }
+
+  if (typeof obj === "object") {
+    const newObj: any = {};
+    for (const key in obj) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(key)) {
+        // eslint-disable-next-line no-prototype-builtins
+        newObj[key] = convertStringToBigInt(obj[key]);
+      }
+    }
+    return newObj;
+  }
+
+  return obj;
+}
+
+function convertBigIntToString(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "bigint") {
+    return obj.toString();
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToString);
+  }
+
+  if (typeof obj === "object") {
+    const newObj: any = {};
+    for (const key in obj) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(key)) {
+        // eslint-disable-next-line no-prototype-builtins
+        newObj[key] = convertBigIntToString(obj[key]);
+      }
+    }
+    return newObj;
+  }
+
+  return obj;
+}
