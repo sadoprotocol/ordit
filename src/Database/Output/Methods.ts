@@ -9,7 +9,8 @@ import {
   UpdateOptions,
 } from "mongodb";
 
-import { ignoreDuplicateErrors } from "../../Utilities/Database";
+import { ignoreDuplicateErrors } from "~Database/Utilities";
+
 import { getChunkSize } from "../Utilities";
 import { collection, deployedCollection, OutputDocument, SpentOutput } from "./Collection";
 import { noSpentsFilter } from "./Utilities";

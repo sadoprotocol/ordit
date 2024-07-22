@@ -1,10 +1,10 @@
 import { DeleteOptions, Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { getChunkSize } from "~Database/Utilities";
+import { ignoreDuplicateErrors } from "~Database/Utilities";
 
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
-import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, Inscription } from "./Collection";
 
 export const inscriptions = {

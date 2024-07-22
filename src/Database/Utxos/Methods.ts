@@ -1,4 +1,4 @@
-import { ignoreDuplicateErrors } from "~Utilities/Database";
+import { ignoreDuplicateErrors } from "~Database/Utilities";
 
 import { getChunkSize } from "../Utilities";
 import { collection, Utxo } from "./Collection";

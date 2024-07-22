@@ -1,6 +1,5 @@
-import { getChunkSize } from "~Database/Utilities";
+import { getChunkSize, ignoreDuplicateErrors } from "~Database/Utilities";
 
-import { ignoreDuplicateErrors } from "../../../Utilities/Database";
 import { Brc20Event, collection } from "./Collection";
 
 export const events = {
