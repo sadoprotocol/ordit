@@ -21,6 +21,9 @@ export const config = {
     brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
     maxheight: getEnvironmentVariable("MAXHEIGHT", envToNumber, true),
+    height_threshold: getEnvironmentVariable("INDEXER_HEIGHT", envToNumber, true),
+    blocks_threshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
+    chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),
@@ -36,7 +39,7 @@ export const config = {
   },
   reorg: {
     scanLength: getEnvironmentVariable("REORG_SCAN_LENGTH", envToNumber),
-    treshold: getEnvironmentVariable("REORG_MANUAL_TRESHOLD", envToNumber),
+    threshold: getEnvironmentVariable("REORG_MANUAL_THRESHOLD", envToNumber),
     debug: getEnvironmentVariable("REORG_DEBUG", envToBoolean),
   },
   ipfs: {

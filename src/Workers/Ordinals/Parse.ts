@@ -14,7 +14,7 @@ const spent: string[] = [];
 export async function parse() {
   const blockHeight = await rpc.blockchain.getBlockCount();
 
-  let height = (await redis.get("sats:height").then((value) => (value === null ? -1 : parseInt(value)))) + 1;
+  let height = (await redis.get("sats:height").then((value: string) => (value === null ? -1 : parseInt(value)))) + 1;
   let hash = await rpc.blockchain.getBlockHash(height);
 
   while (height < blockHeight) {
@@ -54,7 +54,7 @@ export async function parse() {
       break;
     }
 
-    if (hasReachedTreshold(height)) {
+    if (hasReachedThreshold(height)) {
       await commit(height);
     }
 
@@ -98,7 +98,7 @@ async function commit(height: number) {
   log(`\n💽 Removed ${outpoints.toLocaleString()} outpoints [${ts.now} seconds]\n\n`);
 }
 
-function hasReachedTreshold(height: number) {
+function hasReachedThreshold(height: number) {
   if (height !== 0 && height % 5_000 === 0) {
     return true;
   }

@@ -1,10 +1,10 @@
 import { DeleteOptions, Filter, FindOptions, UpdateFilter } from "mongodb";
 
 import { getChunkSize } from "~Database/Utilities";
+import { ignoreDuplicateErrors } from "~Database/Utilities";
 
 import { config } from "../../Config";
 import { FindPaginatedParams, paginate } from "../../Libraries/Paginate";
-import { ignoreDuplicateErrors } from "../../Utilities/Database";
 import { collection, Inscription } from "./Collection";
 
 export const inscriptions = {
@@ -38,12 +38,12 @@ export const inscriptions = {
  | Core Methods
  |--------------------------------------------------------------------------------
  |
- | Flexible core mongodb methods for the collection. These methods provides a 
+ | Flexible core mongodb methods for the collection. These methods provides a
  | unified passthrough to the collection directly for querying.
  |
  */
 
-async function insertMany(inscriptions: Inscription[], chunkSize = getChunkSize(inscriptions.length)) {
+async function insertMany(inscriptions: Inscription[], chunkSize = getChunkSize()) {
   const promises = [];
   for (let i = 0; i < inscriptions.length; i += chunkSize) {
     const chunk = inscriptions.slice(i, i + chunkSize);
@@ -107,8 +107,8 @@ async function deleteMany(filter: Filter<Inscription>, options?: DeleteOptions) 
  | Helper Methods
  |--------------------------------------------------------------------------------
  |
- | List of helper methods for querying more complex data from the collection. 
- | These methods provides a wrapper around core functionality and produces results 
+ | List of helper methods for querying more complex data from the collection.
+ | These methods provides a wrapper around core functionality and produces results
  | under deterministic filters.
  |
  */

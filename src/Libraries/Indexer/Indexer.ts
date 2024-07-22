@@ -3,18 +3,16 @@ import { assert } from "console";
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
-import { Block, isCoinbaseTx, rpc, ScriptPubKey } from "~Services/Bitcoin";
+import { rpc, ScriptPubKey, Vin } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
 
 export class Indexer {
   readonly #indexers: IndexHandler[];
-  readonly #treshold: {
+  readonly #threshold: {
     height?: number;
     blocks: number;
-    vins: number;
-    vouts: number;
   };
 
   #vins: VinData[] = [];
@@ -22,11 +20,9 @@ export class Indexer {
 
   constructor(options: IndexerOptions) {
     this.#indexers = options.indexers;
-    this.#treshold = {
-      height: options.treshold?.height,
-      blocks: options.treshold?.blocks ?? 5_000,
-      vins: options.treshold?.vins ?? 250_000,
-      vouts: options.treshold?.vouts ?? 250_000,
+    this.#threshold = {
+      height: options.threshold?.height ?? config.index.height_threshold ?? undefined,
+      blocks: options.threshold?.blocks ?? config.index.blocks_threshold ?? 1_000,
     };
   }
 
@@ -67,7 +63,8 @@ export class Indexer {
       return; // indexer has latest outputs
     }
 
-    log(`\n ---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
+    const indexBlock = Math.min(blockHeight, config.index.height_threshold);
+    log(`---------- indexing to block ${indexBlock.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
     if (reorgHeight !== undefined) {
@@ -87,7 +84,7 @@ export class Indexer {
 
     const reorgHeight = await getReorgHeight();
     if (reorgHeight !== -1) {
-      if (blockHeight - reorgHeight > config.reorg.treshold) {
+      if (blockHeight - reorgHeight > config.reorg.threshold) {
         log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
         throw new Error("reorg detected, manual intervention required");
       }
@@ -104,50 +101,73 @@ export class Indexer {
    |--------------------------------------------------------------------------------
    */
 
+  async #fetchAndHandleBlock(blockHash: string, retries = 5) {
+    try {
+      const block = await rpc.blockchain.getBlock(blockHash, 2);
+      await this.#handleBlock(block);
+    } catch (error) {
+      if (retries > 0 && error.code === -32000) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await this.#fetchAndHandleBlock(blockHash, retries - 1);
+      } else {
+        throw error;
+      }
+    }
+  }
+
   async #indexBlocks(currentHeight: number, blockHeight: number) {
-    log(`\n\n 📦 Indexing blockchain from block ${currentHeight.toLocaleString()}\n`);
+    log(`📦 Indexing blockchain from block ${currentHeight.toLocaleString()}`);
 
     let height = currentHeight + 1;
-    let blockHash = await rpc.blockchain.getBlockHash(height);
+    let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
 
+    let ts = perf();
+    const toBlock = Math.min(height - 1 + this.#threshold.blocks, blockHeight);
+    log(`\n💽 Reading blocks [${(height - 1).toLocaleString()} - ${toBlock.toLocaleString()}]`);
+
+    const blockPromises: Promise<void>[] = [];
     while (blockHash !== undefined && height <= blockHeight) {
-      if (this.#treshold.height && this.#treshold.height <= height) {
-        break; // reached configured height treshold
+      if (this.#threshold.height && this.#threshold.height <= height) {
+        break; // reached configured height threshold
       }
 
-      const ts = perf();
-      const block = await rpc.blockchain.getBlock(blockHash, 2);
-
-      log(`\n   💽 Reading block ${block.height.toLocaleString()} [${ts.now} seconds]`);
-
-      // ### Block
-      // Process the block and extract all the vin and vout information required
-      // by subsequent index handlers.
-
-      await this.#handleBlock(block);
+      blockPromises.push(this.#fetchAndHandleBlock(blockHash));
 
       // ### Commit
-      // Once we reach configured tresholds we commit the current vins and vouts
+      // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
 
-      if (this.#hasReachedTreshold(height)) {
+      if (this.#hasReachedThreshold(height)) {
+        log(`💽 Read blocks in ${ts.now} seconds`);
+        await Promise.all(blockPromises);
         await this.#commit(height);
+        blockPromises.length = 0; // Clear the array for the next batch
+        const toBlock = Math.min(height + this.#threshold.blocks, blockHeight);
+        log(`\n💽 Reading blocks [${height.toLocaleString()} - ${toBlock.toLocaleString()}]`);
+        ts = perf();
       }
 
-      blockHash = block.nextblockhash;
+      try {
+        blockHash = await rpc.blockchain.getBlockHash(height + 1);
+      } catch {
+        blockHash = undefined;
+      }
       height += 1;
+    }
+
+    if (blockPromises.length > 0) {
+      await Promise.all(blockPromises);
     }
 
     await this.#commit(height - 1);
   }
 
-  async #handleBlock(block: Block<2>) {
-    for (const tx of block.tx) {
-      const txid = tx.txid;
+  async #handleBlock(block: any) {
+    await Promise.all(
+      block.tx.map(async (tx: any) => {
+        const txid = tx.txid;
 
-      if (isCoinbaseTx(tx) === false) {
-        let n = 0;
-        for (const vin of tx.vin) {
+        const vinPromises = tx.vin.map((vin: Vin, n: number) => {
           this.#vins.push({
             txid,
             n,
@@ -162,44 +182,39 @@ export class Indexer {
               n: vin.vout,
             },
           });
-          n += 1;
-        }
-      }
-
-      let n = 0;
-      for (const vout of tx.vout) {
-        this.#vouts.push({
-          txid,
-          n,
-          addresses: await getAddressessFromVout(vout),
-          value: vout.value,
-          scriptPubKey: vout.scriptPubKey,
-          block: {
-            hash: block.hash,
-            height: block.height,
-            time: block.time,
-          },
         });
-        n += 1;
-      }
-    }
+
+        const voutPromises = tx.vout.map(async (vout: VoutData, n: number) => {
+          const addresses = await getAddressessFromVout(vout);
+          this.#vouts.push({
+            txid,
+            n,
+            addresses,
+            value: vout.value,
+            scriptPubKey: vout.scriptPubKey,
+            block: {
+              hash: block.hash,
+              height: block.height,
+              time: block.time,
+            },
+          });
+        });
+
+        await Promise.all([...vinPromises, ...voutPromises]);
+      }),
+    );
   }
 
   async #commit(height: number) {
-    log(
-      `\n\n   📖 Indexing ${this.#vouts.length.toLocaleString()} vouts and ${this.#vins.length.toLocaleString()} vins`,
-    );
-
     // ### Run
     // Run all the registered index handlers and update the indexer
     // height tracker.
 
     for (const indexer of this.#indexers) {
-      log(`\n\n     🏭 Running ${indexer.name} indexer\n`);
       await indexer.run(this, {
         height,
         log(message: string) {
-          log(`\n       ${message}`);
+          log(`${message}`);
         },
       });
     }
@@ -211,8 +226,6 @@ export class Indexer {
 
     this.#vins = [];
     this.#vouts = [];
-
-    log(`\n`);
   }
 
   /*
@@ -221,17 +234,8 @@ export class Indexer {
    |--------------------------------------------------------------------------------
    */
 
-  #hasReachedTreshold(height: number) {
-    if (height !== 0 && height % this.#treshold.blocks === 0) {
-      return true;
-    }
-    if (this.#vins.length > this.#treshold.vins) {
-      return true;
-    }
-    if (this.#vouts.length > this.#treshold.vouts) {
-      return true;
-    }
-    return false;
+  #hasReachedThreshold(height: number) {
+    return height !== 0 && height % this.#threshold.blocks === 0;
   }
 
   async #getCurrentHeight() {
@@ -251,11 +255,9 @@ export class Indexer {
 
 type IndexerOptions = {
   indexers: IndexHandler[];
-  treshold?: {
+  threshold?: {
     height?: number;
     blocks?: number;
-    vins?: number;
-    vouts?: number;
   };
 };
 
