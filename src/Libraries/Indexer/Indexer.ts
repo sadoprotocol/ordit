@@ -22,7 +22,7 @@ export class Indexer {
     this.#indexers = options.indexers;
     this.#threshold = {
       height: options.threshold?.height ?? config.index.height_threshold ?? undefined,
-      blocks: options.threshold?.blocks ?? config.index.blocks_threshold ?? 5_000,
+      blocks: options.threshold?.blocks ?? config.index.blocks_threshold ?? 1_000,
     };
   }
 
