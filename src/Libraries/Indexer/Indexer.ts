@@ -21,8 +21,8 @@ export class Indexer {
   constructor(options: IndexerOptions) {
     this.#indexers = options.indexers;
     this.#threshold = {
-      height: options.threshold?.height ?? config.indexer.height_threshold ?? undefined,
-      blocks: options.threshold?.blocks ?? config.indexer.blocks_threshold ?? 5_000,
+      height: options.threshold?.height ?? config.index.height_threshold ?? undefined,
+      blocks: options.threshold?.blocks ?? config.index.blocks_threshold ?? 5_000,
     };
   }
 
@@ -63,7 +63,7 @@ export class Indexer {
       return; // indexer has latest outputs
     }
 
-    const indexBlock = Math.min(blockHeight, config.indexer.height_threshold);
+    const indexBlock = Math.min(blockHeight, config.index.height_threshold);
     log(`---------- indexing to block ${indexBlock.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);

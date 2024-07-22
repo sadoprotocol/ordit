@@ -1,3 +1,5 @@
+import { ignoreDuplicateErrors } from "~Utilities/Database";
+
 import { getChunkSize } from "../Utilities";
 import { collection, Utxo } from "./Collection";
 
@@ -12,11 +14,7 @@ async function insertMany(utxos: Utxo[]) {
   const chunkSize = getChunkSize();
   for (let i = 0; i < utxos.length; i += chunkSize) {
     const chunk = utxos.slice(i, i + chunkSize);
-    promises.push(
-      collection.insertMany(chunk, { ordered: false }).catch((error) => {
-        if (error.code !== 11000) throw error;
-      }),
-    );
+    promises.push(collection.insertMany(chunk, { ordered: false }).catch(ignoreDuplicateErrors));
   }
   await Promise.all(promises);
 }
