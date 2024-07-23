@@ -22,6 +22,9 @@ export const config = {
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
     maxheight: getEnvironmentVariable("MAXHEIGHT", envToNumber, true),
     runes: getEnvironmentVariable("INDEX_RUNES", envToBoolean),
+    height_threshold: getEnvironmentVariable("INDEXER_HEIGHT", envToNumber, true),
+    blocks_threshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
+    chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),
@@ -37,7 +40,7 @@ export const config = {
   },
   reorg: {
     scanLength: getEnvironmentVariable("REORG_SCAN_LENGTH", envToNumber),
-    treshold: getEnvironmentVariable("REORG_MANUAL_TRESHOLD", envToNumber),
+    threshold: getEnvironmentVariable("REORG_MANUAL_THRESHOLD", envToNumber),
     debug: getEnvironmentVariable("REORG_DEBUG", envToBoolean),
   },
   ipfs: {

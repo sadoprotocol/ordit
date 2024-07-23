@@ -1,7 +1,8 @@
 import { CountDocumentsOptions, Filter, FindOptions } from "mongodb";
 
-import { FindPaginatedParams, paginate } from "../../../Libraries/Paginate";
-import { ignoreDuplicateErrors } from "../../../Utilities/Database";
+import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
+
+import { ignoreDuplicateErrors } from "../../Utilities";
 import type { TokenDeployed } from "../Events/Collection";
 import { collection, Token } from "./Collection";
 

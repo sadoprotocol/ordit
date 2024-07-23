@@ -37,8 +37,13 @@ WORKER_URI="http://127.0.0.1:3031"
 WORKER_HOST="0.0.0.0"
 WORKER_PORT=3031
 
-# INDEXERS
+#------------------------------------------------------------
+# INDEXER SETTINGS
+#------------------------------------------------------------
 
+INDEXER_HEIGHT=""
+INDEXER_COMMIT_BLOCKS=1000
+INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
 INDEX_OUTPUTS=true
 INDEX_UTXOS=true
 INDEX_INSCRIPTIONS=true
@@ -76,7 +81,7 @@ RPC_NOTIFY="http://host.docker.internal:3031"
 # events.
 
 REORG_SCAN_LENGTH=10
-REORG_MANUAL_TRESHOLD=10 # Treshold for automated recovery.
+REORG_MANUAL_THRESHOLD=10 # Threshold for automated recovery.
 REORG_DEBUG=false        # Log reorg trace for manual checks.
 
 #------------------------------------------------------------
@@ -114,3 +119,6 @@ DEPLOYED_MONGO_DIRECT_CONNECTION=false
 
 FAUCET_SEED=""
 FAUCET_AUTH=""
+
+
+
