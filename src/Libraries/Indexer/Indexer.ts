@@ -69,8 +69,7 @@ export class Indexer {
       return; // indexer has latest outputs
     }
 
-    const indexBlock = Math.min(blockHeight, config.index.height_threshold);
-    log(`---------- indexing to block ${indexBlock.toLocaleString()} ----------`);
+    log(`---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
     if (reorgHeight !== undefined) {
