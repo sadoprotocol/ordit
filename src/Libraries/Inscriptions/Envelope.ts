@@ -184,7 +184,7 @@ function getParents(data: EnvelopeData[]) {
 
   while (data.indexOf(PARENT_TAG, scanIndex) !== -1) {
     const parentIndex = data.indexOf(PARENT_TAG, scanIndex) + 1;
-    const parent = getParent(data[parentIndex]);
+    const parent = decodeInscriptionId(data[parentIndex]);
     if (parent) {
       parents.push(parent);
     }
@@ -193,14 +193,14 @@ function getParents(data: EnvelopeData[]) {
   return parents;
 }
 
-function getParent(parentData: EnvelopeData) {
-  if (!isBuffer(parentData)) {
+function decodeInscriptionId(inscriptionIdData: EnvelopeData) {
+  if (!isBuffer(inscriptionIdData)) {
     return undefined;
   }
-  const parent_index_buffer = ensureFourBytesLE(parentData.subarray(32, 36));
-  const parent_index = parent_index_buffer.readInt32LE(0);
-  const parent_txid = parentData.subarray(0, 32).reverse().toString("hex");
-  return `${parent_txid}i${parent_index ?? 0}`;
+  const inscription_index_buffer = ensureFourBytesLE(inscriptionIdData.subarray(32, 36));
+  const inscription_index = inscription_index_buffer.readInt32LE(0);
+  const inscription_txid = inscriptionIdData.subarray(0, 32).reverse().toString("hex");
+  return `${inscription_txid}i${inscription_index ?? 0}`;
 }
 
 function getDelegateTag(data: EnvelopeData[]) {
@@ -208,11 +208,11 @@ function getDelegateTag(data: EnvelopeData[]) {
   if (startIndex === -1) {
     return undefined;
   }
-  const delegate = data[startIndex + 1];
-  if (!delegate || !isBuffer(delegate)) {
+  const delegateData = data[startIndex + 1];
+  if (!delegateData || !isBuffer(delegateData)) {
     return undefined;
   }
-  return `${delegate.reverse().toString("hex")}i0`;
+  return decodeInscriptionId(delegateData);
 }
 
 function getEnvelopeMeta(data: EnvelopeData[]) {
