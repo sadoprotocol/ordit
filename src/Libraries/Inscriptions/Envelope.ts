@@ -197,10 +197,10 @@ function decodeInscriptionId(inscriptionIdData: EnvelopeData) {
   if (!isBuffer(inscriptionIdData)) {
     return undefined;
   }
-  const inscription_index_buffer = ensureFourBytesLE(inscriptionIdData.subarray(32, 36));
-  const inscription_index = inscription_index_buffer.readInt32LE(0);
-  const inscription_txid = inscriptionIdData.subarray(0, 32).reverse().toString("hex");
-  return `${inscription_txid}i${inscription_index ?? 0}`;
+  const inscriptionIdIndexBuffer = ensureFourBytesLE(inscriptionIdData.subarray(32, 36));
+  const inscriptionIdIndex = inscriptionIdIndexBuffer.readInt32LE(0);
+  const inscriptionIdTxid = inscriptionIdData.subarray(0, 32).reverse().toString("hex");
+  return `${inscriptionIdTxid}i${inscriptionIdIndex ?? 0}`;
 }
 
 function getDelegateTag(data: EnvelopeData[]) {
