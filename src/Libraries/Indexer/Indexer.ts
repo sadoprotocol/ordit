@@ -3,7 +3,7 @@ import { assert } from "console";
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
-import { Block, RawTransaction, rpc, ScriptPubKey, Vin } from "~Services/Bitcoin";
+import { Block, rpc, ScriptPubKey, Vin } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
@@ -17,14 +17,13 @@ export class Indexer {
 
   #vins: VinData[] = [];
   #vouts: VoutData[] = [];
-  #txs: RawTransaction[] = [];
   #blocks: Block<2>[] = [];
 
   constructor(options: IndexerOptions) {
     this.#indexers = options.indexers;
     this.#threshold = {
-      height: options.threshold?.height ?? config.index.height_threshold ?? undefined,
-      blocks: options.threshold?.blocks ?? config.index.blocks_threshold ?? 1_000,
+      height: options.threshold?.height ?? config.index.maxheight ?? undefined,
+      blocks: options.threshold?.blocks ?? config.index.blocksThreshold ?? 1_000,
     };
   }
 
@@ -126,11 +125,9 @@ export class Indexer {
     let height = currentHeight + 1;
     let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
 
-    let ts = perf();
-    const toBlock = Math.min(height - 1 + this.#threshold.blocks, blockHeight);
-    log(`\n💽 Reading blocks [${(height - 1).toLocaleString()} - ${toBlock.toLocaleString()}]`);
-
+    let startHeight = currentHeight;
     const blockPromises: Promise<void>[] = [];
+    let ts = perf();
     while (blockHash !== undefined && height <= blockHeight) {
       if (this.#threshold.height && this.#threshold.height <= height) {
         break; // reached configured height threshold
@@ -143,12 +140,11 @@ export class Indexer {
       // to the registered index handlers.
 
       if (this.#hasReachedThreshold(height)) {
-        log(`💽 Read blocks in ${ts.now} seconds`);
+        log(`\n💽 Read blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}][${ts.now} seconds]`);
+        startHeight = height;
         await Promise.all(blockPromises);
         await this.#commit(height);
         blockPromises.length = 0; // Clear the array for the next batch
-        const toBlock = Math.min(height + this.#threshold.blocks, blockHeight);
-        log(`\n💽 Reading blocks [${height.toLocaleString()} - ${toBlock.toLocaleString()}]`);
         ts = perf();
       }
 

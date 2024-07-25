@@ -20,10 +20,9 @@ export const config = {
     inscriptions: getEnvironmentVariable("INDEX_INSCRIPTIONS", envToBoolean),
     brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
-    maxheight: getEnvironmentVariable("MAXHEIGHT", envToNumber, true),
     runes: getEnvironmentVariable("INDEX_RUNES", envToBoolean),
-    height_threshold: getEnvironmentVariable("INDEXER_HEIGHT", envToNumber, true),
-    blocks_threshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
+    maxheight: getEnvironmentVariable("INDEXER_MAX_HEIGHT", envToNumber, true),
+    blocksThreshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
     chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
   },
   ord: {

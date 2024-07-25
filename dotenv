@@ -41,7 +41,6 @@ WORKER_PORT=3031
 # INDEXER SETTINGS
 #------------------------------------------------------------
 
-INDEXER_HEIGHT=""
 INDEXER_COMMIT_BLOCKS=1000
 INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
 INDEX_OUTPUTS=true
@@ -49,8 +48,8 @@ INDEX_UTXOS=true
 INDEX_INSCRIPTIONS=true
 INDEX_BRC20=true
 INDEX_SADO=true
-# MAXHEIGHT=767430
 INDEX_RUNES=true
+INDEXER_MAX_HEIGTH=767430
 
 # ORD SERVER
 # Currently used to serve our ability to track sat ranges and

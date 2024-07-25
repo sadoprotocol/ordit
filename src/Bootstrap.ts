@@ -10,6 +10,7 @@ import { registrar as output } from "./Database/Output/Collection";
 import { registrarBlocks as runesBlocks } from "./Database/Runes/Collection";
 import { registrarEtchings as runesEtchings } from "./Database/Runes/Collection";
 import { registrarUtxoBalance as runesUtxoBalances } from "./Database/Runes/Collection";
+import { registrarMintCount as runesMintCount } from "./Database/Runes/Collection";
 import { registrar as sadoEvents } from "./Database/Sado/Events/Collection";
 import { registrar as sadoOrders } from "./Database/Sado/Orders/Collection";
 import { registrar as utxos } from "./Database/Utxos/Collection";
@@ -33,6 +34,7 @@ async function database() {
     output,
     runesBlocks,
     runesEtchings,
+    runesMintCount,
     runesUtxoBalances,
     sadoEvents,
     sadoOrders,
