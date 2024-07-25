@@ -25,6 +25,7 @@ export const outputIndexer: IndexHandler = {
           txid: vout.txid,
           n: vout.n,
         },
+        scriptPubKey: vout.scriptPubKey,
       });
     }
 
