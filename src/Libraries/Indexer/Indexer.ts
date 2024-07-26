@@ -1,8 +1,8 @@
 import { assert } from "console";
-import pLimit from "p-limit";
 
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
+import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
 import { Block, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
@@ -187,9 +187,9 @@ export class Indexer {
         });
       }
 
-      const limit = pLimit(config.index.voutConcurrencyLimit ?? 50);
-      const voutPromises = tx.vout.map((vout) => {
-        return limit(async () => {
+      const voutLimiter = limiter(config.index.voutConcurrencyLimit ?? 50);
+      for (const vout of tx.vout) {
+        voutLimiter.push(async () => {
           const addresses = await getAddressessFromVout(vout);
           this.#vouts.push({
             txid,
@@ -204,9 +204,9 @@ export class Indexer {
             },
           });
         });
-      });
+      }
 
-      await Promise.all(voutPromises);
+      await voutLimiter.run();
     }
   }
 
