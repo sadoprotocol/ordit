@@ -5,7 +5,7 @@ import { Indexer, IndexHandler } from "~Libraries/Indexer/Indexer";
 import { perf } from "~Libraries/Log";
 import { getNetworkEnum } from "~Libraries/Network";
 import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
-import { blockchain } from "~Services/Bitcoin";
+import { Block, blockchain } from "~Services/Bitcoin";
 
 export const runesIndexer: IndexHandler = {
   name: "runes",
@@ -16,10 +16,13 @@ export const runesIndexer: IndexHandler = {
     }
     log(`[Runes indexer]`);
     const network = getNetworkEnum();
-    log(`⏳ Looking for runestones in blocks: [${idx.blocks[0].height} - ${idx.blocks.at(-1)?.height}]`);
-    for (const block of idx.blocks) {
+
+    // order blocks
+    const blocks = sortBlocksByHeight(idx.blocks);
+
+    for (const block of blocks) {
       const ts = perf();
-      const runeUpdater = new RuneUpdater(network, block, true, runes, blockchain);
+      const runeUpdater = new RuneUpdater(network, block, false, runes, blockchain);
 
       for (const [txIndex, tx] of block.tx.entries()) {
         await runeUpdater.indexRunes(tx, txIndex);
@@ -43,6 +46,7 @@ export const runesIndexer: IndexHandler = {
       }
     }
   },
+
   async reorg(height: number) {
     await runes.resetCurrentBlockHeight(height);
   },
@@ -68,4 +72,8 @@ function printBlockInfo(
   const timeStr = `[${time} seconds]`.padStart(15, " ");
 
   console.log(`${blockStr}:${etchingsStr},${balancesStr},${spentStr},${burntStr} ${timeStr}`);
+}
+
+function sortBlocksByHeight(blocks: Block<2>[]): Block<2>[] {
+  return blocks.sort((a, b) => a.height - b.height);
 }

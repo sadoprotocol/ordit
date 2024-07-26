@@ -24,6 +24,7 @@ export const config = {
     maxheight: getEnvironmentVariable("INDEXER_MAX_HEIGHT", envToNumber, true),
     blocksThreshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
     chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
+    voutConcurrencyLimit: getEnvironmentVariable("VOUT_CONCURRENCY_LIMIT", envToNumber, true),
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),

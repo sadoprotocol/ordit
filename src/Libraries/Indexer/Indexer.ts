@@ -1,9 +1,10 @@
 import { assert } from "console";
+import pLimit from "p-limit";
 
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { log, perf } from "~Libraries/Log";
-import { Block, rpc, ScriptPubKey, Vin } from "~Services/Bitcoin";
+import { Block, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
@@ -165,31 +166,34 @@ export class Indexer {
 
   async #handleBlock(block: Block<2>) {
     this.#blocks.push(block);
-    await Promise.all(
-      block.tx.map(async (tx: any) => {
-        const txid = tx.txid;
 
-        const vinPromises = tx.vin.map((vin: Vin, n: number) => {
-          this.#vins.push({
-            txid,
-            n,
-            witness: vin.txinwitness ?? [],
-            block: {
-              hash: block.hash,
-              height: block.height,
-              time: block.time,
-            },
-            vout: {
-              txid: vin.txid,
-              n: vin.vout,
-            },
-          });
+    for (const tx of block.tx) {
+      const txid = tx.txid;
+
+      for (const [n, vin] of tx.vin.entries()) {
+        this.#vins.push({
+          txid,
+          n,
+          witness: vin.txinwitness ?? [],
+          block: {
+            hash: block.hash,
+            height: block.height,
+            time: block.time,
+          },
+          vout: {
+            txid: vin.txid,
+            n: vin.vout,
+          },
         });
-        const voutPromises = tx.vout.map(async (vout: VoutData, n: number) => {
+      }
+
+      const limit = pLimit(config.index.voutConcurrencyLimit ?? 50);
+      const voutPromises = tx.vout.map((vout) => {
+        return limit(async () => {
           const addresses = await getAddressessFromVout(vout);
           this.#vouts.push({
             txid,
-            n,
+            n: vout.n,
             addresses,
             value: vout.value,
             scriptPubKey: vout.scriptPubKey,
@@ -200,10 +204,10 @@ export class Indexer {
             },
           });
         });
+      });
 
-        await Promise.all([...vinPromises, ...voutPromises]);
-      }),
-    );
+      await Promise.all(voutPromises);
+    }
   }
 
   async #commit(height: number) {

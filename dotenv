@@ -38,18 +38,23 @@ WORKER_HOST="0.0.0.0"
 WORKER_PORT=3031
 
 #------------------------------------------------------------
-# INDEXER SETTINGS
+# INDEXER OPTIONS
 #------------------------------------------------------------
-
-INDEXER_COMMIT_BLOCKS=1000
-INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
 INDEX_OUTPUTS=true
 INDEX_UTXOS=true
 INDEX_INSCRIPTIONS=true
 INDEX_BRC20=true
 INDEX_SADO=true
 INDEX_RUNES=true
+
+#------------------------------------------------------------
+# INDEXER SETTINGS
+#------------------------------------------------------------
 INDEXER_MAX_HEIGTH=767430
+INDEXER_COMMIT_BLOCKS=1000
+INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
+INDEXER_VOUT_CONCURRENCY_LIMIT=100 # Set the limit at which vouts are concurrently processed.
+
 
 # ORD SERVER
 # Currently used to serve our ability to track sat ranges and
