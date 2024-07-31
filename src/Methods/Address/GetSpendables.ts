@@ -1,9 +1,8 @@
-import { BadRequestError, method } from "@valkyr/api";
+import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 import { isRunestone, tryDecodeRunestone } from "runestone-lib";
-import { RunestoneTx } from "runestone-lib/src/runestone";
 
-import { getTransaction, getTransactionOutputHex } from "~Utilities/Transaction";
+import { getTransaction } from "~Utilities/Transaction";
 
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
