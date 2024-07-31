@@ -10,7 +10,7 @@ import { rpc } from "../../Services/Bitcoin";
 import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
 
-const MAX_LIMIT = 200;
+const MAX_SPENDABLES = 200;
 
 async function outputHasRunes(outpoint: string): Promise<boolean> {
   const [txid, n] = outpoint.split(":");
@@ -95,9 +95,9 @@ export default method({
       });
 
       totalValue += output.value;
-      // if (totalValue >= value || spendables.length >= (limit ?? MAX_LIMIT)) {
-      //   break;
-      // }
+      if (spendables.length >= (limit ?? MAX_SPENDABLES)) {
+        break;
+      }
     }
 
     if (totalValue < value) {
