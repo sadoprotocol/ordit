@@ -2,8 +2,6 @@ import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 import { isRunestone, tryDecodeRunestone } from "runestone-lib";
 
-import { getTransaction } from "~Utilities/Transaction";
-
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
@@ -14,7 +12,7 @@ const MAX_SPENDABLES = 200;
 
 async function outputHasRunes(outpoint: string): Promise<boolean> {
   const [txid, n] = outpoint.split(":");
-  const tx = await getTransaction(txid);
+  const tx = await rpc.transactions.getRawTransaction(txid, true);
   if (!tx) return false;
   const decipher = tryDecodeRunestone(tx);
   if (!decipher) return false;
@@ -25,9 +23,7 @@ async function outputHasRunes(outpoint: string): Promise<boolean> {
     if (Number(n) === pointer) return true;
   }
   if (decipher.edicts) {
-    decipher.edicts.forEach((edict) => {
-      if (Number(n) === edict.output) return true;
-    });
+    return decipher.edicts.some((edict) => Number(n) === edict.output);
   }
 
   return false;
@@ -36,7 +32,7 @@ async function outputHasRunes(outpoint: string): Promise<boolean> {
 export default method({
   params: Schema({
     address: string,
-    value: number,
+    value: number.optional(),
     safetospend: boolean.optional(),
     filter: array.of(string).optional(),
     limit: number.optional(),
@@ -48,11 +44,15 @@ export default method({
     let safeToSpend = 0;
     let scanned = 0;
 
-    const outputs = await db.outputs.collection
-      .find({ addresses: address, ...noSpentsFilter }, { sort: { value: -1 } })
-      .toArray();
-    for (const output of outputs) {
+    const cursor = db.outputs.collection.find({ addresses: address, ...noSpentsFilter }, { sort: { value: -1 } });
+
+    while (await cursor.hasNext()) {
+      const output = await cursor.next();
+      if (output === null) {
+        continue;
+      }
       scanned += 1;
+
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
       if (filter.includes(outpoint)) {
         continue;
@@ -95,12 +95,15 @@ export default method({
       });
 
       totalValue += output.value;
+      if (value && totalValue >= value) {
+        break;
+      }
       if (spendables.length >= (limit ?? MAX_SPENDABLES)) {
         break;
       }
     }
 
-    if (totalValue < value) {
+    if (value && totalValue < value) {
       throw new BadRequestError("Insufficient funds", {
         requested: value,
         available: totalValue,

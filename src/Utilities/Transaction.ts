@@ -122,14 +122,6 @@ export async function getTransactionOutputHex(txid: string, vout: number): Promi
   return utxo.scriptPubKey.hex;
 }
 
-export async function getTransaction(txid: string): Promise<RawTransaction | undefined> {
-  const transaction = await rpc.transactions.getRawTransaction(txid, true);
-  if (transaction === undefined) {
-    return undefined;
-  }
-  return transaction;
-}
-
 export function parseLocation(location: string): [string, number] {
   const [txid, vout] = location.split(":");
   if (txid === undefined || vout === undefined) {
