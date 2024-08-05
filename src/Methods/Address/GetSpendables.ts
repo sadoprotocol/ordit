@@ -1,5 +1,6 @@
 import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
+import { isRunestone, tryDecodeRunestone } from "runestone-lib";
 
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
@@ -9,14 +10,34 @@ import { btcToSat } from "../../Utilities/Bitcoin";
 
 const MAX_SPENDABLES = 200;
 
+async function outputHasRunes(outpoint: string): Promise<boolean> {
+  const [txid, n] = outpoint.split(":");
+  const tx = await rpc.transactions.getRawTransaction(txid, true);
+  if (!tx) return false;
+  const decipher = tryDecodeRunestone(tx);
+  if (!decipher) return false;
+  if (!isRunestone(decipher)) return false;
+
+  const pointer = decipher.pointer ?? 1;
+  if (decipher.etching || decipher.mint) {
+    if (Number(n) === pointer) return true;
+  }
+  if (decipher.edicts) {
+    return decipher.edicts.some((edict) => Number(n) === edict.output);
+  }
+
+  return false;
+}
+
 export default method({
   params: Schema({
     address: string,
-    value: number,
+    value: number.optional(),
     safetospend: boolean.optional(),
     filter: array.of(string).optional(),
+    limit: number.optional(),
   }),
-  handler: async ({ address, value, safetospend = true, filter = [] }) => {
+  handler: async ({ address, value, safetospend = true, filter = [], limit }) => {
     const spendables = [];
 
     let totalValue = 0;
@@ -24,12 +45,12 @@ export default method({
     let scanned = 0;
 
     const cursor = db.outputs.collection.find({ addresses: address, ...noSpentsFilter }, { sort: { value: -1 } });
+
     while (await cursor.hasNext()) {
       const output = await cursor.next();
       if (output === null) {
         continue;
       }
-
       scanned += 1;
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
@@ -43,13 +64,13 @@ export default method({
 
       if (safetospend === true) {
         const outpoint = `${output.vout.txid}:${output.vout.n}`;
-        const [inscriptions, ordinals, runeBalances] = await Promise.all([
+        const [inscriptions, ordinals, hasRunes] = await Promise.all([
           db.inscriptions.getInscriptionsByOutpoint(outpoint),
           ord.getOrdinals(outpoint),
-          ord.getRuneOutputsBalancesByOutpoint(outpoint),
+          outputHasRunes(outpoint),
         ]);
 
-        if (getSafeToSpendState(ordinals, inscriptions, runeBalances) === false) {
+        if (getSafeToSpendState(ordinals, inscriptions, hasRunes) === false) {
           continue;
         }
         safeToSpend += 1;
@@ -74,12 +95,15 @@ export default method({
       });
 
       totalValue += output.value;
-      if (totalValue >= value || spendables.length >= MAX_SPENDABLES) {
+      if (value && totalValue >= value) {
+        break;
+      }
+      if (spendables.length >= (limit ?? MAX_SPENDABLES)) {
         break;
       }
     }
 
-    if (totalValue < value) {
+    if (value && totalValue < value) {
       throw new BadRequestError("Insufficient funds", {
         requested: value,
         available: totalValue,
