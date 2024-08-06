@@ -1,6 +1,8 @@
 import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
+import { outputHasRunes } from "~Utilities/Runes";
+
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
@@ -90,7 +92,7 @@ export default method({
       const [inscriptions, ordinals, runeBalances] = await Promise.all([
         db.inscriptions.getInscriptionsByOutpoint(outpoint),
         ord.getOrdinals(outpoint),
-        ord.getRuneOutputsBalancesByOutpoint(outpoint),
+        outputHasRunes(outpoint),
       ]);
 
       // DEPRECATED, REMOVE WHEN CLIENT CATCHES UP
