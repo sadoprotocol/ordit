@@ -1,6 +1,7 @@
 import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
-import { isRunestone, tryDecodeRunestone } from "runestone-lib";
+
+import { outputHasRunes } from "~Utilities/Runes";
 
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
@@ -9,25 +10,6 @@ import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
 
 const MAX_SPENDABLES = 200;
-
-async function outputHasRunes(outpoint: string): Promise<boolean> {
-  const [txid, n] = outpoint.split(":");
-  const tx = await rpc.transactions.getRawTransaction(txid, true);
-  if (!tx) return false;
-  const decipher = tryDecodeRunestone(tx);
-  if (!decipher) return false;
-  if (!isRunestone(decipher)) return false;
-
-  const pointer = decipher.pointer ?? 1;
-  if (decipher.etching || decipher.mint) {
-    if (Number(n) === pointer) return true;
-  }
-  if (decipher.edicts) {
-    return decipher.edicts.some((edict) => Number(n) === edict.output);
-  }
-
-  return false;
-}
 
 export default method({
   params: Schema({

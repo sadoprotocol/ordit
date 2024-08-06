@@ -1,6 +1,8 @@
 import { method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
+import { outputHasRunes } from "~Utilities/Runes";
+
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
 import { rpc } from "../../Services/Bitcoin";
@@ -87,18 +89,18 @@ export default method({
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
 
-      const [inscriptions, ordinals, runeBalances] = await Promise.all([
+      const [inscriptions, ordinals, hasRunes] = await Promise.all([
         db.inscriptions.getInscriptionsByOutpoint(outpoint),
         ord.getOrdinals(outpoint),
-        ord.getRuneOutputsBalancesByOutpoint(outpoint),
+        outputHasRunes(outpoint),
       ]);
 
       // DEPRECATED, REMOVE WHEN CLIENT CATCHES UP
       utxo.ordinals = ordinals;
       utxo.inscriptions = inscriptions;
-      utxo.runes = runeBalances;
+      utxo.runes = hasRunes;
 
-      utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, runeBalances, options?.allowedrarity);
+      utxo.safeToSpend = getSafeToSpendState(ordinals, inscriptions, hasRunes, options?.allowedrarity);
       utxo.confirmation = height - output.vout.block.height + 1;
 
       if (options?.safetospend === true && utxo.safeToSpend === false) {
