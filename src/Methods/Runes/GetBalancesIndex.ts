@@ -4,7 +4,7 @@ import Schema, { string } from "computed-types";
 import { runes } from "~Database/Runes";
 
 type RuneBalance = {
-  balance: bigint;
+  balance: string;
   rune_metadata: {
     divisibility: number;
     symbol: string;
@@ -22,12 +22,13 @@ export default method({
   }),
   handler: async ({ address }): Promise<RuneBalanceMap> => {
     const balances = await runes.addressBalances(address);
-    if (balances === null) {
-      throw new NotFoundError("Address not found");
+    if (balances.length === 0) {
+      throw new NotFoundError("Address has no balances");
     }
 
     const responseBalances: RuneBalanceMap = {};
     for (const balance of balances) {
+      balance.amount = BigInt(balance.amount);
       const rune = await runes.findRune(balance.runeTicker);
       if (rune === null || !rune.valid) {
         throw new NotFoundError("Rune not found");
@@ -36,10 +37,10 @@ export default method({
       const currentBalance = responseBalances[balance.runeTicker];
 
       if (currentBalance) {
-        currentBalance.balance += balance.amount;
+        currentBalance.balance = (BigInt(currentBalance.balance) + balance.amount).toString();
       } else {
         responseBalances[balance.runeTicker] = {
-          balance: balance.amount,
+          balance: balance.amount.toString(),
           rune_metadata: {
             divisibility: rune.divisibility ?? 0,
             symbol: rune.symbol ?? "",

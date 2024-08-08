@@ -51,20 +51,12 @@ async function findRune(
   return runeWithoutMints;
 }
 
-async function addressBalances(address: string, withSpents: boolean = false): Promise<RuneUtxoBalance[] | null> {
+async function addressBalances(address: string, withSpents: boolean = false): Promise<RuneUtxoBalance[]> {
   let filter: Filter<RuneUtxoBalance> = { address };
   if (!withSpents) {
     filter = { address, spentTxid: { $exists: false } };
   }
-  const cursor = collectionUtxoBalances.find<RuneUtxoBalance>(filter);
-
-  const balances: RuneUtxoBalance[] = await cursor.toArray();
-
-  if (balances.length === 0) {
-    return null;
-  }
-
-  return balances;
+  return await collectionUtxoBalances.find<RuneUtxoBalance>(filter).toArray();
 }
 
 async function addressRunesUTXOs(address: string, runeTicker: string): Promise<RuneUtxoBalance[] | null> {
@@ -138,7 +130,7 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
   // RUNE UTXOS
   const bulkUtxoBalances = runeBlockIndex.utxoBalances.map((utxo) => ({
     insertOne: {
-      document: utxo,
+      document: convertBigIntToString(utxo),
     },
   }));
 

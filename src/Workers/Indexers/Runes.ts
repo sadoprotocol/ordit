@@ -37,15 +37,15 @@ export const runesIndexer: IndexHandler = {
         etchingsLength || utxoBalancesLength || spentBalancesLength || burnedBalancesLength || mintCountsLength;
       await runes.saveBlockIndex(runeUpdater);
       if (foundRunestone) {
-        // printBlockInfo(
-        //   block.height,
-        //   etchingsLength,
-        //   utxoBalancesLength,
-        //   spentBalancesLength,
-        //   burnedBalancesLength,
-        //   mintCountsLength,
-        //   ts.now,
-        // );
+        printBlockInfo(
+          block.height,
+          etchingsLength,
+          utxoBalancesLength,
+          spentBalancesLength,
+          burnedBalancesLength,
+          mintCountsLength,
+          ts.now,
+        );
       }
     }
   },
