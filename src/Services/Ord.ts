@@ -205,10 +205,10 @@ async function call<R>(path: string, data?: any): Promise<R> {
 export function getSafeToSpendState(
   ordinals: any[],
   inscriptions: any[],
-  runeBalances: { [key: string]: RuneOutputBalance },
+  hasRunes: boolean,
   allowedRarity: Rarity[] = ["common", "uncommon"],
 ): boolean {
-  if (inscriptions.length > 0 || ordinals.length === 0) {
+  if (inscriptions.length > 0) {
     return false;
   }
   for (const ordinal of ordinals) {
@@ -216,10 +216,7 @@ export function getSafeToSpendState(
       return false;
     }
   }
-  if (Object.keys(runeBalances).length > 0) {
-    return false;
-  }
-  return true;
+  return !hasRunes;
 }
 
 /*
