@@ -256,6 +256,29 @@ export type OrdInscriptionData = {
   timestamp: number;
 };
 
+export type OrdRuneData = {
+  block: number;
+  burned: number;
+  divisibility: number;
+  etching: string;
+  id: string;
+  mints: number;
+  number: number;
+  premine: number;
+  rune: string;
+  supply: number;
+  symbol: string;
+  terms: {
+    amount: number;
+    cap: number;
+    height: [number | null, number | null];
+    offset: [number | null, number | null];
+  };
+  timestamp: string;
+  turbo: boolean;
+  tx: number;
+};
+
 export type Ordinal = {
   number: number;
   decimal: string;

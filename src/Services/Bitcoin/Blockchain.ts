@@ -1,3 +1,12 @@
+import {
+  GetBlockhashParams,
+  GetBlockParams,
+  GetBlockReturn,
+  GetRawTransactionParams,
+  GetRawTransactionReturn,
+  RpcResponse,
+} from "runestone-lib";
+
 import { rpc } from "./Rpc";
 import { RawTransaction, ScriptPubKey } from "./Transactions";
 
@@ -18,6 +27,10 @@ export const blockchain = {
   getMemPoolInfo,
   getRawMemPool,
   getTxOut,
+  // BitcoinRpcClient impl
+  getblock,
+  getblockhash,
+  getrawtransaction,
 };
 
 /*
@@ -126,6 +139,64 @@ async function getRawMemPool(verbose = false): Promise<string[] | { [txid: strin
  */
 async function getTxOut(txid: string, vout: number, include_mempool = true): Promise<TxOut | null> {
   return rpc("gettxout", [txid, vout, include_mempool]);
+}
+
+/**
+ * Implementation of BitcoinRpcClient interface, needed for the runes indexer
+ */
+export async function getblockhash({ height }: GetBlockhashParams): Promise<RpcResponse<string>> {
+  try {
+    const result = await rpc<string>("getblockhash", [height]);
+    return {
+      result,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      result: null,
+      error: error,
+    };
+  }
+}
+
+export async function getblock<T extends GetBlockParams>({
+  verbosity,
+  blockhash: hash,
+}: T): Promise<RpcResponse<GetBlockReturn<T>>> {
+  try {
+    const result = await rpc<GetBlockReturn<T>>("getblock", [hash, verbosity]);
+    return {
+      result,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      result: null,
+      error: error,
+    };
+  }
+}
+
+export async function getrawtransaction<T extends GetRawTransactionParams>({
+  txid,
+  verbose,
+  blockhash,
+}: T): Promise<RpcResponse<GetRawTransactionReturn<T>>> {
+  try {
+    const result = await rpc<GetRawTransactionReturn<T>>(
+      "getrawtransaction",
+      [txid, verbose, blockhash].filter((arg) => arg !== undefined),
+    );
+    return {
+      result,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      result: null,
+      error: error,
+    };
+  }
 }
 
 /*

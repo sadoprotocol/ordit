@@ -1,9 +1,10 @@
 import { method } from "@valkyr/api";
 import Schema, { array, boolean, string } from "computed-types";
 
+import { limiter } from "~Libraries/Limiter";
+
 import { rpc } from "../../Services/Bitcoin";
 import { getExpandedTransaction } from "../../Utilities/Transaction";
-import { limiter } from "~Libraries/Limiter";
 
 const options = Schema({
   ord: boolean.optional(),

@@ -8,6 +8,7 @@ export const outputIndexer: IndexHandler = {
 
   async run(indexer: Indexer, { log }) {
     let ts = perf();
+    log(`[Outputs indexer]`);
 
     const outputs: OutputDocument[] = [];
     const spents: SpentOutput[] = [];

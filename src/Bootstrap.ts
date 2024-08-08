@@ -7,6 +7,9 @@ import { registrar as inscriptions } from "./Database/Inscriptions/Collection";
 import { registrar as ipfs } from "./Database/IPFS/Collection";
 import { registrar as media } from "./Database/Media/Collection";
 import { registrar as output } from "./Database/Output/Collection";
+import { registrarBlocks as runesBlocks } from "./Database/Runes/Collection";
+import { registrarRunes as runes } from "./Database/Runes/Collection";
+import { registrarUtxoBalance as runesUtxoBalances } from "./Database/Runes/Collection";
 import { registrar as sadoEvents } from "./Database/Sado/Events/Collection";
 import { registrar as sadoOrders } from "./Database/Sado/Orders/Collection";
 import { registrar as utxos } from "./Database/Utxos/Collection";
@@ -28,6 +31,9 @@ async function database() {
     ipfs,
     media,
     output,
+    runes,
+    runesBlocks,
+    runesUtxoBalances,
     sadoEvents,
     sadoOrders,
     utxos,

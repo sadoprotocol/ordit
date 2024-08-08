@@ -17,6 +17,7 @@ export const inscriptionsIndexer: IndexHandler = {
       return;
     }
 
+    log(`[Inscriptions indexer]`);
     let ts = perf();
     log(`⏳ Waiting for block ${height.toLocaleString()}`);
     await ord.waitForBlock(height);

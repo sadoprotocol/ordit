@@ -2,8 +2,10 @@ import { CreateIndexesOptions, Document, IndexSpecification, MongoClient } from 
 
 import { config } from "../Config";
 
-const client = new MongoClient(getMongoUri(config.mongo));
+export const client = new MongoClient(getMongoUri(config.mongo));
 const deployedClient = new MongoClient(getMongoUri(config.deployedMongo));
+
+let isConnected = false;
 
 export const mongo = {
   get db() {
@@ -25,7 +27,7 @@ export const mongo = {
 async function register(registrars: CollectionRegistrar[]) {
   const list = await getCollectionsSet();
   for (const { name, indexes } of registrars) {
-    if (list.has(name) === true) {
+    if (list.has(name)) {
       continue;
     }
     await client.db(config.mongo.database).createCollection(name);
@@ -41,14 +43,19 @@ async function register(registrars: CollectionRegistrar[]) {
  * Establishes a connection to the mongodb server and keeps it alive.
  */
 async function connect() {
-  console.log(`connecting to mongodb server ${getMongoUri(config.mongo)}`);
+  if (isConnected) {
+    return;
+  }
+
+  console.log(`Connecting to MongoDB server ${getMongoUri(config.mongo)}`);
   await client
     .connect()
     .then(() => {
-      console.log("client connected");
+      isConnected = true;
+      console.log("Client connected");
     })
     .catch((err) => {
-      console.log("client failed connection attempt %O", err);
+      console.log("Client failed connection attempt %O", err);
     });
 }
 
@@ -97,7 +104,7 @@ function getMongoUri(mongoConfig: {
     srv = "+srv";
     portStr = "";
   }
-  
+
   if (username && password) {
     return `mongodb${srv}://${username}:${password}@${hostname}${portStr}${options}`;
   }

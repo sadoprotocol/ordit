@@ -2,8 +2,9 @@ import { assert } from "console";
 
 import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
+import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
-import { rpc, ScriptPubKey, Vin } from "~Services/Bitcoin";
+import { Block, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
 
 import { getReorgHeight } from "./Reorg";
@@ -17,12 +18,13 @@ export class Indexer {
 
   #vins: VinData[] = [];
   #vouts: VoutData[] = [];
+  #blocks: Block<2>[] = [];
 
   constructor(options: IndexerOptions) {
     this.#indexers = options.indexers;
     this.#threshold = {
-      height: options.threshold?.height ?? config.index.height_threshold ?? undefined,
-      blocks: options.threshold?.blocks ?? config.index.blocks_threshold ?? 1_000,
+      height: options.threshold?.height ?? config.index.maxheight ?? undefined,
+      blocks: options.threshold?.blocks ?? config.index.blocksThreshold ?? 1_000,
     };
   }
 
@@ -38,6 +40,10 @@ export class Indexer {
 
   get vouts() {
     return this.#vouts;
+  }
+
+  get blocks() {
+    return this.#blocks;
   }
 
   /*
@@ -63,8 +69,7 @@ export class Indexer {
       return; // indexer has latest outputs
     }
 
-    const indexBlock = Math.min(blockHeight, config.index.height_threshold);
-    log(`---------- indexing to block ${indexBlock.toLocaleString()} ----------`);
+    log(`---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
     if (reorgHeight !== undefined) {
@@ -121,11 +126,9 @@ export class Indexer {
     let height = currentHeight + 1;
     let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
 
-    let ts = perf();
-    const toBlock = Math.min(height - 1 + this.#threshold.blocks, blockHeight);
-    log(`\n💽 Reading blocks [${(height - 1).toLocaleString()} - ${toBlock.toLocaleString()}]`);
-
+    let startHeight = currentHeight;
     const blockPromises: Promise<void>[] = [];
+    let ts = perf();
     while (blockHash !== undefined && height <= blockHeight) {
       if (this.#threshold.height && this.#threshold.height <= height) {
         break; // reached configured height threshold
@@ -138,12 +141,11 @@ export class Indexer {
       // to the registered index handlers.
 
       if (this.#hasReachedThreshold(height)) {
-        log(`💽 Read blocks in ${ts.now} seconds`);
+        log(`\n💽 Read blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}][${ts.now} seconds]`);
+        startHeight = height;
         await Promise.all(blockPromises);
         await this.#commit(height);
         blockPromises.length = 0; // Clear the array for the next batch
-        const toBlock = Math.min(height + this.#threshold.blocks, blockHeight);
-        log(`\n💽 Reading blocks [${height.toLocaleString()} - ${toBlock.toLocaleString()}]`);
         ts = perf();
       }
 
@@ -162,33 +164,36 @@ export class Indexer {
     await this.#commit(height - 1);
   }
 
-  async #handleBlock(block: any) {
-    await Promise.all(
-      block.tx.map(async (tx: any) => {
-        const txid = tx.txid;
+  async #handleBlock(block: Block<2>) {
+    this.#blocks.push(block);
 
-        const vinPromises = tx.vin.map((vin: Vin, n: number) => {
-          this.#vins.push({
-            txid,
-            n,
-            witness: vin.txinwitness ?? [],
-            block: {
-              hash: block.hash,
-              height: block.height,
-              time: block.time,
-            },
-            vout: {
-              txid: vin.txid,
-              n: vin.vout,
-            },
-          });
+    for (const tx of block.tx) {
+      const txid = tx.txid;
+
+      for (const [n, vin] of tx.vin.entries()) {
+        this.#vins.push({
+          txid,
+          n,
+          witness: vin.txinwitness ?? [],
+          block: {
+            hash: block.hash,
+            height: block.height,
+            time: block.time,
+          },
+          vout: {
+            txid: vin.txid,
+            n: vin.vout,
+          },
         });
+      }
 
-        const voutPromises = tx.vout.map(async (vout: VoutData, n: number) => {
+      const voutLimiter = limiter(config.index.voutConcurrencyLimit ?? 50);
+      for (const vout of tx.vout) {
+        voutLimiter.push(async () => {
           const addresses = await getAddressessFromVout(vout);
           this.#vouts.push({
             txid,
-            n,
+            n: vout.n,
             addresses,
             value: vout.value,
             scriptPubKey: vout.scriptPubKey,
@@ -199,10 +204,10 @@ export class Indexer {
             },
           });
         });
+      }
 
-        await Promise.all([...vinPromises, ...voutPromises]);
-      }),
-    );
+      await voutLimiter.run();
+    }
   }
 
   async #commit(height: number) {
@@ -226,6 +231,7 @@ export class Indexer {
 
     this.#vins = [];
     this.#vouts = [];
+    this.#blocks = [];
   }
 
   /*
@@ -263,14 +269,14 @@ type IndexerOptions = {
 
 export type IndexHandler = {
   name: string;
-  run(
+  run: (
     indexer: Indexer,
     props: {
       height: number;
       log: (message: string) => void;
     },
-  ): Promise<void>;
-  reorg(height: number): Promise<void>;
+  ) => Promise<void>;
+  reorg: (height: number) => Promise<void>;
 };
 
 export type VinData = TxMeta & {
