@@ -128,11 +128,18 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
   if (bulkEtchings.length > 0) await collectionRunes.bulkWrite(bulkEtchings).catch(ignoreDuplicateErrors);
 
   // RUNE UTXOS
-  const bulkUtxoBalances = runeBlockIndex.utxoBalances.map((utxo) => ({
-    insertOne: {
-      document: convertBigIntToString(utxo),
-    },
-  }));
+  const bulkUtxoBalances = runeBlockIndex.utxoBalances.map((utxo) => {
+    const { amount, ...rest } = utxo;
+
+    return {
+      insertOne: {
+        document: {
+          ...rest,
+          amount: amount.toString(),
+        },
+      },
+    };
+  });
 
   if (bulkUtxoBalances.length > 0)
     await collectionUtxoBalances.bulkWrite(bulkUtxoBalances).catch(ignoreDuplicateErrors);

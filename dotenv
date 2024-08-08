@@ -50,7 +50,7 @@ INDEX_RUNES=true
 #------------------------------------------------------------
 # INDEXER SETTINGS
 #------------------------------------------------------------
-INDEXER_MAX_HEIGTH=767430
+INDEXER_MAX_HEIGHT=767430
 INDEXER_COMMIT_BLOCKS=1000
 INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
 INDEXER_VOUT_CONCURRENCY_LIMIT=100 # Set the limit at which vouts are concurrently processed.

@@ -1,4 +1,3 @@
-import { ScriptPubKey } from "~Services/Bitcoin";
 import { CollectionRegistrar, mongo } from "../../Services/Mongo";
 
 export const collection = mongo.db.collection<OutputDocument>("outputs");
@@ -46,7 +45,6 @@ export type OutputDocument = {
   vout: OutputTransaction;
   vin?: OutputTransaction;
   spent?: true;
-  scriptPubKey: ScriptPubKey | Buffer;
 };
 
 export type SpentOutput = {
