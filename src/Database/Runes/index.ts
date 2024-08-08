@@ -1,16 +1,13 @@
 export * from "./Collection";
 export * from "./Methods.ts";
-import { collectionBlocks, collectionEtchings, collectionMintCount, collectionUtxoBalances } from "~Database/Runes";
+import { collectionBlocks, collectionRunes, collectionUtxoBalances } from "~Database/Runes";
 
 export const runesBlocks = {
   collectionBlocks,
 };
 export const runesEtchings = {
-  collectionEtchings,
+  collectionRunes,
 };
 export const runesUtxoBalances = {
   collectionUtxoBalances,
-};
-export const runesMintCounts = {
-  collectionMintCount,
 };

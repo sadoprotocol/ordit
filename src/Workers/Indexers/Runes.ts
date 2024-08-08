@@ -5,7 +5,7 @@ import { Indexer, IndexHandler } from "~Libraries/Indexer/Indexer";
 import { perf } from "~Libraries/Log";
 import { getNetworkEnum } from "~Libraries/Network";
 import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
-import { Block, blockchain } from "~Services/Bitcoin";
+import { blockchain } from "~Services/Bitcoin";
 
 export const runesIndexer: IndexHandler = {
   name: "runes",
@@ -18,7 +18,7 @@ export const runesIndexer: IndexHandler = {
     const network = getNetworkEnum();
 
     // order blocks
-    const blocks = sortBlocksByHeight(idx.blocks);
+    const blocks = idx.blocks.sort((a, b) => a.height - b.height);
 
     for (const block of blocks) {
       const ts = perf();
@@ -31,18 +31,21 @@ export const runesIndexer: IndexHandler = {
       const utxoBalancesLength = runeUpdater.utxoBalances.length;
       const spentBalancesLength = runeUpdater.spentBalances.length;
       const burnedBalancesLength = runeUpdater.burnedBalances.length;
+      const mintCountsLength = runeUpdater.mintCounts.length;
 
-      const foundRunestone = etchingsLength || utxoBalancesLength || spentBalancesLength || burnedBalancesLength;
+      const foundRunestone =
+        etchingsLength || utxoBalancesLength || spentBalancesLength || burnedBalancesLength || mintCountsLength;
       await runes.saveBlockIndex(runeUpdater);
       if (foundRunestone) {
-        printBlockInfo(
-          block.height,
-          etchingsLength,
-          utxoBalancesLength,
-          spentBalancesLength,
-          burnedBalancesLength,
-          ts.now,
-        );
+        // printBlockInfo(
+        //   block.height,
+        //   etchingsLength,
+        //   utxoBalancesLength,
+        //   spentBalancesLength,
+        //   burnedBalancesLength,
+        //   mintCountsLength,
+        //   ts.now,
+        // );
       }
     }
   },
@@ -62,6 +65,7 @@ function printBlockInfo(
   utxoBalancesLength: number,
   spentBalancesLength: number,
   burnedBalancesLength: number,
+  mintCountsLength: number,
   time: string,
 ) {
   const blockStr = `${height}`.padEnd(6, " ");
@@ -69,11 +73,8 @@ function printBlockInfo(
   const balancesStr = `${utxoBalancesLength.toLocaleString()} balances`.padStart(12, " ");
   const spentStr = `${spentBalancesLength.toLocaleString()} spent`.padStart(9, " ");
   const burntStr = `${burnedBalancesLength.toLocaleString()} burnt`.padStart(9, " ");
+  const mintStr = `${mintCountsLength.toLocaleString()} mint`.padStart(9, " ");
   const timeStr = `[${time} seconds]`.padStart(15, " ");
 
-  console.log(`${blockStr}:${etchingsStr},${balancesStr},${spentStr},${burntStr} ${timeStr}`);
-}
-
-function sortBlocksByHeight(blocks: Block<2>[]): Block<2>[] {
-  return blocks.sort((a, b) => a.height - b.height);
+  console.log(`${blockStr}:${etchingsStr},${balancesStr},${spentStr},${burntStr},${mintStr} ${timeStr}`);
 }

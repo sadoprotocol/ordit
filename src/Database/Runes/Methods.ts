@@ -1,17 +1,17 @@
 import { Filter } from "mongodb";
 import { BlockIdentifier, BlockInfo, RuneBlockIndex, RuneEtching, RuneLocation, RuneUtxoBalance } from "runestone-lib";
 
+import { ignoreDuplicateErrors } from "~Database/Utilities";
 import { client, mongo } from "~Services/Mongo";
 import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
-import { collectionBlocks, collectionEtchings, collectionMintCount, collectionUtxoBalances } from "./Collection";
+import { collectionBlocks, collectionRunes, collectionUtxoBalances, Mint, RuneEntry } from "./Collection";
 
 export const runes = {
   ...mongo,
   collectionBlocks,
-  collectionEtchings,
+  collectionRunes,
   collectionUtxoBalances,
-  collectionMintCount,
 
   // Core Methods
   findRune,
@@ -37,14 +37,25 @@ async function countBlocks(filter: Filter<BlockInfo>) {
   return collectionBlocks.countDocuments(filter);
 }
 
-async function findRune(runeTicker: string): Promise<RuneEtching | null> {
+async function findRune(
+  runeTicker: string,
+  verbose: boolean = false,
+): Promise<RuneEntry | Partial<Omit<RuneEntry, "mints">> | null> {
   const filter = { runeTicker };
-  const balances = await collectionEtchings.findOne<RuneEtching>(filter);
-  return balances;
+  const rune = await collectionRunes.findOne<RuneEntry>(filter);
+  if (!rune) return null;
+  if (verbose) return rune;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { mints, ...runeWithoutMints } = rune;
+  return runeWithoutMints;
 }
 
-async function addressBalances(address: string): Promise<RuneUtxoBalance[] | null> {
-  const filter: Filter<RuneUtxoBalance> = { address };
+async function addressBalances(address: string, withSpents: boolean = false): Promise<RuneUtxoBalance[] | null> {
+  let filter: Filter<RuneUtxoBalance> = { address };
+  if (!withSpents) {
+    filter = { address, spentTxid: { $exists: false } };
+  }
   const cursor = collectionUtxoBalances.find<RuneUtxoBalance>(filter);
 
   const balances: RuneUtxoBalance[] = await cursor.toArray();
@@ -104,53 +115,69 @@ async function resetCurrentBlockHeight(height: number): Promise<void> {
 
 async function seedEtchings(runes_etchings: RuneEtching[]): Promise<void> {
   const bulkOps = runes_etchings.map((etching) => ({
-    updateOne: {
-      filter: { runeId: etching.runeId },
-      update: { $set: convertBigIntToString(etching) },
-      upsert: true,
+    insertOne: {
+      document: convertBigIntToString(etching),
     },
   }));
 
-  await collectionEtchings.bulkWrite(bulkOps);
+  await collectionRunes.bulkWrite(bulkOps);
 }
 
 async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
-  await collectionBlocks.insertOne(runeBlockIndex.block);
+  await collectionBlocks.insertOne(runeBlockIndex.block).catch(ignoreDuplicateErrors);
 
+  // RUNE ENTRY
   const bulkEtchings = runeBlockIndex.etchings.map((etching) => ({
-    updateOne: {
-      filter: { runeId: etching.runeId },
-      update: { $set: convertBigIntToString(etching) },
-      upsert: true,
+    insertOne: {
+      document: convertBigIntToString(etching),
     },
   }));
 
-  if (bulkEtchings.length > 0) {
-    await collectionEtchings.bulkWrite(bulkEtchings);
-  }
+  if (bulkEtchings.length > 0) await collectionRunes.bulkWrite(bulkEtchings).catch(ignoreDuplicateErrors);
 
+  // RUNE UTXOS
   const bulkUtxoBalances = runeBlockIndex.utxoBalances.map((utxo) => ({
-    updateOne: {
-      filter: { txid: utxo.txid, vout: utxo.vout },
-      update: { $set: utxo },
-      upsert: true,
+    insertOne: {
+      document: utxo,
     },
   }));
 
-  if (bulkUtxoBalances.length > 0) {
-    await collectionUtxoBalances.bulkWrite(bulkUtxoBalances);
-  }
+  if (bulkUtxoBalances.length > 0)
+    await collectionUtxoBalances.bulkWrite(bulkUtxoBalances).catch(ignoreDuplicateErrors);
 
+  // RUNE SPENTS
   const bulkSpentBalances = runeBlockIndex.spentBalances.map((spent) => ({
-    deleteOne: {
+    updateOne: {
       filter: { txid: spent.txid, vout: spent.vout },
+      update: { $set: { spentTxid: spent.spentTxid } },
     },
   }));
 
-  if (bulkSpentBalances.length > 0) {
-    await collectionUtxoBalances.bulkWrite(bulkSpentBalances);
+  if (bulkSpentBalances.length > 0) await collectionUtxoBalances.bulkWrite(bulkSpentBalances);
+
+  // RUNE MINTS
+  const bulkMintCounts = runeBlockIndex.mintCounts.map((mintCount) => {
+    const mint: Mint = {
+      block: runeBlockIndex.block.height,
+      count: mintCount.count,
+    };
+
+    return {
+      updateOne: {
+        filter: { runeId: mintCount.mint },
+        update: {
+          $push: { mints: mint },
+        },
+        upsert: true,
+      },
+    };
+  });
+
+  if (bulkMintCounts.length > 0) {
+    await collectionRunes.bulkWrite(bulkMintCounts);
   }
 
+  // RUNE BURNT
   const bulkBurnedBalances = runeBlockIndex.burnedBalances.map((burned) => ({
     deleteOne: {
       filter: { "runeId.block": burned.runeId.block, "runeId.tx": burned.runeId.tx },
@@ -167,26 +194,32 @@ async function getEtching(runeLocation: string): Promise<RuneEtching | null> {
     block: Number(runeLocSplit[0]),
     tx: Number(runeLocSplit[1]),
   };
-  const etching = await collectionEtchings.findOne({ runeId: _runeLocation });
+  const etching = await collectionRunes.findOne({ runeId: _runeLocation });
   convertStringToBigInt(etching);
   return etching ? (etching as unknown as RuneEtching) : null;
 }
 
 async function getValidMintCount(runeLocation: string, blockheight: number): Promise<number> {
-  const result = await collectionMintCount
-    .aggregate([
-      {
-        $match: { runeId: runeLocation, blockHeight: { $lte: blockheight } },
-      },
-      { $group: { _id: null, total: { $sum: "$count" } } },
-    ])
-    .toArray();
+  const runeLocSplit = runeLocation.split(":", 2);
+  const _runeLocation: RuneLocation = {
+    block: Number(runeLocSplit[0]),
+    tx: Number(runeLocSplit[1]),
+  };
 
-  return result.length > 0 ? result[0].total : 0;
+  const runeEntry = await collectionRunes.findOne({ runeId: _runeLocation });
+
+  if (!runeEntry || !runeEntry.mints) {
+    return 0;
+  }
+
+  const validMints = runeEntry.mints.filter((mint: Mint) => mint.block <= blockheight);
+  const totalCount = validMints.reduce((sum: number, mint: Mint) => sum + mint.count, 0);
+
+  return totalCount;
 }
 
 async function getRuneLocation(runeTicker: string): Promise<RuneLocation | null> {
-  const etching = await collectionEtchings.findOne({ runeTicker });
+  const etching = await collectionRunes.findOne({ runeTicker });
   convertStringToBigInt(etching);
   return etching ? (etching.runeId as RuneLocation) : null;
 }
