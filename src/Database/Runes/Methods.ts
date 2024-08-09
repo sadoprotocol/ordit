@@ -15,6 +15,7 @@ export const runes = {
 
   // Core Methods
   findRune,
+  findRunes,
   countBlocks,
   addressBalances,
   addressRunesUTXOs,
@@ -49,6 +50,22 @@ async function findRune(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { mints, ...runeWithoutMints } = rune;
   return runeWithoutMints;
+}
+
+async function findRunes(
+  runeTickers: string[],
+  verbose: boolean = false,
+): Promise<(RuneEntry | Partial<Omit<RuneEntry, "mints">>)[]> {
+  const filter = { runeTicker: { $in: runeTickers } };
+  const runes = await collectionRunes.find<RuneEntry>(filter).toArray();
+
+  if (verbose) return runes;
+
+  return runes.map((rune) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { mints, ...runeWithoutMints } = rune;
+    return runeWithoutMints;
+  });
 }
 
 async function addressBalances(address: string, withSpents: boolean = false): Promise<RuneUtxoBalance[]> {

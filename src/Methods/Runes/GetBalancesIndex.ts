@@ -5,7 +5,7 @@ import { runes } from "~Database/Runes";
 
 type RuneBalance = {
   balance: string;
-  rune_metadata: {
+  rune_metadata?: {
     divisibility: number;
     symbol: string;
     name: string; // with spacers
@@ -29,11 +29,6 @@ export default method({
     const responseBalances: RuneBalanceMap = {};
     for (const balance of balances) {
       balance.amount = BigInt(balance.amount);
-      const rune = await runes.findRune(balance.runeTicker);
-      if (rune === null || !rune.valid) {
-        throw new NotFoundError("Rune not found");
-      }
-
       const currentBalance = responseBalances[balance.runeTicker];
 
       if (currentBalance) {
@@ -41,13 +36,18 @@ export default method({
       } else {
         responseBalances[balance.runeTicker] = {
           balance: balance.amount.toString(),
-          rune_metadata: {
-            divisibility: rune.divisibility ?? 0,
-            symbol: rune.symbol ?? "",
-            name: rune.runeName,
-          },
         };
       }
+    }
+
+    const runeTickers = Object.keys(responseBalances);
+    const runesMetadata = await runes.findRunes(runeTickers);
+    for (const runesData of runesMetadata) {
+      responseBalances[runesData.runeTicker].rune_metadata = {
+        divisibility: runesData.divisibility ?? 0,
+        symbol: runesData.symbol ?? "",
+        name: runesData.runeName,
+      };
     }
 
     return responseBalances;
