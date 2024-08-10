@@ -4,7 +4,7 @@ export type UTXO = {
   txid: string;
   n: number;
   sats: number;
-  scriptPubKey: ScriptPubKey;
+  scriptPubKey: ScriptPubKey | Buffer;
 };
 
 export type Outpoint = {

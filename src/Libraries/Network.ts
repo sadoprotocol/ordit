@@ -1,4 +1,5 @@
 import { networks } from "bitcoinjs-lib";
+import { Network as networkEnum } from "runestone-lib";
 
 import { config } from "../Config";
 
@@ -32,6 +33,18 @@ export function getBitcoinNetwork(): networks.Network {
       return networks.regtest;
     }
   }
+}
+
+export function getNetworkEnum(): networkEnum {
+  const _net =
+    config.network === "mainnet"
+      ? networkEnum.MAINNET
+      : config.network === "testnet"
+      ? networkEnum.TESTNET
+      : config.network === "signet"
+      ? networkEnum.SIGNET
+      : networkEnum.REGTEST;
+  return _net;
 }
 
 /**
