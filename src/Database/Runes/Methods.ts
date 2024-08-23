@@ -2,6 +2,7 @@ import { Filter } from "mongodb";
 import { BlockIdentifier, BlockInfo, RuneBlockIndex, RuneEtching, RuneLocation, RuneUtxoBalance } from "runestone-lib";
 
 import { ignoreDuplicateErrors } from "~Database/Utilities";
+import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
 import { client, mongo } from "~Services/Mongo";
 import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
@@ -76,17 +77,8 @@ async function addressBalances(address: string, withSpents: boolean = false): Pr
   return await collectionUtxoBalances.find<RuneUtxoBalance>(filter).toArray();
 }
 
-async function addressRunesUTXOs(address: string, runeTicker: string): Promise<RuneUtxoBalance[] | null> {
-  const filter: Filter<RuneUtxoBalance> = { address, runeTicker };
-  const cursor = collectionUtxoBalances.find<RuneUtxoBalance>(filter);
-
-  const balances: RuneUtxoBalance[] = await cursor.toArray();
-
-  if (balances.length === 0) {
-    return null;
-  }
-
-  return balances;
+async function addressRunesUTXOs(params: FindPaginatedParams<RuneUtxoBalance> = {}) {
+  return paginate.findPaginated(collectionUtxoBalances, params);
 }
 
 /**
