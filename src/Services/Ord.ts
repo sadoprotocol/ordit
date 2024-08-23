@@ -71,7 +71,19 @@ async function getInscription(id: string) {
 }
 
 async function getInscriptions(ids: string[]) {
-  return call<OrdInscriptionData[]>(`/inscriptions`, ids);
+  try {
+    const ordData = await call<OrdInscriptionData[]>(`/inscriptions`, ids);
+    return ordData;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      const errorMessage = error.data as string;
+      // Sample errorMessage: "inscription 861c74973a4ab6be4f4c40690210d9095eab234f56173cfa82bfd07f4278febci0 not found"
+      const missingId = errorMessage.slice(12, -10); // Slice from front and back as inscription number is variable length
+      ids.splice(ids.indexOf(missingId), 1);
+      return getInscriptions(ids);
+    }
+    throw error;
+  }
 }
 
 /**
@@ -81,7 +93,14 @@ async function getInscriptions(ids: string[]) {
  * @param ids - Inscription ids.
  */
 async function getInscriptionsForIds(ids: string[]) {
-  return call<OrdInscription[]>(`/inscriptions`, { ids });
+  try {
+    return call<OrdInscription[]>(`/inscriptions`, { ids });
+  } catch (error) {
+    if (error instanceof OrdError) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 /**
@@ -186,10 +205,10 @@ async function call<R>(path: string, data?: any): Promise<R> {
 export function getSafeToSpendState(
   ordinals: any[],
   inscriptions: any[],
-  runeBalances: { [key: string]: RuneOutputBalance },
+  hasRunes: boolean,
   allowedRarity: Rarity[] = ["common", "uncommon"],
 ): boolean {
-  if (inscriptions.length > 0 || ordinals.length === 0) {
+  if (inscriptions.length > 0) {
     return false;
   }
   for (const ordinal of ordinals) {
@@ -197,10 +216,7 @@ export function getSafeToSpendState(
       return false;
     }
   }
-  if (Object.keys(runeBalances).length > 0) {
-    return false;
-  }
-  return true;
+  return !hasRunes;
 }
 
 /*
@@ -222,12 +238,13 @@ export type OrdInscription = {
 
 export type OrdInscriptionData = {
   address?: string;
-  children: string[];
+  charms?: string[];
+  children?: string[];
   content_length?: number;
   content_type?: string;
   content_encoding?: string;
-  genesis_fee: number;
-  genesis_height: number;
+  fee: number;
+  height: number;
   id: string;
   number: number;
   inscription_sequence: number;
@@ -237,6 +254,29 @@ export type OrdInscriptionData = {
   sat: number;
   satpoint: string;
   timestamp: number;
+};
+
+export type OrdRuneData = {
+  block: number;
+  burned: number;
+  divisibility: number;
+  etching: string;
+  id: string;
+  mints: number;
+  number: number;
+  premine: number;
+  rune: string;
+  supply: number;
+  symbol: string;
+  terms: {
+    amount: number;
+    cap: number;
+    height: [number | null, number | null];
+    offset: [number | null, number | null];
+  };
+  timestamp: string;
+  turbo: boolean;
+  tx: number;
 };
 
 export type Ordinal = {

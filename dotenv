@@ -31,19 +31,30 @@ API_REPLICAS=1
 # Configuration for the worker instance handling indexing and
 # related operations. URI defines the global endpoint that
 # can access the read layer. HOST and PORT settings defines
-# the instance configuration. 
+# the instance configuration.
 
 WORKER_URI="http://127.0.0.1:3031"
 WORKER_HOST="0.0.0.0"
 WORKER_PORT=3031
 
-# INDEXERS
-
+#------------------------------------------------------------
+# INDEXER OPTIONS
+#------------------------------------------------------------
 INDEX_OUTPUTS=true
 INDEX_UTXOS=true
 INDEX_INSCRIPTIONS=true
 INDEX_BRC20=true
 INDEX_SADO=true
+INDEX_RUNES=true
+
+#------------------------------------------------------------
+# INDEXER SETTINGS
+#------------------------------------------------------------
+INDEXER_MAX_HEIGHT=767430
+INDEXER_COMMIT_BLOCKS=1000
+INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
+INDEXER_VOUT_CONCURRENCY_LIMIT=100 # Set the limit at which vouts are concurrently processed.
+
 
 # ORD SERVER
 # Currently used to serve our ability to track sat ranges and
@@ -69,12 +80,12 @@ RPC_PASSWORD="bitcoin"
 RPC_NOTIFY="http://host.docker.internal:3031"
 
 # REORG
-# For every new block we want to reverse lookup previous 
-# block hashes against local indexes to check for reorg 
+# For every new block we want to reverse lookup previous
+# block hashes against local indexes to check for reorg
 # events.
 
 REORG_SCAN_LENGTH=10
-REORG_MANUAL_TRESHOLD=10 # Treshold for automated recovery.
+REORG_MANUAL_THRESHOLD=10 # Threshold for automated recovery.
 REORG_DEBUG=false        # Log reorg trace for manual checks.
 
 #------------------------------------------------------------
@@ -112,3 +123,6 @@ DEPLOYED_MONGO_DIRECT_CONNECTION=false
 
 FAUCET_SEED=""
 FAUCET_AUTH=""
+
+
+

@@ -14,13 +14,14 @@ export const inscriptionsIndexer: IndexHandler = {
 
   async run(indexer: Indexer, { log, height }) {
     if (height < INSCRIPTION_EPOCH_BLOCK) {
-      return log(`🚫 Inscriptions indexer has not passed epoch block`);
+      return;
     }
 
+    log(`[Inscriptions indexer]`);
     let ts = perf();
     log(`⏳ Waiting for block ${height.toLocaleString()}`);
     await ord.waitForBlock(height);
-    log(`  ⌛ Resolved [${ts.now} seconds]`);
+    log(`⏳ Resolved [${ts.now} seconds]`);
 
     ts = perf();
     const inscriptions = await getInscriptions(indexer.vins);

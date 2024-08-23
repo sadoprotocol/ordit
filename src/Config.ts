@@ -20,6 +20,11 @@ export const config = {
     inscriptions: getEnvironmentVariable("INDEX_INSCRIPTIONS", envToBoolean),
     brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
+    runes: getEnvironmentVariable("INDEX_RUNES", envToBoolean),
+    maxheight: getEnvironmentVariable("INDEXER_MAX_HEIGHT", envToNumber, true),
+    blocksThreshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
+    chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
+    voutConcurrencyLimit: getEnvironmentVariable("INDEXER_VOUT_CONCURRENCY_LIMIT", envToNumber, true),
   },
   ord: {
     uri: getEnvironmentVariable("ORD_URI"),
@@ -35,7 +40,7 @@ export const config = {
   },
   reorg: {
     scanLength: getEnvironmentVariable("REORG_SCAN_LENGTH", envToNumber),
-    treshold: getEnvironmentVariable("REORG_MANUAL_TRESHOLD", envToNumber),
+    threshold: getEnvironmentVariable("REORG_MANUAL_THRESHOLD", envToNumber),
     debug: getEnvironmentVariable("REORG_DEBUG", envToBoolean),
   },
   ipfs: {

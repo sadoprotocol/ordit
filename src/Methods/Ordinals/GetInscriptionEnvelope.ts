@@ -13,10 +13,11 @@ export default method({
     if (tx === undefined) {
       throw new NotFoundError("Transaction not found");
     }
-    const envelope = Envelope.fromTransaction(tx);
-    if (envelope === undefined) {
-      return new NotFoundError("Transaction does not have inscription envelope");
+    const envelopes = Envelope.fromTransaction(tx);
+    if (envelopes === undefined) {
+      return new NotFoundError("Transaction does not have any inscription envelopes");
     }
-    return envelope.toJSON();
+    const envelopes_json = envelopes.map((envelope) => envelope?.toJSON());
+    return envelopes_json;
   },
 });

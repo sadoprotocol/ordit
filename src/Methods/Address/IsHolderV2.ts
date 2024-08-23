@@ -2,9 +2,11 @@ import { method } from "@valkyr/api";
 import Schema, { string } from "computed-types";
 
 import { db } from "~Database";
+import { getFeelingGood } from "~Database/Data/FeelingGood.ts";
+import { getFomoji_2Ids } from "~Database/Data/Fomoji2.ts";
+import { getFomojiGenesisIds } from "~Database/Data/FomojiGenesis.ts";
 import { getGeniiGenesisIds } from "~Database/Data/GeniiGenesis.ts";
 import { getOrdzaarPassIds } from "~Database/Data/OrdzaarPass.ts";
-import { getFeelingGood } from "~Database/Data/FeelingGood.ts";
 import { getUnisatOGPass } from "~Database/Data/UnisatOGPass.ts";
 
 /**
@@ -32,6 +34,12 @@ export default method({
         break
       case "unisat-og-pass":
         inscriptionIds = getUnisatOGPass()
+        break
+      case "ordinal-fomojis":
+        inscriptionIds = getFomojiGenesisIds()
+        break
+      case "fomojis_2":
+        inscriptionIds = getFomoji_2Ids()
         break
     }
     if (inscriptionIds.length === 0) {
