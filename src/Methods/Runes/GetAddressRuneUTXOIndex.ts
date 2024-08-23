@@ -12,13 +12,15 @@ export default method({
     address: string,
     runeTicker: string,
     pagination: schema.pagination.optional(),
+    sort: schema.sort,
   }),
-  handler: async ({ address, runeTicker, pagination = {} }) => {
+  handler: async ({ address, runeTicker, pagination = {}, sort }) => {
     pagination.limit ??= 50;
+    sort ??= { _id: "asc" };
     const params: FindPaginatedParams<RuneUtxoBalance> = {
       ...pagination,
       filter: { address, runeTicker },
-      sort: { _id: "asc" },
+      sort,
     };
     const balances = await runes.addressRunesUTXOs(params);
 
