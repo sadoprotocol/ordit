@@ -51,7 +51,7 @@ export const findPaginated = async <T extends Document>(
   const firstDocumentCursor = encodeCursor(buildCursor(documents[0], sort));
   const lastDocumentCursor = encodeCursor(buildCursor(documents[documents.length - 1], sort));
 
-  // Only add $cursor to the document if verbose is true
+  // Only add $cursor to the document if cursorInfo is true
   for (const document of documents) {
     if (cursorInfo) {
       document.$cursor = encodeCursor(buildCursor(document, sort));
