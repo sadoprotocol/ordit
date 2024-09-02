@@ -21,6 +21,7 @@ export default method({
       ...pagination,
       filter: { address, runeTicker },
       sort,
+      cursorInfo: false,
     };
     const balances = await runes.addressRunesUTXOs(params);
 
