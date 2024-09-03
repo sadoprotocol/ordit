@@ -127,25 +127,26 @@ export class Indexer {
     let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
 
     let startHeight = currentHeight;
-    const blockPromises: Promise<void>[] = [];
+
+    const blockLimiter = limiter(config.index.blockConcurrencyLimit ?? 8);
+
     let ts = perf();
     while (blockHash !== undefined && height <= blockHeight) {
       if (this.#threshold.height && this.#threshold.height <= height) {
         break; // reached configured height threshold
       }
 
-      blockPromises.push(this.#fetchAndHandleBlock(blockHash));
+      blockLimiter.push(() => this.#fetchAndHandleBlock(blockHash as string));
 
       // ### Commit
       // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
 
-      if (this.#hasReachedThreshold(height)) {
+      if (this.#hasReachedBlocksCommitThreshold(height)) {
         log(`\n💽 Read blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}][${ts.now} seconds]`);
         startHeight = height;
-        await Promise.all(blockPromises);
+        await blockLimiter.run();
         await this.#commit(height);
-        blockPromises.length = 0; // Clear the array for the next batch
         ts = perf();
       }
 
@@ -156,11 +157,7 @@ export class Indexer {
       }
       height += 1;
     }
-
-    if (blockPromises.length > 0) {
-      await Promise.all(blockPromises);
-    }
-
+    await blockLimiter.run();
     await this.#commit(height - 1);
   }
 
@@ -240,7 +237,7 @@ export class Indexer {
    |--------------------------------------------------------------------------------
    */
 
-  #hasReachedThreshold(height: number) {
+  #hasReachedBlocksCommitThreshold(height: number) {
     return height !== 0 && height % this.#threshold.blocks === 0;
   }
 
