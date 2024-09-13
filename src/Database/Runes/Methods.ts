@@ -7,6 +7,7 @@ import { client, mongo } from "~Services/Mongo";
 import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
 import { collectionBlocks, collectionRunes, collectionUtxoBalances, Mint, RuneEntry } from "./Collection";
+import { blockchain } from "~Services/Bitcoin";
 
 export const runes = {
   ...mongo,
@@ -106,7 +107,7 @@ async function resetCurrentBlock(block: BlockIdentifier): Promise<void> {
 
 async function resetCurrentBlockHeight(height: number): Promise<void> {
   await collectionBlocks.deleteMany({ height: { $gt: height } });
-  const hash = await getBlockhash(height);
+  const hash = await blockchain.getBlockHash(height);
   if (!hash) {
     throw new Error(`Error getting block hash ${height}`);
   }
