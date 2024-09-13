@@ -10,6 +10,7 @@ import {
 } from "mongodb";
 
 import { ignoreDuplicateErrors } from "~Database/Utilities";
+import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
 
 import { getChunkSize } from "../Utilities";
 import { collection, deployedCollection, OutputDocument, SpentOutput } from "./Collection";
@@ -24,6 +25,7 @@ export const outputs = {
   insertMany,
   find,
   findOne,
+  findPaginated,
   updateOne,
   cursor,
   aggregate,
@@ -67,6 +69,10 @@ async function insertMany(outputs: OutputDocument[]) {
 
 async function find(filter: Filter<OutputDocument>, options?: FindOptions<OutputDocument>) {
   return collection.find(filter, options).toArray();
+}
+
+async function findPaginated(params: FindPaginatedParams<OutputDocument> = {}) {
+  return paginate.findPaginated(collection, params);
 }
 
 async function findOne(
