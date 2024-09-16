@@ -135,8 +135,9 @@ export class Indexer {
       if (this.#threshold.height && this.#threshold.height <= height) {
         break; // reached configured height threshold
       }
+      const currentBlockHash = blockHash;
 
-      blockLimiter.push(() => this.#fetchAndHandleBlock(blockHash as string));
+      blockLimiter.push(() => this.#fetchAndHandleBlock(currentBlockHash as string));
 
       // ### Commit
       // Once we reach configured thresholds we commit the current vins and vouts
