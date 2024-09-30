@@ -3,7 +3,7 @@ import { Network as networkEnum } from "runestone-lib";
 
 import { config } from "../Config";
 
-export const VALID_NETWORK = ["mainnet", "testnet", "signet", "regtest"] as const;
+export const VALID_NETWORK = ["mainnet", "testnet", "signet", "regtest", "fractal"] as const;
 
 export type Network = (typeof VALID_NETWORK)[number];
 
@@ -32,6 +32,9 @@ export function getBitcoinNetwork(): networks.Network {
     case "regtest": {
       return networks.regtest;
     }
+    case "fractal": {
+      return networks.bitcoin;
+    }
   }
 }
 
@@ -40,10 +43,12 @@ export function getNetworkEnum(): networkEnum {
     config.network === "mainnet"
       ? networkEnum.MAINNET
       : config.network === "testnet"
-      ? networkEnum.TESTNET
-      : config.network === "signet"
-      ? networkEnum.SIGNET
-      : networkEnum.REGTEST;
+        ? networkEnum.TESTNET
+        : config.network === "signet"
+          ? networkEnum.SIGNET
+          : config.network === "fractal"
+            ? networkEnum.FRACTAL
+            : networkEnum.REGTEST;
   return _net;
 }
 
