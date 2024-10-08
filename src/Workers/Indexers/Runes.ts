@@ -29,6 +29,7 @@ export const runesIndexer: IndexHandler = {
     for (const block of blocks) {
       const runeUpdater = new RuneUpdater(network, block, false, runes, blockchain);
 
+      log(`🔍 [${block.height}] Processing ${block.tx.length} transactions`);
       for (const [txIndex, tx] of block.tx.entries()) {
         await runeUpdater.indexRunes(tx, txIndex);
       }
