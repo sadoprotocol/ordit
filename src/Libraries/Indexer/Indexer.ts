@@ -126,7 +126,7 @@ export class Indexer {
     let height = currentHeight + 1;
     let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
 
-    let startHeight = currentHeight;
+    let startHeight = height;
 
     const blockLimiter = limiter(config.index.blockConcurrencyLimit ?? 8);
 
@@ -144,9 +144,10 @@ export class Indexer {
       // to the registered index handlers.
 
       if (this.#hasReachedBlocksCommitThreshold(height)) {
-        log(`\n💽 Read blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}][${ts.now} seconds]`);
+        log(`\n💽 Reading blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}]`);
         startHeight = height;
         await blockLimiter.run();
+        console.log(`⌚ ${ts.now} seconds`);
         await this.#commit(height);
         ts = perf();
       }

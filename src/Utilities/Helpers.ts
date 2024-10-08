@@ -35,27 +35,24 @@ export function convertStringToBigInt(obj: any): any {
   return obj;
 }
 
-export function convertBigIntToString(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
+export function convertBigIntToString(obj: any, seen = new WeakSet()): any {
+  if (obj && typeof obj === "object") {
+    if (seen.has(obj)) return obj; // Return the object as-is if already processed
 
-  if (typeof obj === "bigint") {
-    return obj.toString();
-  }
+    seen.add(obj);
 
-  if (Array.isArray(obj)) {
-    return obj.map(convertBigIntToString);
-  }
-
-  if (typeof obj === "object") {
-    const newObj: any = {};
     for (const key in obj) {
-      // eslint-disable-next-line no-prototype-builtins
-      if (obj.hasOwnProperty(key)) {
-        // eslint-disable-next-line no-prototype-builtins
-        newObj[key] = convertBigIntToString(obj[key]);
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        if (typeof value === "bigint") {
+          obj[key] = value.toString();
+        } else if (typeof value === "object" && value !== null) {
+          convertBigIntToString(value, seen);
+        }
       }
     }
-    return newObj;
+  } else if (Array.isArray(obj)) {
+    return obj.map((item) => convertBigIntToString(item, seen));
   }
 
   return obj;

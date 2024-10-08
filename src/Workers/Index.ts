@@ -13,10 +13,6 @@ export async function index() {
   const blockHeight = await rpc.blockchain.getBlockCount();
   const indexers: IndexHandler[] = [];
 
-  if (config.index.outputs === true) {
-    indexers.push(outputIndexer);
-  }
-
   if (config.index.utxos === true) {
     indexers.push(utxoIndexer);
   }
@@ -34,6 +30,10 @@ export async function index() {
 
   if (config.index.runes === true) {
     indexers.push(runesIndexer);
+  }
+
+  if (config.index.outputs === true) {
+    indexers.push(outputIndexer);
   }
 
   const indexer = new Indexer({ indexers });
