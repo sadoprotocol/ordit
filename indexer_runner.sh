@@ -17,9 +17,22 @@ set_memory_limit() {
     export NODE_OPTIONS="--max-old-space-size=${max_memory_mb}"
 }
 
+# Ensure MAX_COMMIT_BLOCKS and MIN_COMMIT_BLOCKS are valid integers
 MAX_COMMIT_BLOCKS=${1:-5000}
 MIN_COMMIT_BLOCKS=${2:-10}
 
+# Check if MAX_COMMIT_BLOCKS and MIN_COMMIT_BLOCKS are integers
+if ! [[ "$MAX_COMMIT_BLOCKS" =~ ^[0-9]+$ ]]; then
+    echo "Error: MAX_COMMIT_BLOCKS ($MAX_COMMIT_BLOCKS) is not a valid integer."
+    exit 1
+fi
+
+if ! [[ "$MIN_COMMIT_BLOCKS" =~ ^[0-9]+$ ]]; then
+    echo "Error: MIN_COMMIT_BLOCKS ($MIN_COMMIT_BLOCKS) is not a valid integer."
+    exit 1
+fi
+
+INIT_MAX_COMMIT_BLOCKS=$MAX_COMMIT_BLOCKS
 COMMIT_BLOCKS=$MAX_COMMIT_BLOCKS
 
 # Calculate the decrement value based on the number of digits in MAX_COMMIT_BLOCKS
@@ -58,8 +71,8 @@ run_command() {
         runtime=$((runtime + 1))
     done
 
-    # If the command is still running after 10 minutes and COMMIT_BLOCKS < 5000, terminate and restart to set higher MAX_COMMIT_BLOCKS
-    if ps -p $command_pid >/dev/null && [ $COMMIT_BLOCKS -lt 5000 ]; then
+    # If the command is still running after 10 minutes and COMMIT_BLOCKS < INIT_MAX_COMMIT_BLOCKS, terminate and restart to set higher MAX_COMMIT_BLOCKS
+    if ps -p $command_pid >/dev/null && [ $COMMIT_BLOCKS -lt $INIT_MAX_COMMIT_BLOCKS ]; then
         echo "Command is still running after 2 minutes with COMMIT_BLOCKS=$COMMIT_BLOCKS. Restarting with MAX_COMMIT_BLOCKS=$MAX_COMMIT_BLOCKS."
         kill -9 $command_pid
         wait $command_pid 2>/dev/null
