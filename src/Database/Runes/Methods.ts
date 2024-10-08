@@ -2,7 +2,7 @@ import { BlockIdentifier, RuneBlockIndex, RuneEtching, RuneLocation, RuneUtxoBal
 
 import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
 import { client, mongo } from "~Services/Mongo";
-import { convertBigIntToString } from "~Utilities/Helpers";
+import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
 import { collectionBlockInfo, collectionOutputs, RuneOutput, SimplifiedRuneBlockIndex } from "./Collection";
 
@@ -181,7 +181,7 @@ async function getEtching(runeLocation: string): Promise<RuneEtching | null> {
     (etching) => etching.runeId.block === runeId.block && etching.runeId.tx === runeId.tx,
   );
 
-  return etching || null;
+  return convertStringToBigInt(etching) || null;
 }
 
 async function getValidMintCount(runeLocation: string, blockheight: number): Promise<number> {
@@ -228,5 +228,7 @@ async function getRuneLocation(runeTicker: string): Promise<RuneLocation | null>
 }
 
 async function getUtxoBalance(txid: string, vout: number): Promise<RuneUtxoBalance[]> {
-  return await collectionOutputs.find<RuneUtxoBalance>({ txid, vout }).toArray();
+  const utxoBalance = await collectionOutputs.find<RuneUtxoBalance>({ txid, vout }).toArray();
+  const utxoBalanceFlat = utxoBalance.map((utxo) => convertStringToBigInt(utxo));
+  return utxoBalanceFlat;
 }

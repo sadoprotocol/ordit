@@ -166,46 +166,48 @@ export class Indexer {
   async #handleBlock(block: Block<2>) {
     this.#blocks.push(block);
 
-    for (const tx of block.tx) {
-      const txid = tx.txid;
+    if (!config.index.runesOnly) {
+      for (const tx of block.tx) {
+        const txid = tx.txid;
 
-      for (const [n, vin] of tx.vin.entries()) {
-        this.#vins.push({
-          txid,
-          n,
-          witness: vin.txinwitness ?? [],
-          block: {
-            hash: block.hash,
-            height: block.height,
-            time: block.time,
-          },
-          vout: {
-            txid: vin.txid,
-            n: vin.vout,
-          },
-        });
-      }
-
-      const voutLimiter = limiter(config.index.voutConcurrencyLimit ?? 50);
-      for (const vout of tx.vout) {
-        voutLimiter.push(async () => {
-          const addresses = await getAddressessFromVout(vout);
-          this.#vouts.push({
+        for (const [n, vin] of tx.vin.entries()) {
+          this.#vins.push({
             txid,
-            n: vout.n,
-            addresses,
-            value: vout.value,
-            scriptPubKey: vout.scriptPubKey,
+            n,
+            witness: vin.txinwitness ?? [],
             block: {
               hash: block.hash,
               height: block.height,
               time: block.time,
             },
+            vout: {
+              txid: vin.txid,
+              n: vin.vout,
+            },
           });
-        });
-      }
+        }
 
-      await voutLimiter.run();
+        const voutLimiter = limiter(config.index.voutConcurrencyLimit ?? 50);
+        for (const vout of tx.vout) {
+          voutLimiter.push(async () => {
+            const addresses = await getAddressessFromVout(vout);
+            this.#vouts.push({
+              txid,
+              n: vout.n,
+              addresses,
+              value: vout.value,
+              scriptPubKey: vout.scriptPubKey,
+              block: {
+                hash: block.hash,
+                height: block.height,
+                time: block.time,
+              },
+            });
+          });
+        }
+
+        await voutLimiter.run();
+      }
     }
   }
 

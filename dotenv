@@ -41,11 +41,13 @@ WORKER_PORT=3031
 # INDEXER OPTIONS
 #------------------------------------------------------------
 INDEX_OUTPUTS=true
-INDEX_UTXOS=true
-INDEX_INSCRIPTIONS=true
+INDEX_INSCRIPTIONS=true # dependant on INDEX_OUTPUTS=true
+INDEX_RUNES=true # dependant on INDEX_OUTPUTS=true
+INDEX_RUNES_ONLY=false # Optional, if set to true only runes will be indexed skiping outputs
+# Deprecated
 INDEX_BRC20=true
 INDEX_SADO=true
-INDEX_RUNES=true
+INDEX_UTXOS=true
 
 #------------------------------------------------------------
 # INDEXER SETTINGS

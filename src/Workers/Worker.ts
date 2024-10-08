@@ -136,7 +136,10 @@ function getWorkerStatus() {
 
 const start = async () => {
   await bootstrap();
-  lastHeight = await db.outputs.getHeighestBlock();
+  lastHeight = config.index.runesOnly
+    ? (await db.runes.getCurrentBlock())?.height || 0
+    : await db.outputs.getHeighestBlock();
+
   if (config.index.maxheight && lastHeight >= config.index.maxheight) {
     console.log(`Already at maxheight ${lastHeight}`);
     process.exit(0);

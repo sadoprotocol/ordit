@@ -3,8 +3,9 @@ import { db } from "~Database";
 import { rpc } from "~Services/Bitcoin";
 
 export async function getReorgHeight(): Promise<number> {
-  const heighestBlock = await db.outputs.getHeighestBlock();
-  if (heighestBlock === 0) {
+  const onlyRunes = config.index.runesOnly;
+  const heighestBlock = onlyRunes ? (await db.runes.getCurrentBlock())?.height : await db.outputs.getHeighestBlock();
+  if (!heighestBlock) {
     return -1; // fresh database, start from genesis
   }
 
@@ -21,7 +22,9 @@ export async function getReorgHeight(): Promise<number> {
       continue;
     }
 
-    const output = await db.outputs.findOne({ "vout.block.height": currentHeight });
+    const output: any = onlyRunes
+      ? await db.runes.collectionOutputs.findOne({ txBlockHeight: currentHeight })
+      : await db.outputs.findOne({ "vout.block.height": currentHeight });
     if (output === undefined) {
       if (block.nTx !== 0) {
         reorgHeight = currentHeight;
@@ -30,7 +33,8 @@ export async function getReorgHeight(): Promise<number> {
       continue;
     }
 
-    if (block.hash !== output.vout.block.hash) {
+    const outputBlockHash = onlyRunes ? await db.runes.getBlockhash(currentHeight) : output?.vout.block.hash;
+    if (block.hash !== outputBlockHash) {
       reorgHeight = currentHeight;
       if (currentHeight === targetHeight) {
         targetHeight -= 10;

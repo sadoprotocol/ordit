@@ -21,6 +21,7 @@ export const config = {
     brc20: getEnvironmentVariable("INDEX_BRC20", envToBoolean),
     sado: getEnvironmentVariable("INDEX_SADO", envToBoolean),
     runes: getEnvironmentVariable("INDEX_RUNES", envToBoolean),
+    runesOnly: getEnvironmentVariable("INDEX_RUNES_ONLY", envToBoolean, true),
     maxheight: getEnvironmentVariable("INDEXER_MAX_HEIGHT", envToNumber, true),
     blocksThreshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
     chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
