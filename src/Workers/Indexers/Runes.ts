@@ -29,7 +29,6 @@ export const runesIndexer: IndexHandler = {
     for (const block of blocks) {
       const runeUpdater = new RuneUpdater(network, block, false, runes, blockchain);
 
-      log(`🔍 [${block.height}] Processing ${block.tx.length} transactions`);
       for (const [txIndex, tx] of block.tx.entries()) {
         await runeUpdater.indexRunes(tx, txIndex);
       }
@@ -53,9 +52,9 @@ export const runesIndexer: IndexHandler = {
           burnedBalances,
         };
         runeBlockIndexes.push(runeBlockIndex);
+        printBlockInfo(runeBlockIndex);
       }
     }
-    console.log(`🪛 ${runeBlockIndexes.length} runestones processed`);
     if (runeBlockIndexes.length > 0) await runes.saveBlocksInBatch(runeBlockIndexes);
   },
 
@@ -63,3 +62,14 @@ export const runesIndexer: IndexHandler = {
     await runes.resetCurrentBlock({ height, hash: "" });
   },
 };
+
+function printBlockInfo(runeBlockIndex: RuneBlockIndex) {
+  const blockStr = `${runeBlockIndex.block.height}`.padEnd(6, " ");
+  const etchingsStr = `${runeBlockIndex.etchings.length.toLocaleString()} etchings`.padStart(12, " ");
+  const balancesStr = `${runeBlockIndex.utxoBalances.length.toLocaleString()} balances`.padStart(12, " ");
+  const spentStr = `${runeBlockIndex.spentBalances.length.toLocaleString()} spent`.padStart(9, " ");
+  const burntStr = `${runeBlockIndex.burnedBalances.length.toLocaleString()} burnt`.padStart(9, " ");
+  const mintStr = `${runeBlockIndex.mintCounts.length.toLocaleString()} mint`.padStart(9, " ");
+
+  console.log(`🔍 ${blockStr}:${etchingsStr},${balancesStr},${spentStr},${burntStr},${mintStr}`);
+}

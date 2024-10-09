@@ -72,7 +72,7 @@ export class Indexer {
     log(`---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
-    if (reorgHeight !== undefined) {
+    if (reorgHeight !== undefined && currentHeight > reorgHeight) {
       currentHeight = reorgHeight;
     }
     await this.#indexBlocks(currentHeight, blockHeight);
