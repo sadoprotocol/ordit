@@ -1,21 +1,23 @@
+import { Decimal128 } from "mongodb";
 import { BlockIdentifier, RuneBlockIndex, RuneEtching, RuneLocation, RuneUtxoBalance } from "runestone-lib";
 
+import { ignoreDuplicateErrors } from "~Database/Utilities";
 import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
 import { client, mongo } from "~Services/Mongo";
 import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
-import { collectionBlockInfo, collectionOutputs, RuneOutput, SimplifiedRuneBlockIndex } from "./Collection";
+import { collectionBlockInfo, collectionEtching, collectionOutputs, RuneOutput } from "./Collection";
 
 export const runes = {
   ...mongo,
   collectionBlockInfo,
   collectionOutputs,
+  collectionEtching,
 
   // Core Methods
   getEtchingByTicker,
   addressBalances,
   addressRunesUTXOs,
-  saveBlocksInBatch,
 
   // RunestoneStorage implementation
   disconnect,
@@ -31,41 +33,41 @@ export const runes = {
 };
 
 async function getEtchingByTicker(runeTicker: string): Promise<RuneEtching | null> {
-  const result = await collectionBlockInfo
-    .aggregate<RuneEtching>([
-      { $unwind: "$etchings" },
-      { $match: { "etchings.runeTicker": runeTicker } },
-      { $replaceRoot: { newRoot: "$etchings" } },
-      { $limit: 1 },
-    ])
-    .toArray();
-
-  return result.length > 0 ? result[0] : null;
+  return await collectionEtching.findOne({ runeTicker });
 }
 
 export async function addressBalances(address: string): Promise<{ runeTicker: string; balance: string }[]> {
   const result = await collectionOutputs
-    .aggregate<{ runeTicker: string; balance: string }>([
+    .aggregate<{ runeTicker: string; totalBalance: Decimal128 }>([
       {
         $match: { address, spentTxid: { $exists: false } },
       },
       {
         $group: {
           _id: "$runeTicker",
-          totalBalance: { $sum: { $toDouble: "$amount" } },
+          totalBalance: {
+            $sum: {
+              $toDecimal: "$amount",
+            },
+          },
         },
       },
       {
         $project: {
           _id: 0,
           runeTicker: "$_id",
-          balance: { $toString: "$totalBalance" },
+          totalBalance: 1,
         },
       },
     ])
     .toArray();
 
-  return result;
+  const balances = result.map(({ runeTicker, totalBalance }) => ({
+    runeTicker,
+    balance: totalBalance.toString(),
+  }));
+
+  return balances;
 }
 
 async function addressRunesUTXOs(params: FindPaginatedParams<RuneOutput> = {}) {
@@ -92,77 +94,47 @@ async function getCurrentBlock(): Promise<BlockIdentifier | null> {
 async function resetCurrentBlock(block: BlockIdentifier): Promise<void> {
   await collectionOutputs.deleteMany({ txBlockHeight: { $gt: block.height } });
   await collectionBlockInfo.deleteMany({ "block.height": { $gt: block.height } });
+  await collectionEtching.deleteMany({ "runeId.block": { $gt: block.height } });
 }
 
 export async function seedEtchings(runesEtchings: RuneEtching[]): Promise<void> {
-  for (const etching of runesEtchings) {
-    if (!etching.valid) continue;
+  const bulkOps = runesEtchings.map((etching) => ({
+    insertOne: {
+      document: convertBigIntToString(etching),
+    },
+  }));
 
-    const blockHeight = etching.runeId.block;
-    const filter = { "block.height": blockHeight };
-
-    const existingDocument = await collectionBlockInfo.findOne(filter);
-    if (existingDocument) {
-      await collectionBlockInfo.updateOne(filter, { $push: { etchings: etching } });
-    } else {
-      const newDocument: SimplifiedRuneBlockIndex = {
-        block: {
-          height: blockHeight,
-          hash: etching.txid,
-          previousblockhash: "---",
-          time: 0,
-        },
-        reorg: false,
-        etchings: [etching],
-        mintCounts: [],
-        burnedBalances: [],
-      };
-
-      await collectionBlockInfo.insertOne(newDocument);
-    }
-  }
+  await collectionEtching.bulkWrite(bulkOps);
 }
 
 async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
-  const filter = { "block.height": runeBlockIndex.block.height };
-
   const sanitizedBlockIndex = convertBigIntToString(runeBlockIndex);
 
-  await collectionBlockInfo.updateOne(filter, { $set: sanitizedBlockIndex }, { upsert: true });
+  await collectionBlockInfo.insertOne(sanitizedBlockIndex).catch(ignoreDuplicateErrors);
+
+  const bulkEtchings = runeBlockIndex.etchings.map((etching) => ({
+    insertOne: {
+      document: convertBigIntToString(etching),
+    },
+  }));
+
+  if (bulkEtchings.length > 0) await collectionEtching.bulkWrite(bulkEtchings).catch(ignoreDuplicateErrors);
 
   if (runeBlockIndex.utxoBalances && runeBlockIndex.utxoBalances.length > 0) {
-    const newUtxos = runeBlockIndex.utxoBalances.map((utxo) => ({
-      ...utxo,
-      txBlockHeight: runeBlockIndex.block.height,
-    }));
-
-    await collectionOutputs.insertMany(newUtxos);
+    const newUtxos = runeBlockIndex.utxoBalances.map((utxo) => {
+      return {
+        ...utxo,
+        txBlockHeight: runeBlockIndex.block.height,
+      };
+    });
+    await collectionOutputs.insertMany(newUtxos).catch(ignoreDuplicateErrors);
   }
 
   for (const spentUtxo of runeBlockIndex.spentBalances) {
     await collectionOutputs.updateOne(
-      { txid: spentUtxo.txid, vout: spentUtxo.vout },
-      { $set: { spentTxid: spentUtxo.spentTxid, blockHeight: runeBlockIndex.block.height } },
+      { txid: spentUtxo.txid, vout: spentUtxo.vout, runeTicker: spentUtxo.runeTicker },
+      { $set: { spentTxid: spentUtxo.spentTxid, txBlockHeight: runeBlockIndex.block.height } },
     );
-  }
-}
-
-async function saveBlocksInBatch(runeBlockIndexes: RuneBlockIndex[]): Promise<void> {
-  const session = client.startSession();
-
-  try {
-    await session.withTransaction(async () => {
-      for (const runeBlockIndex of runeBlockIndexes) {
-        await saveBlockIndex(runeBlockIndex);
-      }
-    });
-
-    console.log("✅ Transaction committed successfully");
-  } catch (error) {
-    console.error("Error saving blocks in batch, transaction aborted:", error);
-    throw error;
-  } finally {
-    session.endSession();
   }
 }
 
@@ -173,15 +145,14 @@ async function getEtching(runeLocation: string): Promise<RuneEtching | null> {
     tx: parseInt(txStr, 10),
   };
 
-  const document = await collectionBlockInfo.findOne<RuneBlockIndex>({ "block.height": runeId.block });
+  const etching = await collectionEtching.findOne<RuneEtching>({
+    "runeId.block": runeId.block,
+    "runeId.tx": runeId.tx,
+  });
 
-  if (!document) return null;
+  if (!etching) return null;
 
-  const etching = document.etchings.find(
-    (etching) => etching.runeId.block === runeId.block && etching.runeId.tx === runeId.tx,
-  );
-
-  return convertStringToBigInt(etching) || null;
+  return convertStringToBigInt(etching);
 }
 
 async function getValidMintCount(runeLocation: string, blockheight: number): Promise<number> {
@@ -215,16 +186,7 @@ async function getValidMintCount(runeLocation: string, blockheight: number): Pro
 }
 
 async function getRuneLocation(runeTicker: string): Promise<RuneLocation | null> {
-  const result = await collectionBlockInfo
-    .aggregate<RuneLocation>([
-      { $unwind: "$etchings" },
-      { $match: { "etchings.runeTicker": runeTicker } },
-      { $project: { _id: 0, runeId: "$etchings.runeId" } },
-      { $limit: 1 },
-    ])
-    .toArray();
-
-  return result.length > 0 ? result[0] : null;
+  return (await collectionEtching.findOne({ runeTicker }))?.runeId ?? null;
 }
 
 async function getUtxoBalance(txid: string, vout: number): Promise<RuneUtxoBalance[]> {

@@ -16,8 +16,14 @@ export async function getReorgHeight(): Promise<number> {
   while (currentHeight > targetHeight) {
     logProgress(currentHeight, targetHeight, reorgHeight);
 
-    const block = await rpc.blockchain.getBlock(currentHeight);
-    if (block === undefined) {
+    let block: any;
+    try {
+      block = await rpc.blockchain.getBlock(currentHeight);
+      if (block === undefined) {
+        currentHeight -= 1;
+        continue;
+      }
+    } catch (e) {
       currentHeight -= 1;
       continue;
     }

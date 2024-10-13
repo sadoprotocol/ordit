@@ -8,6 +8,7 @@ import { registrar as ipfs } from "./Database/IPFS/Collection";
 import { registrar as media } from "./Database/Media/Collection";
 import { registrar as output } from "./Database/Output/Collection";
 import { registrarBlockInfo as runesBlockInfo } from "./Database/Runes/Collection";
+import { registrarEtching as runesEtching } from "./Database/Runes/Collection";
 import { registrarOutput as runesOutput } from "./Database/Runes/Collection";
 import { registrar as sadoEvents } from "./Database/Sado/Events/Collection";
 import { registrar as sadoOrders } from "./Database/Sado/Orders/Collection";
@@ -31,6 +32,7 @@ async function database() {
     media,
     output,
     runesBlockInfo,
+    runesEtching,
     runesOutput,
     sadoEvents,
     sadoOrders,

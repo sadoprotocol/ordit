@@ -21,10 +21,10 @@ export const runesIndexer: IndexHandler = {
     const initialHeight = blocks[0].height;
     const runesIndexHeight = await runes.getCurrentBlock();
     if (runesIndexHeight && runesIndexHeight?.height > initialHeight) {
+      console.log("Runes reorg, new initial height", initialHeight);
       await runes.resetCurrentBlock({ height: initialHeight, hash: "" });
     }
 
-    const runeBlockIndexes: RuneBlockIndex[] = [];
     log(`🔍 Looking for runestones in blocks...`);
     for (const block of blocks) {
       const runeUpdater = new RuneUpdater(network, block, false, runes, blockchain);
@@ -51,11 +51,10 @@ export const runesIndexer: IndexHandler = {
           spentBalances,
           burnedBalances,
         };
-        runeBlockIndexes.push(runeBlockIndex);
+        runes.saveBlockIndex(runeBlockIndex);
         printBlockInfo(runeBlockIndex);
       }
     }
-    if (runeBlockIndexes.length > 0) await runes.saveBlocksInBatch(runeBlockIndexes);
   },
 
   async reorg(height: number) {
