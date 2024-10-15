@@ -17,15 +17,7 @@ export const runesIndexer: IndexHandler = {
     // order blocks
     const blocks = idx.blocks.sort((a, b) => a.height - b.height);
 
-    // check reorg for runes
-    const initialHeight = blocks[0].height;
-    const runesIndexHeight = await runes.getCurrentBlock();
-    if (runesIndexHeight && runesIndexHeight?.height > initialHeight) {
-      console.log("Runes reorg, new initial height", initialHeight);
-      await runes.resetCurrentBlock({ height: initialHeight, hash: "" });
-    }
-
-    log(`🔍 Looking for runestones in blocks...`);
+    log(`🔍 Looking for runestones in blocks ${blocks[0].height}-${blocks[blocks.length - 1].height}`);
     for (const block of blocks) {
       const runeUpdater = new RuneUpdater(network, block, false, runes, blockchain);
 
@@ -55,6 +47,7 @@ export const runesIndexer: IndexHandler = {
         printBlockInfo(runeBlockIndex);
       }
     }
+    console.log("🏁 Finished looking for runestones");
   },
 
   async reorg(height: number) {

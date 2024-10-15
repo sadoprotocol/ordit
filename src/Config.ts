@@ -23,6 +23,7 @@ export const config = {
     runes: getEnvironmentVariable("INDEX_RUNES", envToBoolean),
     runesOnly: getEnvironmentVariable("INDEX_RUNES_ONLY", envToBoolean, true),
     maxheight: getEnvironmentVariable("INDEXER_MAX_HEIGHT", envToNumber, true),
+    startHeight: getEnvironmentVariable("INDEXER_START_HEIGHT", envToNumber, true),
     blocksThreshold: getEnvironmentVariable("INDEXER_COMMIT_BLOCKS", envToNumber, true),
     chunkSize: getEnvironmentVariable("INDEXER_DB_CHUNK_SIZE", envToNumber, true),
     voutConcurrencyLimit: getEnvironmentVariable("INDEXER_VOUT_CONCURRENCY_LIMIT", envToNumber, true),

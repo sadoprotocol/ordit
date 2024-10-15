@@ -3,64 +3,41 @@ import { db } from "~Database";
 import { rpc } from "~Services/Bitcoin";
 
 export async function getReorgHeight(): Promise<number> {
-  const onlyRunes = config.index.runesOnly;
-  const heighestBlock = onlyRunes ? (await db.runes.getCurrentBlock())?.height : await db.outputs.getHeighestBlock();
-  if (!heighestBlock) {
-    return -1; // fresh database, start from genesis
+  const indexerHeight = await db.indexer.getHeight();
+  const blockchainHeight = await rpc.blockchain.getBlockCount();
+  // Determine which indexes are active
+  const runesActive = config.index.runes;
+  const outputsActive = config.index.outputs && !config.index.runesOnly;
+
+  let outputHighest = indexerHeight;
+  let runesHighest = indexerHeight;
+  // Array to keep track of all relevant heights
+  const heights = [indexerHeight];
+
+  if (outputsActive) {
+    outputHighest = await db.outputs.getHeighestBlock();
+    heights.push(outputHighest);
   }
 
-  let targetHeight = heighestBlock - config.reorg.scanLength;
-  let reorgHeight = -1;
-
-  let currentHeight = heighestBlock;
-  while (currentHeight > targetHeight) {
-    logProgress(currentHeight, targetHeight, reorgHeight);
-
-    let block: any;
-    try {
-      block = await rpc.blockchain.getBlock(currentHeight);
-      if (block === undefined) {
-        currentHeight -= 1;
-        continue;
-      }
-    } catch (e) {
-      currentHeight -= 1;
-      continue;
+  if (runesActive) {
+    const runesCurrentBlock = await db.runes.getCurrentBlock();
+    if (runesCurrentBlock) {
+      runesHighest = runesCurrentBlock.height;
+      heights.push(runesHighest);
     }
-
-    const output: any = onlyRunes
-      ? await db.runes.collectionOutputs.findOne({ txBlockHeight: currentHeight })
-      : await db.outputs.findOne({ "vout.block.height": currentHeight });
-    if (output === undefined) {
-      if (block.nTx !== 0) {
-        reorgHeight = currentHeight;
-      }
-      currentHeight -= 1;
-      continue;
-    }
-
-    const outputBlockHash = onlyRunes ? await db.runes.getBlockhash(currentHeight) : output?.vout.block.hash;
-    if (block.hash !== outputBlockHash) {
-      reorgHeight = currentHeight;
-      if (currentHeight === targetHeight) {
-        targetHeight -= 10;
-      }
-      currentHeight -= 1;
-      continue;
-    }
-
-    currentHeight -= 1;
   }
 
-  return reorgHeight;
-}
+  const lowestHeight = Math.min(...heights);
 
-function logProgress(currentHeight: number, targetHeight: number, reorgHeight: number) {
-  if (config.reorg.debug === true) {
-    process.stdout.write(
-      `\r  scanning block ${currentHeight} | ${
-        currentHeight - targetHeight
-      } blocks left to scan | reorg height: ${reorgHeight}          `,
-    );
+  if (lowestHeight > blockchainHeight) {
+    return blockchainHeight;
   }
+
+  // Check if the indexer is behind the outputs or runes highest blocks
+  if ((outputsActive && indexerHeight < outputHighest) || (runesActive && indexerHeight < runesHighest)) {
+    return indexerHeight;
+  }
+
+  // If no reorganization is needed, return -1
+  return -1;
 }

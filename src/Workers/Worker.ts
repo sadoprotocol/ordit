@@ -12,8 +12,6 @@ import { index } from "./Index";
 const fastify = Fastify();
 
 let indexing = false;
-let outdated = false;
-let reorging = false;
 
 let lastHeight = 0;
 
@@ -75,7 +73,7 @@ fastify.get("/hooks/bitcoin", async () => {
 
 async function checkForBlock() {
   const blockHeight = await rpc.blockchain.getBlockCount();
-  if (lastHeight < blockHeight) {
+  if (lastHeight !== blockHeight && lastHeight !== config.index.maxheight) {
     await startIndexer();
   }
   timeout = setTimeout(checkForBlock, 5000);
@@ -89,41 +87,20 @@ async function checkForBlock() {
 
 async function startIndexer() {
   clearTimeout(timeout);
+  console.log(new Date(Date.now()).toISOString(), "Start indexing");
 
-  if (indexing === true || reorging === true) {
-    outdated = true;
-    return;
-  }
   indexing = true;
 
   const blockHeight = await index();
-  if (blockHeight === undefined) {
-    reorging = true;
-    indexing = false;
-    outdated = true;
-    return;
-  }
 
   lastHeight = blockHeight;
-
-  await stopIndexer();
-}
-
-async function stopIndexer() {
   indexing = false;
-  if (outdated === true) {
-    outdated = false;
-    return startIndexer();
-  }
-  checkForBlock();
+  console.log(new Date(Date.now()).toISOString(), "Finished indexing");
 }
 
 function getWorkerStatus() {
   if (indexing === true) {
     return "indexing";
-  }
-  if (reorging === true) {
-    return "reorg";
   }
   return "idle";
 }
@@ -136,9 +113,7 @@ function getWorkerStatus() {
 
 const start = async () => {
   await bootstrap();
-  lastHeight = config.index.runesOnly
-    ? (await db.runes.getCurrentBlock())?.height || 0
-    : await db.outputs.getHeighestBlock();
+  lastHeight = await db.indexer.getHeight();
 
   if (config.index.maxheight && lastHeight >= config.index.maxheight) {
     console.log(`Already at maxheight ${lastHeight}`);

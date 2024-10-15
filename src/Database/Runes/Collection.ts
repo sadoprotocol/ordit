@@ -27,4 +27,4 @@ export const registrarOutput: CollectionRegistrar = {
 };
 
 export type RuneOutput = RuneUtxoBalance & { txBlockHeight: number; spentTxid?: string }; // txBlockHeight needed for reorg
-export type SimplifiedRuneBlockIndex = Omit<RuneBlockIndex, "utxoBalances" | "spentBalances" | "reorg">;
+export type SimplifiedRuneBlockIndex = Omit<RuneBlockIndex, "etchings" | "utxoBalances" | "spentBalances" | "reorg">;

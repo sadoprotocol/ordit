@@ -1,3 +1,5 @@
+import { Long } from "bson";
+
 export async function sleep(seconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
@@ -16,16 +18,23 @@ export function convertStringToBigInt(obj: any): any {
     }
   }
 
+  if (typeof obj === "bigint") {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
     return obj.map(convertStringToBigInt);
   }
 
   if (typeof obj === "object") {
+    // Check if the object is a BSON Long
+    if (Long.isLong(obj)) {
+      return obj.toBigInt();
+    }
+
     const newObj: any = {};
     for (const key in obj) {
-      // eslint-disable-next-line no-prototype-builtins
-      if (obj.hasOwnProperty(key)) {
-        // eslint-disable-next-line no-prototype-builtins
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         newObj[key] = convertStringToBigInt(obj[key]);
       }
     }

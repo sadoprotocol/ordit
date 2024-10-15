@@ -4,8 +4,10 @@ import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
+import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
 import { Block, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
+import { sleep } from "~Utilities/Helpers";
 
 import { getReorgHeight } from "./Reorg";
 
@@ -53,7 +55,20 @@ export class Indexer {
    */
 
   async run(blockHeight: number) {
-    let currentHeight = await this.#getCurrentHeight();
+    let currentHeight = await indexer.getHeight();
+    const startHeight = config.index.startHeight;
+    const runesOnly = config.index.runesOnly;
+    if (currentHeight === 0) {
+      // fresh index
+      if (runesOnly) currentHeight = RUNES_BLOCK;
+      if (startHeight) currentHeight = startHeight;
+    } else {
+      // started index
+      if (runesOnly && currentHeight < RUNES_BLOCK) currentHeight = RUNES_BLOCK;
+      if (startHeight && currentHeight < startHeight) currentHeight = startHeight;
+    }
+
+    let targetHeight = blockHeight;
 
     if (config.index.maxheight) {
       const maxheight = config.index.maxheight;
@@ -62,20 +77,21 @@ export class Indexer {
         return;
       }
       // If we are not yet at maxheight, we should index up to maxheight or blockheight, whichever is lower.
-      assert(blockHeight <= maxheight);
+      assert(targetHeight <= maxheight);
+      targetHeight = maxheight;
     }
 
-    if (currentHeight === blockHeight) {
+    if (currentHeight === targetHeight) {
       return; // indexer has latest outputs
     }
 
-    log(`---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
+    log(`---------- indexing to block ${targetHeight.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
     if (reorgHeight !== undefined && currentHeight > reorgHeight) {
       currentHeight = reorgHeight;
     }
-    await this.#indexBlocks(currentHeight, blockHeight);
+    await this.#indexBlocks(currentHeight, targetHeight);
   }
 
   /*
@@ -85,7 +101,7 @@ export class Indexer {
    */
 
   async #reorgCheck(blockHeight: number) {
-    log("\n\n 🏥 Performing reorg check\n");
+    log("\n🏥 Performing reorg check");
 
     const reorgHeight = await getReorgHeight();
     if (reorgHeight !== -1) {
@@ -93,11 +109,11 @@ export class Indexer {
         log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
         throw new Error("reorg detected, manual intervention required");
       }
-      log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
+      log(`🚑 reorg detected at block ${reorgHeight}`);
       await Promise.all(this.#indexers.map((indexer) => indexer.reorg(reorgHeight)));
       return reorgHeight - 1;
     }
-    log("\n   💯 Chain is healthy");
+    log("\n💯 Chain is healthy");
   }
 
   /*
@@ -123,8 +139,16 @@ export class Indexer {
   async #indexBlocks(currentHeight: number, blockHeight: number) {
     log(`📦 Indexing blockchain from block ${currentHeight.toLocaleString()}`);
 
-    let height = currentHeight + 1;
-    let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
+    let height = currentHeight;
+    let blockHash: string | undefined;
+    try {
+      blockHash = await rpc.blockchain.getBlockHash(height);
+    } catch (_) {
+      // If bitcoin node is doing a reorg it might need a second try to catch up
+      console.log("Rpc call getBlockHash failed, retry in 5 seconds");
+      await sleep(5);
+      blockHash = await rpc.blockchain.getBlockHash(height);
+    }
 
     let startHeight = height;
 
@@ -154,13 +178,13 @@ export class Indexer {
 
       try {
         blockHash = await rpc.blockchain.getBlockHash(height + 1);
+        height += 1;
       } catch {
         blockHash = undefined;
       }
-      height += 1;
     }
     await blockLimiter.run();
-    await this.#commit(height - 1);
+    await this.#commit(height);
   }
 
   async #handleBlock(block: Block<2>) {
@@ -243,14 +267,6 @@ export class Indexer {
 
   #hasReachedBlocksCommitThreshold(height: number) {
     return height !== 0 && height % this.#threshold.blocks === 0;
-  }
-
-  async #getCurrentHeight() {
-    const currentHeight = await indexer.getHeight();
-    if (currentHeight === null) {
-      return -1;
-    }
-    return currentHeight;
   }
 }
 

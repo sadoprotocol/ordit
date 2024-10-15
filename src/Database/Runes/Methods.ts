@@ -6,7 +6,13 @@ import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
 import { client, mongo } from "~Services/Mongo";
 import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
-import { collectionBlockInfo, collectionEtching, collectionOutputs, RuneOutput } from "./Collection";
+import {
+  collectionBlockInfo,
+  collectionEtching,
+  collectionOutputs,
+  RuneOutput,
+  SimplifiedRuneBlockIndex,
+} from "./Collection";
 
 export const runes = {
   ...mongo,
@@ -104,13 +110,19 @@ export async function seedEtchings(runesEtchings: RuneEtching[]): Promise<void> 
     },
   }));
 
-  await collectionEtching.bulkWrite(bulkOps);
+  await collectionEtching.bulkWrite(bulkOps).catch(ignoreDuplicateErrors);
 }
 
 async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
-  const sanitizedBlockIndex = convertBigIntToString(runeBlockIndex);
+  const sanitizedBlockIndex: SimplifiedRuneBlockIndex = {
+    block: runeBlockIndex.block,
+    mintCounts: runeBlockIndex.mintCounts,
+    burnedBalances: runeBlockIndex.burnedBalances,
+  };
 
-  await collectionBlockInfo.insertOne(sanitizedBlockIndex).catch(ignoreDuplicateErrors);
+  const normalizedBlockIndex = convertBigIntToString(sanitizedBlockIndex);
+
+  await collectionBlockInfo.insertOne(normalizedBlockIndex).catch(ignoreDuplicateErrors);
 
   const bulkEtchings = runeBlockIndex.etchings.map((etching) => ({
     insertOne: {
