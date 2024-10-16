@@ -142,7 +142,7 @@ export class Indexer {
       // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
 
-      if (this.#hasReachedBlocksCommitThreshold(height)) {
+      if (this.#hasReachedBlocksCommitThreshold(height) || height === blockHeight) {
         log(`\n💽 Read blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}][${ts.now} seconds]`);
         startHeight = height;
         await blockLimiter.run();
