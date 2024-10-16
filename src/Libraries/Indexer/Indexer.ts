@@ -169,10 +169,10 @@ export class Indexer {
 
       if (this.#hasReachedBlocksCommitThreshold(height)) {
         log(`\n💽 Reading blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}]`);
-        startHeight = height;
         await blockLimiter.run();
         console.log(`⌚ ${ts.now} seconds`);
         await this.#commit(height);
+        startHeight = height + 1;
         ts = perf();
       }
 
