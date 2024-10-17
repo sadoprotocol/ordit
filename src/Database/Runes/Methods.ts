@@ -1,23 +1,27 @@
-import { Filter } from "mongodb";
-import { BlockIdentifier, BlockInfo, RuneBlockIndex, RuneEtching, RuneLocation, RuneUtxoBalance } from "runestone-lib";
+import { Decimal128 } from "mongodb";
+import { BlockIdentifier, RuneBlockIndex, RuneEtching, RuneLocation, RuneUtxoBalance } from "runestone-lib";
 
 import { ignoreDuplicateErrors } from "~Database/Utilities";
 import { FindPaginatedParams, paginate } from "~Libraries/Paginate";
 import { client, mongo } from "~Services/Mongo";
 import { convertBigIntToString, convertStringToBigInt } from "~Utilities/Helpers";
 
-import { collectionBlocks, collectionRunes, collectionUtxoBalances, Mint, RuneEntry } from "./Collection";
+import {
+  collectionBlockInfo,
+  collectionEtching,
+  collectionOutputs,
+  RuneOutput,
+  SimplifiedRuneBlockIndex,
+} from "./Collection";
 
 export const runes = {
   ...mongo,
-  collectionBlocks,
-  collectionRunes,
-  collectionUtxoBalances,
+  collectionBlockInfo,
+  collectionOutputs,
+  collectionEtching,
 
   // Core Methods
-  findRune,
-  findRunes,
-  countBlocks,
+  getEtchingByTicker,
   addressBalances,
   addressRunesUTXOs,
 
@@ -30,55 +34,50 @@ export const runes = {
   getUtxoBalance,
   getValidMintCount,
   resetCurrentBlock,
-  resetCurrentBlockHeight,
   saveBlockIndex,
   seedEtchings,
 };
 
-async function countBlocks(filter: Filter<BlockInfo>) {
-  return collectionBlocks.countDocuments(filter);
+async function getEtchingByTicker(runeTicker: string): Promise<RuneEtching | null> {
+  return await collectionEtching.findOne({ runeTicker });
 }
 
-async function findRune(
-  runeTicker: string,
-  verbose: boolean = false,
-): Promise<RuneEntry | Partial<Omit<RuneEntry, "mints">> | null> {
-  const filter = { runeTicker };
-  const rune = await collectionRunes.findOne<RuneEntry>(filter);
-  if (!rune) return null;
-  if (verbose) return rune;
+export async function addressBalances(address: string): Promise<{ runeTicker: string; balance: string }[]> {
+  const result = await collectionOutputs
+    .aggregate<{ runeTicker: string; totalBalance: Decimal128 }>([
+      {
+        $match: { address, spentTxid: { $exists: false } },
+      },
+      {
+        $group: {
+          _id: "$runeTicker",
+          totalBalance: {
+            $sum: {
+              $toDecimal: "$amount",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          runeTicker: "$_id",
+          totalBalance: 1,
+        },
+      },
+    ])
+    .toArray();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { mints, ...runeWithoutMints } = rune;
-  return runeWithoutMints;
+  const balances = result.map(({ runeTicker, totalBalance }) => ({
+    runeTicker,
+    balance: totalBalance.toString(),
+  }));
+
+  return balances;
 }
 
-async function findRunes(
-  runeTickers: string[],
-  verbose: boolean = false,
-): Promise<(RuneEntry | Partial<Omit<RuneEntry, "mints">>)[]> {
-  const filter = { runeTicker: { $in: runeTickers } };
-  const runes = await collectionRunes.find<RuneEntry>(filter).toArray();
-
-  if (verbose) return runes;
-
-  return runes.map((rune) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { mints, ...runeWithoutMints } = rune;
-    return runeWithoutMints;
-  });
-}
-
-async function addressBalances(address: string, withSpents: boolean = false): Promise<RuneUtxoBalance[]> {
-  let filter: Filter<RuneUtxoBalance> = { address };
-  if (!withSpents) {
-    filter = { address, spentTxid: { $exists: false } };
-  }
-  return await collectionUtxoBalances.find<RuneUtxoBalance>(filter).toArray();
-}
-
-async function addressRunesUTXOs(params: FindPaginatedParams<RuneUtxoBalance> = {}) {
-  return paginate.findPaginated(collectionUtxoBalances, params);
+async function addressRunesUTXOs(params: FindPaginatedParams<RuneOutput> = {}) {
+  return paginate.findPaginated(collectionOutputs, params);
 }
 
 /**
@@ -89,159 +88,121 @@ async function disconnect() {
 }
 
 async function getBlockhash(blockHeight: number): Promise<string | null> {
-  const block = await collectionBlocks.findOne({ height: blockHeight });
-  return block ? block.hash : null;
+  const runeBlockInfo = await collectionBlockInfo.findOne({ "block.height": blockHeight });
+  return runeBlockInfo ? runeBlockInfo.block.hash : null;
 }
 
 async function getCurrentBlock(): Promise<BlockIdentifier | null> {
-  const block = await collectionBlocks.find().sort({ height: -1 }).limit(1).next();
-  return block ? { height: block.height, hash: block.hash } : null;
+  const runeBlockInfo = await collectionBlockInfo.find().sort({ "block.height": -1 }).limit(1).next();
+  return runeBlockInfo ? { height: runeBlockInfo.block.height, hash: runeBlockInfo.block.hash } : null;
 }
 
 async function resetCurrentBlock(block: BlockIdentifier): Promise<void> {
-  await collectionBlocks.deleteMany({ height: { $gt: block.height } });
-
-  await collectionBlocks.updateOne({ height: block.height }, { $set: { hash: block.hash } }, { upsert: true });
+  await collectionOutputs.deleteMany({ txBlockHeight: { $gt: block.height } });
+  await collectionBlockInfo.deleteMany({ "block.height": { $gt: block.height } });
+  await collectionEtching.deleteMany({ "runeId.block": { $gt: block.height } });
 }
 
-async function resetCurrentBlockHeight(height: number): Promise<void> {
-  await collectionBlocks.deleteMany({ height: { $gt: height } });
-  const hash = await getBlockhash(height);
-  if (!hash) {
-    throw new Error(`Error getting block hash ${height}`);
-  }
-
-  await collectionBlocks.updateOne({ height }, { $set: { hash } }, { upsert: true });
-}
-
-async function seedEtchings(runes_etchings: RuneEtching[]): Promise<void> {
-  const bulkOps = runes_etchings.map((etching) => ({
+export async function seedEtchings(runesEtchings: RuneEtching[]): Promise<void> {
+  const bulkOps = runesEtchings.map((etching) => ({
     insertOne: {
       document: convertBigIntToString(etching),
     },
   }));
 
-  await collectionRunes.bulkWrite(bulkOps);
+  await collectionEtching.bulkWrite(bulkOps).catch(ignoreDuplicateErrors);
 }
 
 async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
-  await collectionBlocks.insertOne(runeBlockIndex.block).catch(ignoreDuplicateErrors);
+  const sanitizedBlockIndex: SimplifiedRuneBlockIndex = {
+    block: runeBlockIndex.block,
+    mintCounts: runeBlockIndex.mintCounts,
+    burnedBalances: runeBlockIndex.burnedBalances,
+  };
 
-  // RUNE ENTRY
+  const normalizedBlockIndex = convertBigIntToString(sanitizedBlockIndex);
+
+  await collectionBlockInfo.insertOne(normalizedBlockIndex).catch(ignoreDuplicateErrors);
+
   const bulkEtchings = runeBlockIndex.etchings.map((etching) => ({
     insertOne: {
       document: convertBigIntToString(etching),
     },
   }));
 
-  if (bulkEtchings.length > 0) await collectionRunes.bulkWrite(bulkEtchings).catch(ignoreDuplicateErrors);
+  if (bulkEtchings.length > 0) await collectionEtching.bulkWrite(bulkEtchings).catch(ignoreDuplicateErrors);
 
-  // RUNE UTXOS
-  const bulkUtxoBalances = runeBlockIndex.utxoBalances.map((utxo) => {
-    const { amount, ...rest } = utxo;
-
-    return {
-      insertOne: {
-        document: {
-          ...rest,
-          amount: amount.toString(),
-        },
-      },
-    };
-  });
-
-  if (bulkUtxoBalances.length > 0)
-    await collectionUtxoBalances.bulkWrite(bulkUtxoBalances).catch(ignoreDuplicateErrors);
-
-  // RUNE SPENTS
-  const bulkSpentBalances = runeBlockIndex.spentBalances.map((spent) => ({
-    updateOne: {
-      filter: { txid: spent.txid, vout: spent.vout },
-      update: { $set: { spentTxid: spent.spentTxid } },
-    },
-  }));
-
-  if (bulkSpentBalances.length > 0) await collectionUtxoBalances.bulkWrite(bulkSpentBalances);
-
-  // RUNE MINTS
-  const bulkMintCounts = runeBlockIndex.mintCounts.map((mintCount) => {
-    const mint: Mint = {
-      block: runeBlockIndex.block.height,
-      count: mintCount.count,
-    };
-
-    return {
-      updateOne: {
-        filter: { runeId: mintCount.mint },
-        update: {
-          $push: { mints: mint },
-        },
-        upsert: true,
-      },
-    };
-  });
-
-  if (bulkMintCounts.length > 0) {
-    await collectionRunes.bulkWrite(bulkMintCounts);
+  if (runeBlockIndex.utxoBalances && runeBlockIndex.utxoBalances.length > 0) {
+    const newUtxos = runeBlockIndex.utxoBalances.map((utxo) => {
+      return {
+        ...utxo,
+        txBlockHeight: runeBlockIndex.block.height,
+      };
+    });
+    await collectionOutputs.insertMany(newUtxos).catch(ignoreDuplicateErrors);
   }
 
-  // RUNE BURNT
-  const bulkBurnedBalances = runeBlockIndex.burnedBalances.map((burned) => ({
-    deleteOne: {
-      filter: { "runeId.block": burned.runeId.block, "runeId.tx": burned.runeId.tx },
-    },
-  }));
-
-  if (bulkBurnedBalances.length > 0) {
-    await collectionUtxoBalances.bulkWrite(bulkBurnedBalances);
+  for (const spentUtxo of runeBlockIndex.spentBalances) {
+    await collectionOutputs.updateOne(
+      { txid: spentUtxo.txid, vout: spentUtxo.vout, runeTicker: spentUtxo.runeTicker },
+      { $set: { spentTxid: spentUtxo.spentTxid, txBlockHeight: runeBlockIndex.block.height } },
+    );
   }
 }
+
 async function getEtching(runeLocation: string): Promise<RuneEtching | null> {
-  const runeLocSplit = runeLocation.split(":", 2);
-  const _runeLocation: RuneLocation = {
-    block: Number(runeLocSplit[0]),
-    tx: Number(runeLocSplit[1]),
+  const [blockHeightStr, txStr] = runeLocation.split(":");
+  const runeId: RuneLocation = {
+    block: parseInt(blockHeightStr, 10),
+    tx: parseInt(txStr, 10),
   };
-  const etching = await collectionRunes.findOne({ runeId: _runeLocation });
-  convertStringToBigInt(etching);
-  return etching ? (etching as unknown as RuneEtching) : null;
+
+  const etching = await collectionEtching.findOne<RuneEtching>({
+    "runeId.block": runeId.block,
+    "runeId.tx": runeId.tx,
+  });
+
+  if (!etching) return null;
+
+  return convertStringToBigInt(etching);
 }
 
 async function getValidMintCount(runeLocation: string, blockheight: number): Promise<number> {
-  const runeLocSplit = runeLocation.split(":", 2);
-  const _runeLocation: RuneLocation = {
-    block: Number(runeLocSplit[0]),
-    tx: Number(runeLocSplit[1]),
+  const [blockStr, txStr] = runeLocation.split(":");
+  const targetRuneLocation: RuneLocation = {
+    block: parseInt(blockStr, 10),
+    tx: parseInt(txStr, 10),
   };
 
-  const runeEntry = await collectionRunes.findOne({ runeId: _runeLocation });
+  const result = await collectionBlockInfo
+    .aggregate<{ totalMintCount: number }>([
+      { $match: { "block.height": { $lte: blockheight } } },
+      { $unwind: "$mintCounts" },
+      {
+        $match: {
+          "mintCounts.mint.block": targetRuneLocation.block,
+          "mintCounts.mint.tx": targetRuneLocation.tx,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalMintCount: { $sum: "$mintCounts.count" },
+        },
+      },
+      { $project: { _id: 0, totalMintCount: 1 } },
+    ])
+    .toArray();
 
-  if (!runeEntry || !runeEntry.mints) {
-    return 0;
-  }
-
-  const validMints = runeEntry.mints.filter((mint: Mint) => mint.block <= blockheight);
-  const totalCount = validMints.reduce((sum: number, mint: Mint) => sum + mint.count, 0);
-
-  return totalCount;
+  return result.length > 0 ? result[0].totalMintCount : 0;
 }
 
 async function getRuneLocation(runeTicker: string): Promise<RuneLocation | null> {
-  const etching = await collectionRunes.findOne({ runeTicker });
-  convertStringToBigInt(etching);
-  return etching ? (etching.runeId as RuneLocation) : null;
+  return (await collectionEtching.findOne({ runeTicker }))?.runeId ?? null;
 }
 
 async function getUtxoBalance(txid: string, vout: number): Promise<RuneUtxoBalance[]> {
-  const balances = await collectionUtxoBalances.find({ txid, vout }).toArray();
-  return balances.map((balance) => ({
-    txid: balance.txid,
-    vout: balance.vout,
-    address: balance.address,
-    scriptPubKey: balance.scriptPubKey,
-    runeId: balance.runeId,
-    satValue: balance.satValue,
-    runeTicker: balance.runeTicker,
-    amount: BigInt(balance.amount),
-  }));
+  const utxoBalance = await collectionOutputs.find<RuneUtxoBalance>({ txid, vout }).toArray();
+  const utxoBalanceFlat = utxoBalance.map((utxo) => convertStringToBigInt(utxo));
+  return utxoBalanceFlat;
 }

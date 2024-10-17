@@ -41,16 +41,19 @@ WORKER_PORT=3031
 # INDEXER OPTIONS
 #------------------------------------------------------------
 INDEX_OUTPUTS=true
-INDEX_UTXOS=true
-INDEX_INSCRIPTIONS=true
+INDEX_INSCRIPTIONS=true # dependant on INDEX_OUTPUTS=true
+INDEX_RUNES=true # dependant on INDEX_OUTPUTS=true
+INDEX_RUNES_ONLY=false # Optional, if set to true only runes will be indexed skiping outputs
+# Deprecated
 INDEX_BRC20=true
 INDEX_SADO=true
-INDEX_RUNES=true
+INDEX_UTXOS=true
 
 #------------------------------------------------------------
 # INDEXER SETTINGS
 #------------------------------------------------------------
 INDEXER_MAX_HEIGHT=767430
+INDEXER_START_HEIGHT=188700 # Set the start height to index from
 INDEXER_COMMIT_BLOCKS=1000 # Set the limit at which blocks are concurrently processed.
 INDEXER_DB_CHUNK_SIZE=1000 # Chunks of data for i/o ops against db. Keep between 1_000 - 10_000.
 INDEXER_VOUT_CONCURRENCY_LIMIT=100 # Set the limit at which vouts are concurrently processed.

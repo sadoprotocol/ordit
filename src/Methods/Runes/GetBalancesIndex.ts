@@ -1,9 +1,7 @@
-import { method, NotFoundError } from "@valkyr/api";
-import Schema, { string } from "computed-types";
+import { method } from "@valkyr/api";
+import Schema, { boolean, string } from "computed-types";
 
 import { runes } from "~Database/Runes";
-
-import { db } from "../../Database";
 
 type RuneBalance = {
   balance: string;
@@ -23,47 +21,35 @@ type RuneBalanceMap = {
 export default method({
   params: Schema({
     address: string,
+    verbose: boolean.optional(),
   }),
-  handler: async ({ address }): Promise<RuneBalanceMap> => {
-    const balances = await runes.addressBalances(address);
-    if (balances.length === 0) {
-      throw new NotFoundError("Address has no balances");
+  handler: async ({ address, verbose = false }): Promise<RuneBalanceMap> => {
+    const balancesArray: { runeTicker: string; balance: string }[] = await runes.addressBalances(address);
+
+    const balancesMap: RuneBalanceMap = balancesArray.reduce((acc, { runeTicker, balance }) => {
+      acc[runeTicker] = { balance };
+      return acc;
+    }, {} as RuneBalanceMap);
+
+    if (verbose) {
+      await Promise.all(
+        Object.keys(balancesMap).map(async (runeTicker) => {
+          const etching = await runes.getEtchingByTicker(runeTicker);
+          if (etching && etching.valid) {
+            const { runeId, runeName, txid, divisibility, symbol } = etching;
+
+            balancesMap[runeTicker].rune_metadata = {
+              divisibility: divisibility ?? 0,
+              symbol: symbol ?? "",
+              name: runeName ?? "",
+              id: `${runeId.block}:${runeId.tx}`,
+              inscriptionId: txid ? `${txid}i0` : undefined,
+            };
+          }
+        }),
+      );
     }
 
-    const responseBalances: RuneBalanceMap = {};
-    for (const balance of balances) {
-      balance.amount = BigInt(balance.amount);
-      const currentBalance = responseBalances[balance.runeTicker];
-
-      if (currentBalance) {
-        currentBalance.balance = (BigInt(currentBalance.balance) + balance.amount).toString();
-      } else {
-        responseBalances[balance.runeTicker] = {
-          balance: balance.amount.toString(),
-        };
-      }
-    }
-
-    const runeTickers = Object.keys(responseBalances);
-    const runesMetadata = await runes.findRunes(runeTickers);
-    for (const runesData of runesMetadata) {
-      const inscriptionId = `${runesData.txid}i0`;
-      const inscription = await db.inscriptions.getInscriptionById(inscriptionId);
-
-      responseBalances[runesData.runeTicker].rune_metadata = {
-        divisibility: runesData.divisibility ?? 0,
-        symbol: runesData.symbol ?? "",
-        name: runesData.runeName,
-        id: `${runesData.runeId.block}:${runesData.runeId.tx}`,
-      };
-      if (inscription !== undefined) {
-        responseBalances[runesData.runeTicker].rune_metadata = {
-          ...responseBalances[runesData.runeTicker].rune_metadata,
-          inscriptionId,
-        };
-      }
-    }
-
-    return responseBalances;
+    return balancesMap;
   },
 });
