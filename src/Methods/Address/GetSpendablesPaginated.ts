@@ -21,7 +21,7 @@ export default method({
     pagination: pagination.optional(),
   }),
   handler: async ({ address, value, safetospend = true, filter = [], pagination = {} }) => {
-    const spendables: { txid: string; n: number; sats: number; scriptPubKey: ScriptPubKey }[] = [];
+    const spendables: { txid: string; n: number; sats: number; scriptPubKey: ScriptPubKey, confirmations: number }[] = [];
 
     let totalValue = 0;
     let safeToSpendCount = 0;
@@ -80,6 +80,7 @@ export default method({
         n: output.vout.n,
         sats: btcToSat(output.value),
         scriptPubKey: vout.scriptPubKey,
+        confirmations: vout.confirmations
       });
 
       totalValue += output.value;
