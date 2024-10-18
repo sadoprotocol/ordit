@@ -71,6 +71,10 @@ async function find(filter: Filter<OutputDocument>, options?: FindOptions<Output
   return collection.find(filter, options).toArray();
 }
 
+async function findPaginated(params: FindPaginatedParams<OutputDocument> = {}) {
+  return paginate.findPaginated(collection, params);
+}
+
 async function findOne(
   filter: Filter<OutputDocument>,
   options?: FindOptions<OutputDocument>,
