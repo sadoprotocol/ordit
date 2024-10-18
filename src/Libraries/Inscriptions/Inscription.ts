@@ -52,9 +52,16 @@ export class Inscription {
 
 export async function getInscriptionFromEnvelope(
   envelope: Envelope,
-  ord: Map<string, OrdInscriptionData>,
+  ord: Map<string, OrdInscriptionData> | OrdInscriptionData,
 ): Promise<Inscription | undefined> {
-  const ordData = ord.get(envelope.id);
+  let ordData: OrdInscriptionData | undefined;
+
+  if (ord instanceof Map) {
+    ordData = ord.get(envelope.id);
+  } else {
+    ordData = ord;
+  }
+
   if (ordData === undefined) {
     return undefined;
   }

@@ -5,8 +5,9 @@ import { INSCRIPTION_EPOCH_BLOCK } from "~Libraries/Inscriptions/Constants";
 import { Envelope } from "~Libraries/Inscriptions/Envelope";
 import { getInscriptionFromEnvelope, Inscription as RawInscription } from "~Libraries/Inscriptions/Inscription";
 import { isOIP2Meta, validateOIP2Meta } from "~Libraries/Inscriptions/Oip";
+import { limiter } from "~Libraries/Limiter";
 import { perf } from "~Libraries/Log";
-import { ord, OrdInscriptionData } from "~Services/Ord";
+import { ord } from "~Services/Ord";
 import { parseLocation } from "~Utilities/Transaction";
 
 export const inscriptionsIndexer: IndexHandler = {
@@ -42,42 +43,44 @@ export const inscriptionsIndexer: IndexHandler = {
 };
 
 async function getInscriptions(vins: VinData[]) {
-  const envelopes: Envelope[] = [];
   let currentTxid = "";
   let currentEnvelopeIndex = 0;
+  const inscriptionLimiter = limiter(10);
+
   for (const vin of vins) {
     if (vin.txid !== currentTxid) {
       currentTxid = vin.txid;
       currentEnvelopeIndex = 0;
     }
+
     const _envelopes = Envelope.fromTxinWitness(vin.txid, vin.witness, currentEnvelopeIndex);
+
     if (_envelopes) {
       for (const envelope of _envelopes) {
         if (envelope && envelope.isValid) {
-          envelopes.push(envelope);
+          const inscriptionPromise = (async () => {
+            try {
+              const data = await ord.getInscription(envelope.id);
+              if (data) {
+                return await getInscriptionFromEnvelope(envelope, data);
+              }
+            } catch (error) {
+              console.error(`Error processing envelope ${envelope.id}:`, error);
+            }
+            return undefined;
+          })();
+          inscriptionLimiter.push(() => inscriptionPromise);
         }
       }
       currentEnvelopeIndex += _envelopes.length;
     }
   }
 
-  const ordData = new Map<string, OrdInscriptionData>();
-  const chunkSize = 5_000;
-  for (let i = 0; i < envelopes.length; i += chunkSize) {
-    const chunk = envelopes.slice(i, i + chunkSize);
-    const data = await ord.getInscriptions(chunk.map((item) => item.id));
-    for (const item of data) {
-      ordData.set(item.id, item);
-    }
-  }
+  const inscriptionsArray = await inscriptionLimiter.run();
+  const inscriptions = inscriptionsArray.filter(
+    (inscription): inscription is RawInscription => inscription !== undefined,
+  );
 
-  const inscriptions: RawInscription[] = [];
-  for (const envelope of envelopes) {
-    const inscription = await getInscriptionFromEnvelope(envelope, ordData);
-    if (inscription !== undefined) {
-      inscriptions.push(inscription);
-    }
-  }
   return inscriptions;
 }
 
@@ -143,22 +146,29 @@ async function transferInscriptions(outpoints: string[]) {
 }
 
 async function commitTransfers(ids: string[]) {
-  const ops: { id: string; owner: string; outpoint: string }[] = [];
+  const limit = limiter(10);
 
-  const chunkSize = 5_000;
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const chunk = ids.slice(i, i + chunkSize);
-    const data = await ord.getInscriptions(chunk);
-    for (const item of data) {
-      const [txid, n] = parseLocation(item.satpoint);
-      const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
-      ops.push({
-        id: item.id,
-        owner: output?.addresses[0] ?? "",
-        outpoint: `${txid}:${n}`,
-      });
-    }
+  for (const id of ids) {
+    limit.push(async () => {
+      try {
+        const item = await ord.getInscription(id);
+        if (item) {
+          const [txid, n] = parseLocation(item.satpoint);
+          const output = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
+          return {
+            id: item.id,
+            owner: output?.addresses[0] ?? "",
+            outpoint: `${txid}:${n}`,
+          };
+        }
+      } catch (error) {
+        console.error(`Error processing id ${id}:`, error);
+        return null;
+      }
+    });
   }
 
+  const results = await limit.run();
+  const ops = results.filter((op): op is { id: string; owner: string; outpoint: string } => op !== null);
   await db.inscriptions.addTransfers(ops);
 }
