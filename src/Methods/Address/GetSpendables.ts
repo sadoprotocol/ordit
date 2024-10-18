@@ -74,6 +74,7 @@ export default method({
         n: output.vout.n,
         sats: btcToSat(output.value),
         scriptPubKey: vout.scriptPubKey,
+        confirmations: vout.confirmations
       });
 
       totalValue += output.value;
