@@ -11,6 +11,7 @@ export async function getReorgHeight(): Promise<number> {
 
   let outputHighest = indexerHeight;
   let runesHighest = indexerHeight;
+
   // Array to keep track of all relevant heights
   const heights = [indexerHeight];
 
@@ -29,14 +30,8 @@ export async function getReorgHeight(): Promise<number> {
 
   const lowestHeight = Math.min(...heights);
 
-  if (lowestHeight > blockchainHeight) {
-    return blockchainHeight;
-  }
-
-  // Check if the indexer is behind the outputs or runes highest blocks
-  if ((outputsActive && indexerHeight < outputHighest) || (runesActive && indexerHeight < runesHighest)) {
-    return indexerHeight;
-  }
+  if (lowestHeight > blockchainHeight) return blockchainHeight;
+  if (lowestHeight < blockchainHeight) return lowestHeight;
 
   // If no reorganization is needed, return -1
   return -1;
