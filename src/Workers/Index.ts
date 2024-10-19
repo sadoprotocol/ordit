@@ -13,16 +13,10 @@ export async function index() {
   const blockHeight = await rpc.blockchain.getBlockCount();
   const indexers: IndexHandler[] = [];
 
+  // WARNING: order of indexers array is important.
   if (!config.index.runesOnly) {
     if (config.index.utxos === true) {
       indexers.push(utxoIndexer);
-    }
-
-    if (config.index.inscriptions === true) {
-      indexers.push(inscriptionsIndexer);
-      if (config.index.brc20 === true) {
-        indexers.push(brc20Indexer);
-      }
     }
 
     if (config.index.sado === true) {
@@ -35,6 +29,14 @@ export async function index() {
 
     if (config.index.outputs === true) {
       indexers.push(outputIndexer);
+    }
+
+    // Inscriptions indexer depends on outputs collection for owner and creator data
+    if (config.index.inscriptions === true) {
+      indexers.push(inscriptionsIndexer);
+      if (config.index.brc20 === true) {
+        indexers.push(brc20Indexer);
+      }
     }
   } else {
     indexers.push(runesIndexer);
