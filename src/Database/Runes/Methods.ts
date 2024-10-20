@@ -134,10 +134,10 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
 
   if (runeBlockIndex.utxoBalances && runeBlockIndex.utxoBalances.length > 0) {
     const newUtxos = runeBlockIndex.utxoBalances.map((utxo) => {
-      return {
+      return convertBigIntToString({
         ...utxo,
         txBlockHeight: runeBlockIndex.block.height,
-      };
+      });
     });
     await collectionOutputs.insertMany(newUtxos).catch(ignoreDuplicateErrors);
   }
