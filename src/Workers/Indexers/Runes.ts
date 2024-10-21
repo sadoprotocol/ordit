@@ -1,8 +1,7 @@
-import { RuneUpdater } from "runestone-lib";
+import { RuneBlockIndex, RuneUpdater } from "runestone-lib";
 
 import { runes } from "~Database/Runes";
 import { Indexer, IndexHandler } from "~Libraries/Indexer/Indexer";
-import { perf } from "~Libraries/Log";
 import { getNetworkEnum } from "~Libraries/Network";
 import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
 import { blockchain } from "~Services/Bitcoin";
@@ -11,70 +10,58 @@ export const runesIndexer: IndexHandler = {
   name: "runes",
 
   async run(idx: Indexer, { height, log }) {
-    if (height < RUNES_BLOCK) {
-      return;
-    }
-    log(`[Runes indexer]`);
+    if (height < RUNES_BLOCK) return;
+    if (idx.blocks.length === 0) return;
+    console.log(`\n[Runes indexer]`);
     const network = getNetworkEnum();
-
     // order blocks
     const blocks = idx.blocks.sort((a, b) => a.height - b.height);
 
+    log(`🔍 Looking for runestones in blocks ${blocks[0].height}-${blocks[blocks.length - 1].height}`);
     for (const block of blocks) {
-      const ts = perf();
       const runeUpdater = new RuneUpdater(network, block, false, runes, blockchain);
 
       for (const [txIndex, tx] of block.tx.entries()) {
         await runeUpdater.indexRunes(tx, txIndex);
       }
-      const etchingsLength = runeUpdater.etchings.length;
-      const utxoBalancesLength = runeUpdater.utxoBalances.length;
-      const spentBalancesLength = runeUpdater.spentBalances.length;
-      const burnedBalancesLength = runeUpdater.burnedBalances.length;
-      const mintCountsLength = runeUpdater.mintCounts.length;
 
+      const { etchings, mintCounts, utxoBalances, spentBalances, burnedBalances } = runeUpdater;
       const foundRunestone =
-        etchingsLength || utxoBalancesLength || spentBalancesLength || burnedBalancesLength || mintCountsLength;
-      await runes.saveBlockIndex(runeUpdater);
+        etchings.length || mintCounts.length || utxoBalances.length || spentBalances.length || burnedBalances.length;
       if (foundRunestone) {
-        printBlockInfo(
-          block.height,
-          etchingsLength,
-          utxoBalancesLength,
-          spentBalancesLength,
-          burnedBalancesLength,
-          mintCountsLength,
-          ts.now,
-        );
+        const runeBlockIndex: RuneBlockIndex = {
+          block: {
+            height: block.height,
+            hash: block.hash,
+            previousblockhash: block.previousblockhash,
+            time: block.time,
+          },
+          reorg: false,
+          etchings,
+          mintCounts,
+          utxoBalances,
+          spentBalances,
+          burnedBalances,
+        };
+        runes.saveBlockIndex(runeBlockIndex);
+        printBlockInfo(runeBlockIndex);
       }
     }
+    console.log("🏁 Finished looking for runestones");
   },
 
   async reorg(height: number) {
-    await runes.resetCurrentBlockHeight(height);
+    await runes.resetCurrentBlock({ height, hash: "" });
   },
 };
 
-// ------------------------------------------
-// UTILS
-// ------------------------------------------
+function printBlockInfo(runeBlockIndex: RuneBlockIndex) {
+  const blockStr = `${runeBlockIndex.block.height}`.padEnd(6, " ");
+  const etchingsStr = `${runeBlockIndex.etchings.length.toLocaleString()} etchings`.padStart(12, " ");
+  const balancesStr = `${runeBlockIndex.utxoBalances.length.toLocaleString()} balances`.padStart(12, " ");
+  const spentStr = `${runeBlockIndex.spentBalances.length.toLocaleString()} spent`.padStart(9, " ");
+  const burntStr = `${runeBlockIndex.burnedBalances.length.toLocaleString()} burnt`.padStart(9, " ");
+  const mintStr = `${runeBlockIndex.mintCounts.length.toLocaleString()} mint`.padStart(9, " ");
 
-function printBlockInfo(
-  height: number,
-  etchingsLength: number,
-  utxoBalancesLength: number,
-  spentBalancesLength: number,
-  burnedBalancesLength: number,
-  mintCountsLength: number,
-  time: string,
-) {
-  const blockStr = `${height}`.padEnd(6, " ");
-  const etchingsStr = `${etchingsLength.toLocaleString()} etchings`.padStart(12, " ");
-  const balancesStr = `${utxoBalancesLength.toLocaleString()} balances`.padStart(12, " ");
-  const spentStr = `${spentBalancesLength.toLocaleString()} spent`.padStart(9, " ");
-  const burntStr = `${burnedBalancesLength.toLocaleString()} burnt`.padStart(9, " ");
-  const mintStr = `${mintCountsLength.toLocaleString()} mint`.padStart(9, " ");
-  const timeStr = `[${time} seconds]`.padStart(15, " ");
-
-  console.log(`${blockStr}:${etchingsStr},${balancesStr},${spentStr},${burntStr},${mintStr} ${timeStr}`);
+  console.log(`🔍 ${blockStr}:${etchingsStr},${balancesStr},${spentStr},${burntStr},${mintStr}`);
 }
