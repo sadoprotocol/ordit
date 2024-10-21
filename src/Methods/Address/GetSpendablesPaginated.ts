@@ -1,15 +1,16 @@
 import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
+import { db } from "~Database";
+import { OutputDocument } from "~Database/Output";
+import { noSpentsFilter } from "~Database/Output/Utilities.ts";
+import { FindPaginatedParams } from "~Libraries/Paginate";
+import { SortDirection } from "~Libraries/Paginate/Types";
+import { rpc, ScriptPubKey } from "~Services/Bitcoin";
+import { getSafeToSpendState, ord } from "~Services/Ord.ts";
+import { btcToSat } from "~Utilities/Bitcoin.ts";
+import { pagination } from "~Utilities/Pagination";
 import { outputHasRunes } from "~Utilities/Runes";
-
-import { db } from "../../Database";
-import { noSpentsFilter } from "../../Database/Output/Utilities";
-import { rpc } from "../../Services/Bitcoin";
-import { getSafeToSpendState, ord } from "../../Services/Ord";
-import { btcToSat } from "../../Utilities/Bitcoin";
-
-const MAX_SPENDABLES = 200;
 
 export default method({
   params: Schema({
@@ -17,23 +18,28 @@ export default method({
     value: number.optional(),
     safetospend: boolean.optional(),
     filter: array.of(string).optional(),
-    limit: number.optional(),
+    pagination: pagination.optional(),
   }),
-  handler: async ({ address, value, safetospend = true, filter = [], limit }) => {
-    const spendables = [];
+  handler: async ({ address, value, safetospend = true, filter = [], pagination = {} }) => {
+    const spendables: { txid: string; n: number; sats: number; scriptPubKey: ScriptPubKey, confirmation: number }[] = [];
 
     let totalValue = 0;
-    let safeToSpend = 0;
-    let scanned = 0;
+    let safeToSpendCount = 0;
+    let scannedCount = 0;
 
-    const cursor = db.outputs.collection.find({ addresses: address, ...noSpentsFilter }, { sort: { value: -1 } });
+    const paginationParam: FindPaginatedParams<OutputDocument> = {
+      ...pagination,
+      limit: pagination.limit ?? 100,
+      filter: { addresses: address, ...noSpentsFilter },
+      sort: { _id: "asc" as SortDirection },
+    };
 
-    while (await cursor.hasNext()) {
-      const output = await cursor.next();
-      if (output === null) {
-        continue;
-      }
-      scanned += 1;
+    const outputs = await db.outputs.findPaginated(paginationParam);
+
+    if (outputs.documents.length === 0) return { spendables, pagination: outputs.pagination };
+
+    for (const output of outputs.documents) {
+      scannedCount += 1;
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
       if (filter.includes(outpoint)) {
@@ -44,7 +50,7 @@ export default method({
       // Any output that has an inscription or ordinal of rarity higher than
       // configured threshold is not safe to spend.
 
-      if (safetospend === true) {
+      if (safetospend) {
         const outpoint = `${output.vout.txid}:${output.vout.n}`;
         const [inscriptions, ordinals, hasRunes] = await Promise.all([
           db.inscriptions.getInscriptionsByOutpoint(outpoint),
@@ -52,10 +58,10 @@ export default method({
           outputHasRunes(outpoint),
         ]);
 
-        if (getSafeToSpendState(ordinals, inscriptions, hasRunes) === false) {
+        if (!getSafeToSpendState(ordinals, inscriptions, hasRunes)) {
           continue;
         }
-        safeToSpend += 1;
+        safeToSpendCount += 1;
       }
 
       // ### Transaction
@@ -81,9 +87,6 @@ export default method({
       if (value && totalValue >= value) {
         break;
       }
-      if (spendables.length >= (limit ?? MAX_SPENDABLES)) {
-        break;
-      }
     }
 
     if (value && totalValue < value) {
@@ -91,12 +94,12 @@ export default method({
         requested: value,
         available: totalValue,
         spendables: {
-          scanned,
-          safeToSpend: safetospend === true ? safeToSpend : "disabled",
+          scanned: scannedCount,
+          safeToSpend: safetospend ? safeToSpendCount : "disabled",
         },
       });
     }
 
-    return spendables;
+    return { spendables, pagination: outputs.pagination };
   },
 });

@@ -1,34 +1,30 @@
-import { BlockInfo, RuneBalance, RuneEtching, RuneUtxoBalance } from "runestone-lib";
+import { RuneBlockIndex, RuneEtching, RuneUtxoBalance } from "runestone-lib";
 
 import { CollectionRegistrar, mongo } from "~Services/Mongo";
 
-export const collectionBlocks = mongo.db.collection<BlockInfo>("runes_blocks");
-export const collectionUtxoBalances = mongo.db.collection<RuneUtxoBalance>("runes_utxoBalances");
-export const collectionRunes = mongo.db.collection<RuneEntry>("runes");
+export const collectionBlockInfo = mongo.db.collection<SimplifiedRuneBlockIndex>("runes_blocks");
+export const collectionEtching = mongo.db.collection<RuneEtching>("runes_etchings");
+export const collectionOutputs = mongo.db.collection<RuneOutput>("runes_outputs");
 
-export const registrarBlocks: CollectionRegistrar = {
+export const registrarBlockInfo: CollectionRegistrar = {
   name: "runes_blocks",
-  indexes: [[{ height: 1 }, { unique: true }]],
+  indexes: [[{ "block.height": 1 }, { unique: true }]],
 };
 
-export const registrarUtxoBalance: CollectionRegistrar = {
-  name: "runes_utxoBalances",
+export const registrarEtching: CollectionRegistrar = {
+  name: "runes_etchings",
+  indexes: [[{ runeTicker: 1 }, { unique: true }]],
+};
+
+export const registrarOutput: CollectionRegistrar = {
+  name: "runes_outputs",
   indexes: [
     [{ txid: 1, vout: 1, runeTicker: 1 }, { unique: true }],
+    [{ txid: 1, vout: 1 }],
     [{ address: 1 }],
-    [{ runeTicker: 1 }],
     [{ address: 1, runeTicker: 1 }],
   ],
 };
 
-export const registrarRunes: CollectionRegistrar = {
-  name: "runes",
-  indexes: [
-    [{ runeTicker: 1 }, { unique: true }],
-    [{ runeId: 1 }, { unique: true }],
-  ],
-};
-
-export type Mint = { block: number; count: number };
-export type Burned = RuneBalance & { block: number };
-export type RuneEntry = RuneEtching & { mints: Mint[]; burned: Burned[] };
+export type RuneOutput = RuneUtxoBalance & { txBlockHeight: number; spentTxid?: string }; // txBlockHeight needed for reorg
+export type SimplifiedRuneBlockIndex = Omit<RuneBlockIndex, "etchings" | "utxoBalances" | "spentBalances" | "reorg">;

@@ -4,8 +4,10 @@ import { config } from "~Config";
 import { indexer } from "~Database/Indexer";
 import { limiter } from "~Libraries/Limiter";
 import { log, perf } from "~Libraries/Log";
+import { RUNES_BLOCK } from "~Libraries/Runes/Constants";
 import { Block, rpc, ScriptPubKey } from "~Services/Bitcoin";
 import { getAddressessFromVout } from "~Utilities/Address";
+import { sleep } from "~Utilities/Helpers";
 
 import { getReorgHeight } from "./Reorg";
 
@@ -53,7 +55,20 @@ export class Indexer {
    */
 
   async run(blockHeight: number) {
-    let currentHeight = await this.#getCurrentHeight();
+    let currentHeight = await indexer.getHeight();
+    const startHeight = config.index.startHeight;
+    const runesOnly = config.index.runesOnly;
+    if (currentHeight === 0) {
+      // fresh index
+      if (runesOnly) currentHeight = RUNES_BLOCK;
+      if (startHeight) currentHeight = startHeight;
+    } else {
+      // started index
+      if (runesOnly && currentHeight < RUNES_BLOCK) currentHeight = RUNES_BLOCK;
+      if (startHeight && currentHeight < startHeight) currentHeight = startHeight;
+    }
+
+    let targetHeight = blockHeight;
 
     if (config.index.maxheight) {
       const maxheight = config.index.maxheight;
@@ -62,20 +77,21 @@ export class Indexer {
         return;
       }
       // If we are not yet at maxheight, we should index up to maxheight or blockheight, whichever is lower.
-      assert(blockHeight <= maxheight);
+      assert(targetHeight <= maxheight);
+      targetHeight = maxheight;
     }
 
-    if (currentHeight === blockHeight) {
+    if (currentHeight === targetHeight) {
       return; // indexer has latest outputs
     }
 
-    log(`---------- indexing to block ${blockHeight.toLocaleString()} ----------`);
+    log(`---------- indexing to block ${targetHeight.toLocaleString()} ----------`);
 
     const reorgHeight = await this.#reorgCheck(currentHeight);
-    if (reorgHeight !== undefined) {
+    if (reorgHeight !== undefined && currentHeight > reorgHeight) {
       currentHeight = reorgHeight;
     }
-    await this.#indexBlocks(currentHeight, blockHeight);
+    await this.#indexBlocks(currentHeight, targetHeight);
   }
 
   /*
@@ -85,7 +101,7 @@ export class Indexer {
    */
 
   async #reorgCheck(blockHeight: number) {
-    log("\n\n 🏥 Performing reorg check\n");
+    log("\n🏥 Performing reorg check");
 
     const reorgHeight = await getReorgHeight();
     if (reorgHeight !== -1) {
@@ -93,11 +109,11 @@ export class Indexer {
         log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
         throw new Error("reorg detected, manual intervention required");
       }
-      log(`\n   🚑 reorg detected at block ${reorgHeight}, starting rollback`);
+      log(`🚑 reorg detected at block ${reorgHeight}`);
       await Promise.all(this.#indexers.map((indexer) => indexer.reorg(reorgHeight)));
       return reorgHeight - 1;
     }
-    log("\n   💯 Chain is healthy");
+    log("\n💯 Chain is healthy");
   }
 
   /*
@@ -123,10 +139,18 @@ export class Indexer {
   async #indexBlocks(currentHeight: number, blockHeight: number) {
     log(`📦 Indexing blockchain from block ${currentHeight.toLocaleString()}`);
 
-    let height = currentHeight + 1;
-    let blockHash: string | undefined = await rpc.blockchain.getBlockHash(height);
+    let height = currentHeight;
+    let blockHash: string | undefined;
+    try {
+      blockHash = await rpc.blockchain.getBlockHash(height);
+    } catch (_) {
+      // If bitcoin node is doing a reorg it might need a second try to catch up
+      console.log("Rpc call getBlockHash failed, retry in 5 seconds");
+      await sleep(5);
+      blockHash = await rpc.blockchain.getBlockHash(height);
+    }
 
-    let startHeight = currentHeight;
+    let startHeight = height;
 
     const blockLimiter = limiter(config.index.blockConcurrencyLimit ?? 8);
 
@@ -135,75 +159,79 @@ export class Indexer {
       if (this.#threshold.height && this.#threshold.height <= height) {
         break; // reached configured height threshold
       }
+      const currentBlockHash = blockHash;
 
-      blockLimiter.push(() => this.#fetchAndHandleBlock(blockHash as string));
+      blockLimiter.push(() => this.#fetchAndHandleBlock(currentBlockHash as string));
 
       // ### Commit
       // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
 
       if (this.#hasReachedBlocksCommitThreshold(height) || height === blockHeight) {
-        log(`\n💽 Read blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}][${ts.now} seconds]`);
-        startHeight = height;
+        log(`\n💽 Reading blocks [${startHeight.toLocaleString()} - ${height.toLocaleString()}]`);
         await blockLimiter.run();
+        console.log(`⌚ ${ts.now} seconds`);
         await this.#commit(height);
+        startHeight = height + 1;
         ts = perf();
       }
 
       try {
         blockHash = await rpc.blockchain.getBlockHash(height + 1);
+        height += 1;
       } catch {
         blockHash = undefined;
       }
-      height += 1;
     }
     await blockLimiter.run();
-    await this.#commit(height - 1);
+    await this.#commit(height);
   }
 
   async #handleBlock(block: Block<2>) {
     this.#blocks.push(block);
 
-    for (const tx of block.tx) {
-      const txid = tx.txid;
+    if (!config.index.runesOnly) {
+      for (const tx of block.tx) {
+        const txid = tx.txid;
 
-      for (const [n, vin] of tx.vin.entries()) {
-        this.#vins.push({
-          txid,
-          n,
-          witness: vin.txinwitness ?? [],
-          block: {
-            hash: block.hash,
-            height: block.height,
-            time: block.time,
-          },
-          vout: {
-            txid: vin.txid,
-            n: vin.vout,
-          },
-        });
-      }
-
-      const voutLimiter = limiter(config.index.voutConcurrencyLimit ?? 50);
-      for (const vout of tx.vout) {
-        voutLimiter.push(async () => {
-          const addresses = await getAddressessFromVout(vout);
-          this.#vouts.push({
+        for (const [n, vin] of tx.vin.entries()) {
+          this.#vins.push({
             txid,
-            n: vout.n,
-            addresses,
-            value: vout.value,
-            scriptPubKey: vout.scriptPubKey,
+            n,
+            witness: vin.txinwitness ?? [],
             block: {
               hash: block.hash,
               height: block.height,
               time: block.time,
             },
+            vout: {
+              txid: vin.txid,
+              n: vin.vout,
+            },
           });
-        });
-      }
+        }
 
-      await voutLimiter.run();
+        const voutLimiter = limiter(config.index.voutConcurrencyLimit ?? 50);
+        for (const vout of tx.vout) {
+          voutLimiter.push(async () => {
+            const addresses = await getAddressessFromVout(vout);
+            this.#vouts.push({
+              txid,
+              n: vout.n,
+              addresses,
+              value: vout.value,
+              scriptPubKey: vout.scriptPubKey,
+              block: {
+                hash: block.hash,
+                height: block.height,
+                time: block.time,
+              },
+            });
+          });
+        }
+
+        await voutLimiter.run();
+      }
     }
   }
 
@@ -239,14 +267,6 @@ export class Indexer {
 
   #hasReachedBlocksCommitThreshold(height: number) {
     return height !== 0 && height % this.#threshold.blocks === 0;
-  }
-
-  async #getCurrentHeight() {
-    const currentHeight = await indexer.getHeight();
-    if (currentHeight === null) {
-      return -1;
-    }
-    return currentHeight;
   }
 }
 
