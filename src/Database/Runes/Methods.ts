@@ -99,6 +99,10 @@ async function getCurrentBlock(): Promise<BlockIdentifier | null> {
 
 async function resetCurrentBlock(block: BlockIdentifier): Promise<void> {
   await collectionOutputs.deleteMany({ txBlockHeight: { $gt: block.height } });
+  await collectionOutputs.updateMany(
+    { spentBlockHeight: { $gt: block.height } },
+    { $unset: { spentTxid: "", spentBlockHeight: "" } },
+  );
   await collectionBlockInfo.deleteMany({ "block.height": { $gt: block.height } });
   await collectionEtching.deleteMany({ "runeId.block": { $gt: block.height } });
 }
@@ -145,7 +149,7 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
   for (const spentUtxo of runeBlockIndex.spentBalances) {
     await collectionOutputs.updateOne(
       { txid: spentUtxo.txid, vout: spentUtxo.vout, runeTicker: spentUtxo.runeTicker },
-      { $set: { spentTxid: spentUtxo.spentTxid, txBlockHeight: runeBlockIndex.block.height } },
+      { $set: { spentTxid: spentUtxo.spentTxid, spentBlockHeight: runeBlockIndex.block.height } },
     );
   }
 }
