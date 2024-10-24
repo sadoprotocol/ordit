@@ -87,11 +87,9 @@ export class Indexer {
 
     log(`---------- indexing to block ${targetHeight.toLocaleString()} ----------`);
 
-    const reorgHeight = await this.#reorgCheck(currentHeight);
-    if (reorgHeight !== undefined && currentHeight > reorgHeight) {
-      currentHeight = reorgHeight;
-    }
-    await this.#indexBlocks(currentHeight, targetHeight);
+    const reorgHeight = await this.#reorgCheck();
+    const indexStartHeight = reorgHeight === -1 ? currentHeight : reorgHeight;
+    await this.#indexBlocks(indexStartHeight, targetHeight);
   }
 
   /*
@@ -100,20 +98,23 @@ export class Indexer {
    |--------------------------------------------------------------------------------
    */
 
-  async #reorgCheck(blockHeight: number) {
+  async #reorgCheck() {
     log("\n🏥 Performing reorg check");
 
     const reorgHeight = await getReorgHeight();
-    if (reorgHeight !== -1) {
-      if (blockHeight - reorgHeight > config.reorg.threshold) {
-        log(`\n   🚨 reorg at block ${reorgHeight} is unexpectedly far behind, needs manual review`);
-        throw new Error("reorg detected, manual intervention required");
-      }
-      log(`🚑 reorg detected at block ${reorgHeight}`);
-      await Promise.all(this.#indexers.map((indexer) => indexer.reorg(reorgHeight)));
-      return reorgHeight - 1;
+
+    // reorg not detected
+    if (reorgHeight === -1) {
+      log("\n💯 Chain is healthy");
+      return -1;
     }
-    log("\n💯 Chain is healthy");
+
+    // if reorg found!
+    log(`🚑 reorg detected at block ${reorgHeight}`);
+    // all indexers run reorg cleanup
+    await Promise.all(this.#indexers.map((indexer) => indexer.reorg(reorgHeight)));
+    // return height for continuing the indexing
+    return reorgHeight;
   }
 
   /*
