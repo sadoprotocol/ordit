@@ -123,6 +123,7 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
     mintCounts: runeBlockIndex.mintCounts,
     burnedBalances: runeBlockIndex.burnedBalances,
   };
+  if (sanitizedBlockIndex.mintCounts.length > 0) console.log(sanitizedBlockIndex.mintCounts);
 
   const normalizedBlockIndex = convertBigIntToString(sanitizedBlockIndex);
 
@@ -147,8 +148,8 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
   }
 
   for (const spentUtxo of runeBlockIndex.spentBalances) {
-    await collectionOutputs.updateOne(
-      { txid: spentUtxo.txid, vout: spentUtxo.vout, runeTicker: spentUtxo.runeTicker },
+    await collectionOutputs.updateMany(
+      { txid: spentUtxo.txid, vout: spentUtxo.vout },
       { $set: { spentTxid: spentUtxo.spentTxid, spentBlockHeight: runeBlockIndex.block.height } },
     );
   }

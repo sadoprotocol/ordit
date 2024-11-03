@@ -15,7 +15,8 @@
     "db:start": "docker compose --profile db up -d",
     "db:stop": "docker compose --profile db down",
     "clean": "rm -rf dist",
-    "lint": "eslint ./src --max-warnings 0 --report-unused-disable-directives --fix"
+    "lint": "eslint ./src --max-warnings 0 --report-unused-disable-directives --fix",
+    "datavalidation": "tsx ./src/Workers/Tasks/AddressBalanceValidator.ts"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -36,6 +37,7 @@
     "ioredis": "^5.3.2",
     "lodash.get": "^4.4.2",
     "lodash.mapvalues": "^4.6.0",
+    "lossless-json": "^4.0.2",
     "mongodb": "^6.5.0",
     "node-fetch": "^3.3.2",
     "p-limit": "^4.0.0",
@@ -59,7 +61,7 @@
     "eslint-plugin-anti-trojan-source": "^1.1.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "husky": "^8.0.3",
-    "lint-staged": "^14.0.1",
+    "lint-staged": "^15.2.10",
     "prettier": "^3.0.3",
     "tsx": "^3.13.0",
     "typescript": "^5.2.2"
