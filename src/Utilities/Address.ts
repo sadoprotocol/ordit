@@ -1,7 +1,6 @@
-import { address as addr, payments } from "bitcoinjs-lib";
+import { address as addr } from "bitcoinjs-lib";
 
 import { getBitcoinNetwork } from "~Libraries/Network";
-import { rpc } from "~Services/Bitcoin";
 
 import { Vout } from "../Services/Bitcoin";
 
@@ -21,57 +20,20 @@ export async function getAddressessFromVout(vout: Vout) {
   if (address !== undefined) {
     return [address];
   }
-  if (vout.scriptPubKey.desc !== undefined) {
-    return rpc.util.deriveAddresses(vout.scriptPubKey.desc).catch(() => []);
-  }
   return [];
 }
 
 function extractAddress(script: Buffer) {
+  if (script[0] === 0x6a) {
+    return; // Return empty array for OP_RETURN
+  }
   try {
     const address = addr.fromOutputScript(script, network);
     if (address) {
       return address;
     }
   } catch {
-    // ignore
+    // Ignore no address found
   }
-
-  try {
-    const address = payments.p2pkh({ output: script, network }).address;
-    if (address) {
-      return address;
-    }
-  } catch {
-    // ignore
-  }
-
-  try {
-    const address = payments.p2sh({ output: script, network }).address;
-    if (address) {
-      return address;
-    }
-  } catch {
-    // ignore
-  }
-
-  try {
-    const address = payments.p2wpkh({ output: script, network }).address;
-    if (address) {
-      return address;
-    }
-  } catch {
-    // ignore
-  }
-
-  try {
-    const address = payments.p2wsh({ output: script, network }).address;
-    if (address) {
-      return address;
-    }
-  } catch {
-    // ignore
-  }
-
-  return undefined;
+  return;
 }
