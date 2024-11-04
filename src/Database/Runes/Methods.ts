@@ -123,7 +123,6 @@ async function saveBlockIndex(runeBlockIndex: RuneBlockIndex): Promise<void> {
     mintCounts: runeBlockIndex.mintCounts,
     burnedBalances: runeBlockIndex.burnedBalances,
   };
-  if (sanitizedBlockIndex.mintCounts.length > 0) console.log(sanitizedBlockIndex.mintCounts);
 
   const normalizedBlockIndex = convertBigIntToString(sanitizedBlockIndex);
 

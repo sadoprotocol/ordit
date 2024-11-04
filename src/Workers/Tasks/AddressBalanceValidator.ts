@@ -9,6 +9,7 @@ import { config } from "~Config";
 import { db } from "~Database";
 
 async function main() {
+  console.time("Execution time");
   try {
     const ORD_URI = config.ord.uri;
     const discrepancies: Array<{
@@ -20,15 +21,17 @@ async function main() {
     }> = [];
 
     const BATCH_SIZE = 100;
-    const CONCURRENT_REQUESTS = 5;
+    const CONCURRENT_REQUESTS = 50;
     let notFoundCount = 0;
     let batchCount = 0;
 
-    const logFilePath = path.join(__dirname, "ord_not_found_log.txt");
-    fs.writeFileSync(logFilePath, "ORD Not Found Log:\n", "utf-8");
+    const logFilePath = path.join(__dirname, "data_validation.log");
+    fs.writeFileSync(logFilePath, ""); // empty file
 
+    console.log("-----------------------------");
     console.log("BATCH_SIZE:", BATCH_SIZE);
     console.log("CONCURRENT_REQUESTS:", CONCURRENT_REQUESTS);
+    console.log("-----------------------------\n");
 
     const limit = pLimit(CONCURRENT_REQUESTS);
 
@@ -78,9 +81,8 @@ async function main() {
             });
 
             if (!response.ok) {
-              console.error(
-                `Failed to fetch ORD data for txid ${txid} vout ${vout}: ${response.status} ${response.statusText}`,
-              );
+              notFoundCount++;
+              fs.appendFileSync(logFilePath, `${txid}:${vout}[${doc.runeTicker}]: not found in ord\n`, "utf-8");
               return;
             }
 
@@ -97,12 +99,11 @@ async function main() {
             const ordRune = processedRunes[doc.runeTicker];
             if (!ordRune) {
               notFoundCount++;
-              fs.appendFileSync(logFilePath, `${txid}:${vout}[${doc.runeTicker}]: not found in ord index\n`, "utf-8");
+              fs.appendFileSync(logFilePath, `${txid}:${vout}[${doc.runeTicker}]: not found in ord\n`, "utf-8");
               return;
             }
 
             const ordAmount = ordRune.amount;
-            if (ordAmount > 100000000000000000000000000000n) console.log(ordAmount);
 
             if (BigInt(doc.amount) !== ordAmount) {
               discrepancies.push({
@@ -122,26 +123,31 @@ async function main() {
       await Promise.all(tasks);
     }
 
-    process.stdout.write("\rProcessing... 100% - Completed.\n");
+    process.stdout.write("\rProcessing... 100% - Completed.\n\n");
 
     if (discrepancies.length > 0) {
-      console.log("Discrepancies found:");
+      console.log("Discrepancies found ❗");
       discrepancies.forEach((discrepancy, index) => {
+        const diff = Math.abs(Number(discrepancy.dbAmount) - Number(discrepancy.ordAmount));
         console.log(`${index + 1}. Txid: ${discrepancy.dbTxid}, Vout: ${discrepancy.dbVout}`);
         console.log(`   RuneTicker: ${discrepancy.runeTicker}`);
         console.log(`   DB Amount: ${discrepancy.dbAmount}`);
         console.log(`   ORD Amount: ${discrepancy.ordAmount}`);
+        console.log(`   Diff: ${diff}`);
       });
     } else {
-      console.log("No discrepancies found.");
+      console.log("No discrepancies found ✅");
     }
 
-    console.log(`Total not found in ord index: ${notFoundCount}`);
-    console.log(`Detailed 'not found in ord index' log can be found at: ${logFilePath}`);
+    if (notFoundCount === 0) console.log(`All UTXOs present in ord ✅`);
+    else {
+      console.log(`UTXOs not present in ord: ${notFoundCount} ❗`);
+      console.log(`\nDetailed utxo log at: ${logFilePath} ℹ️`);
+    }
   } catch (error) {
     console.error("An error occurred in the main function:", error);
   } finally {
-    console.log("Exiting process...");
+    console.timeEnd("Execution time");
     exit(1);
   }
 }

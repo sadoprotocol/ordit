@@ -43,7 +43,7 @@ export const runesIndexer: IndexHandler = {
           spentBalances,
           burnedBalances,
         };
-        runes.saveBlockIndex(runeBlockIndex);
+        await runes.saveBlockIndex(runeBlockIndex);
         printBlockInfo(runeBlockIndex);
       }
     }

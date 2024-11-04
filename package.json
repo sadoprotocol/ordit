@@ -41,7 +41,7 @@
     "mongodb": "^6.5.0",
     "node-fetch": "^3.3.2",
     "p-limit": "^4.0.0",
-    "runestone-lib": "git+https://github.com/ordzaar/runestone-lib.git#5c298803eb9ce4c97a1fea498ef886888884faa5",
+    "runestone-lib": "git+https://github.com/ordzaar/runestone-lib.git#8554afccebfe9f523f72934f54c2914c1acbe05a",
     "tiny-secp256k1": "^2.2.3"
   },
   "devDependencies": {
