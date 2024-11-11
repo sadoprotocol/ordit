@@ -32,3 +32,4 @@ dist
 # Logs
 
 npm-debug.log*
+data_validation.log
