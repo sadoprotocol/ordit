@@ -15,7 +15,6 @@ export default method({
     pagination.limit ??= 100;
     sort ??= "asc";
     const _sort = sort === "asc" ? -1 : 1;
-    console.log(_sort);
 
     const etching = await runes.getEtchingByTicker(runeTicker);
     let totalSupply = 0n;
