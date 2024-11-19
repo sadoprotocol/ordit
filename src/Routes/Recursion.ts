@@ -178,7 +178,7 @@ fastify.get(
         throw new Error("Inscription not found");
       }
       let parents = inscription.parents;
-      if (parents && parents.length === 0) {
+      if (!parents || parents.length === 0) {
         const ordData = await ord.getInscription(inscription.id);
 
         if (ordData) {
