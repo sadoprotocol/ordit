@@ -1,6 +1,7 @@
 import { FastifyRequest } from "fastify";
 
 import { rpc } from "~Services/Bitcoin";
+import { ord } from "~Services/Ord";
 
 import { db } from "../Database";
 import { fastify } from "../Fastify";
@@ -175,7 +176,25 @@ fastify.get(
     if (inscription === undefined) {
       throw new Error("Inscription not found");
     }
-    return inscription.parents ? inscription.parents.slice(0, 100) : [];
+    let parents = inscription.parents;
+    if (parents && parents.length === 0) {
+      const ordData = await ord.getInscription(inscription.id);
+
+      if (ordData) {
+        if (ordData.parents) {
+          parents = ordData.parents;
+          await db.inscriptions.updateOne(
+            { _id: inscription._id },
+            {
+              $set: {
+                parents: ordData.parents,
+              },
+            },
+          );
+        }
+      }
+    }
+    return parents;
   },
 );
 
