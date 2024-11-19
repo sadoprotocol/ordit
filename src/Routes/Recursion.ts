@@ -172,29 +172,33 @@ fastify.get(
     },
   },
   async (request: InscriptionIdRequest) => {
-    const inscription = await db.inscriptions.getInscriptionById(request.params.inscriptionId);
-    if (inscription === undefined) {
-      throw new Error("Inscription not found");
-    }
-    let parents = inscription.parents;
-    if (parents && parents.length === 0) {
-      const ordData = await ord.getInscription(inscription.id);
+    try {
+      const inscription = await db.inscriptions.getInscriptionById(request.params.inscriptionId);
+      if (inscription === undefined) {
+        throw new Error("Inscription not found");
+      }
+      let parents = inscription.parents;
+      if (parents && parents.length === 0) {
+        const ordData = await ord.getInscription(inscription.id);
 
-      if (ordData) {
-        if (ordData.parents) {
-          parents = ordData.parents;
-          await db.inscriptions.updateOne(
-            { _id: inscription._id },
-            {
-              $set: {
-                parents: ordData.parents,
+        if (ordData) {
+          if (ordData.parents) {
+            parents = ordData.parents;
+            await db.inscriptions.updateOne(
+              { _id: inscription._id },
+              {
+                $set: {
+                  parents: ordData.parents,
+                },
               },
-            },
-          );
+            );
+          }
         }
       }
+      return parents?.slice(0, 100);
+    } catch (e) {
+      return [];
     }
-    return parents;
   },
 );
 
