@@ -45,6 +45,7 @@ async function main() {
   log(`total inscriptions: ${total} \n`);
 
   let count = 0;
+  const indexedSet = new Set<string>();
 
   const cursor = db.inscriptions.collection.find({}, { sort: { _id: -1 } });
   while (await cursor.hasNext()) {
@@ -54,6 +55,12 @@ async function main() {
     }
 
     log(`count: ${count}, inscription id: ${inscription.id} \n`);
+
+    if (indexedSet.has(inscription.genesis)) {
+      log(`txid already indexed: ${inscription.genesis}, skipping inscription \n`);
+      count += 1;
+      continue;
+    }
 
     // try to reindex the transaction if the index 1 exist
     let ordData: OrdInscriptionData | undefined;
@@ -73,6 +80,7 @@ async function main() {
       }
     }
     count += 1;
+    indexedSet.add(inscription.genesis);
   }
 }
 
