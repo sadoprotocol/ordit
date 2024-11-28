@@ -53,7 +53,17 @@ async function insertMany(inscriptions: Inscription[], chunkSize = getChunkSize(
     for (const inscription of chunk) {
       if (inscription.parents) {
         for (const parent of inscription.parents) {
-          promises.push(collection.updateOne({ id: parent }, { $addToSet: { children: inscription.id } }));
+          promises.push(
+            collection.updateOne({ id: parent }, [
+              {
+                $set: {
+                  children: {
+                    $ifNull: [{ $concatArrays: ["$children", [inscription.id]] }, [inscription.id]],
+                  },
+                },
+              },
+            ]),
+          );
         }
       }
     }
@@ -65,7 +75,15 @@ async function insertOne(inscription: Inscription) {
   // Check for parents in Inscriptions and update children
   if (inscription.parents) {
     for (const parent of inscription.parents) {
-      await collection.updateOne({ id: parent }, { $addToSet: { children: inscription.id } });
+      await collection.updateOne({ id: parent }, [
+        {
+          $set: {
+            children: {
+              $ifNull: [{ $concatArrays: ["$children", [inscription.id]] }, [inscription.id]],
+            },
+          },
+        },
+      ]);
     }
   }
   return collection.updateOne({ id: inscription.id }, { $set: inscription }, { upsert: true });
