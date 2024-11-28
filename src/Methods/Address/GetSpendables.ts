@@ -1,15 +1,17 @@
 import { BadRequestError, method } from "@valkyr/api";
 import Schema, { array, boolean, number, string } from "computed-types";
 
+import { OutputDocument } from "~Database/Output";
+import { FindPaginatedParams } from "~Libraries/Paginate";
+import { SortDirection } from "~Libraries/Paginate/Types";
+import { pagination } from "~Utilities/Pagination";
 import { outputHasRunes } from "~Utilities/Runes";
 
 import { db } from "../../Database";
 import { noSpentsFilter } from "../../Database/Output/Utilities";
-import { rpc } from "../../Services/Bitcoin";
+import { rpc, ScriptPubKey } from "../../Services/Bitcoin";
 import { getSafeToSpendState, ord } from "../../Services/Ord";
 import { btcToSat } from "../../Utilities/Bitcoin";
-
-const MAX_SPENDABLES = 200;
 
 export default method({
   params: Schema({
@@ -17,22 +19,29 @@ export default method({
     value: number.optional(),
     safetospend: boolean.optional(),
     filter: array.of(string).optional(),
-    limit: number.optional(),
+    pagination: pagination.optional(),
   }),
-  handler: async ({ address, value, safetospend = true, filter = [], limit }) => {
-    const spendables = [];
+  handler: async ({ address, value, safetospend = true, filter = [], pagination = {} }) => {
+    const spendables: { txid: string; n: number; sats: number; scriptPubKey: ScriptPubKey }[] = [];
 
     let totalValue = 0;
     let safeToSpend = 0;
     let scanned = 0;
 
-    const cursor = db.outputs.collection.find({ addresses: address, ...noSpentsFilter }, { sort: { value: -1 } });
+    pagination.limit ??= 100;
+    const paginationFilter = { addresses: address, ...noSpentsFilter };
+    const sort = { _id: "asc" as SortDirection };
 
-    while (await cursor.hasNext()) {
-      const output = await cursor.next();
-      if (output === null) {
-        continue;
-      }
+    const paginationParam: FindPaginatedParams<OutputDocument> = {
+      ...pagination,
+      filter: paginationFilter,
+      sort,
+    };
+    const outputs = await db.outputs.findPaginated(paginationParam);
+
+    if (outputs.documents.length === 0) return { spendables, pagination: outputs.pagination };
+
+    for (const output of outputs.documents) {
       scanned += 1;
 
       const outpoint = `${output.vout.txid}:${output.vout.n}`;
@@ -81,9 +90,6 @@ export default method({
       if (value && totalValue >= value) {
         break;
       }
-      if (spendables.length >= (limit ?? MAX_SPENDABLES)) {
-        break;
-      }
     }
 
     if (value && totalValue < value) {
@@ -97,6 +103,6 @@ export default method({
       });
     }
 
-    return spendables;
+    return { spendables, pagination: outputs.pagination };
   },
 });
